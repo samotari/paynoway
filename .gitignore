@@ -1,0 +1,10 @@
+.gradle/
+node_modules/
+hooks/
+platforms/
+plugins/
+www/
+config.xml
+npm-debug.log
+.DS_Store
+.vscode
