@@ -1,0 +1,62 @@
+.view.send input[name="address"] {
+	font-family: 'Courier';
+	letter-spacing: .1rem;
+}
+.view.send .utxo {
+	margin-bottom: 2rem;
+}
+.view.send .utxo table {
+	border: .1rem solid #eee;
+}
+.view.send .utxo th {
+	font-weight: bold;
+}
+.view.send .utxo th:first-child,
+.view.send .utxo td:first-child {
+	text-align: left;
+}
+.view.send .utxo th:last-child,
+.view.send .utxo td:last-child {
+	text-align: right;
+}
+.view.send .utxo th,
+.view.send .utxo td {
+	border-bottom: .1rem solid #eee;
+	padding: .4rem;
+}
+.view.send .utxo tr:last-child td {
+	border-bottom: none;
+}
+.view.send .utxo-empty {
+	font-size: 1rem;
+	font-style: italic;
+	margin-bottom: .5rem;
+}
+.view.send .button.refresh-utxo {
+	display: inline-block;
+	vertical-align: top;
+	width: 1rem;
+	height: 1rem;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: 1rem;
+	background-repeat: no-repeat;
+	background-image: url('../images/cycle.svg');
+	box-sizing: border-box;
+	padding: .8rem 1.1rem;
+	margin-top: .6rem;
+}
+.view.send .button.secondary-control {
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: 2.4rem;
+	background-repeat: no-repeat;
+}
+.view.send .button.secondary-control.payment {
+	background-color: blue;
+	background-image: url('../images/send-darker.svg');
+}
+.view.send .button.secondary-control.double-spend {
+	background-color: red;
+	background-image: url('../images/wink.svg');
+}

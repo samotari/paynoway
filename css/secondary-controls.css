@@ -1,0 +1,47 @@
+.secondary-controls {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	z-index: 5;
+	width: 100%;
+	height: 6rem;
+	line-height: 4rem;
+	background: #fff;
+	box-shadow: 0 2rem 2rem 2rem #fff;
+	box-sizing: border-box;
+	padding: 1rem;
+}
+.secondary-control {
+	float: left;
+	height: 100%;
+	font-size: 1.1rem;
+	text-align: center;
+	box-sizing: border-box;
+	padding: 0;
+}
+.secondary-control.touchstart {
+	text-decoration: none;
+}
+.secondary-control + .secondary-control {
+	border-left: none;
+	margin-left: 2%;
+}
+/* one item */
+.secondary-control:first-child:nth-last-child(1) {
+	width: 100%;
+}
+/* two items */
+.secondary-control:first-child:nth-last-child(2),
+.secondary-control:first-child:nth-last-child(2) ~ .secondary-control {
+	width: 49%;
+}
+/* three items */
+.secondary-control:first-child:nth-last-child(3),
+.secondary-control:first-child:nth-last-child(3) ~ .secondary-control {
+	width: 31.33333%;
+}
+/* four items */
+.secondary-control:first-child:nth-last-child(4),
+.secondary-control:first-child:nth-last-child(4) ~ .secondary-control {
+	width: 23%;
+}

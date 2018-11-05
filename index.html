@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title><%= info.name %></title>
+	<link href="css/all.min.css" rel="stylesheet">
+	<!-- favicon -->
+	<link rel="apple-touch-icon-precomposed" sizes="57x57" href="images/favicon/apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/favicon/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/favicon/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/favicon/apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon-precomposed" sizes="60x60" href="images/favicon/apple-touch-icon-60x60.png">
+	<link rel="apple-touch-icon-precomposed" sizes="120x120" href="images/favicon/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon-precomposed" sizes="76x76" href="images/favicon/apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon-precomposed" sizes="152x152" href="images/favicon/apple-touch-icon-152x152.png">
+	<link rel="icon" type="image/png" href="images/favicon/favicon-196x196.png" sizes="196x196">
+	<link rel="icon" type="image/png" href="images/favicon/favicon-96x96.png" sizes="96x96">
+	<link rel="icon" type="image/png" href="images/favicon/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="images/favicon/favicon-16x16.png" sizes="16x16">
+	<link rel="icon" type="image/png" href="images/favicon/favicon-128.png" sizes="128x128">
+	<meta name="application-name" content="&nbsp;">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="images/favicon/mstile-144x144.png">
+	<meta name="msapplication-square70x70logo" content="images/favicon/mstile-70x70.png">
+	<meta name="msapplication-square150x150logo" content="images/favicon/mstile-150x150.png">
+	<meta name="msapplication-wide310x150logo" content="images/favicon/mstile-310x150.png">
+	<meta name="msapplication-square310x310logo" content="images/favicon/mstile-310x310.png">
+</head>
+<body>
+
+	<div id="cover">
+		<div id="cover-image"></div>
+		<div id="cover-text"></div>
+	</div>
+	<div id="header">
+		<a class="header-button receive" href="#receive"></a>
+		<a class="header-button send" href="#send"></a>
+		<a class="header-button configure" href="#configure"></a>
+	</div>
+	<div id="view">
+		<div id="view-content"></div>
+	</div>
+	<div id="message">
+		<div id="message-inner">
+			<div id="message-content"></div>
+		</div>
+	</div>
+
+	<noscript>
+		<!-- This language string is hard-coded because handlebars requires JavaScript. -->
+		<p class="page-description">This app requires JavaScript to function.</p>
+	</noscript>
+
+	<script type="text/html" id="template-configure">
+		<h2 class="page-title">{{i18n "configure.title"}}</h2>
+		<div class="form">
+			<form>
+		{{#each inputs}}
+			{{#if visible}}
+				{{> formFieldRow .}}
+			{{/if}}
+		{{/each}}
+			</form>
+	</script>
+
+	<script type="text/html" id="template-receive">
+		<h2 class="page-title">{{i18n "receive.title"}}</h2>
+		<div class="address">
+			<div class="address-qrcode"></div>
+			<div class="address-text"></div>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-send">
+		<div class="utxo">
+		{{#if utxo}}
+		<table>
+			<thead>
+				<tr>
+					<th>tx</th>
+					<th>amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each utxo}}
+				<tr>
+					<td><a href="{{url}}">{{txid}}</a></td>
+					<td>{{amount}}</td>
+				</tr>
+				{{/each}}
+			</tbody>
+		</table>
+		{{else}}
+		<p class="utxo-empty">{{i18n "send.no-utxo"}}</p>
+		{{/if}}
+		<a class="button refresh-utxo"></a>
+		</div>
+		<div class="form">
+			<form>
+		{{#each inputs}}
+			{{#if visible}}
+				{{> formFieldRow .}}
+			{{/if}}
+		{{/each}}
+			</form>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button payment disabled"></a>
+			<a class="secondary-control button double-spend disabled"></a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-form-field">
+		{{#switch type}}
+			{{#case "select" break=true}}
+			<select class="form-input" id="{{id}}" name="{{name}}">
+				{{#each options}}
+				<option{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}}{{#if key}} value="{{key}}"{{/if}}>{{label}}</option>
+				{{/each}}
+			</select>
+			{{/case}}
+			{{#case "checkbox" break=true}}
+			<label class="form-switch" for="{{id}}">
+				<input type="checkbox" name="{{name}}" id="{{id}}"{{#if value}} checked{{/if}} value="1">
+				<span class="form-switch-slider"></span>
+			</label>
+			{{/case}}
+			{{#case "number" break=true}}
+			<input class="form-input" type="number" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#case "integer" break=true}}
+			<input class="form-input" type="number" min="0" step="1" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#case "password" break=true}}
+			<input class="form-input" type="password" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#default}}
+			<input class="form-input" type="text" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/default}}
+		{{/switch}}
+			<div class="form-error"></div>
+		{{#if actions}}
+			<div class="form-field-actions">
+			{{#each actions}}
+				<a class="form-field-action button {{name}}" data-action="{{name}}" data-input="{{../name}}"></a>
+			{{/each}}
+			</div>
+		{{/if}}
+	</script>
+
+	<script type="text/html" id="template-form-field-row">
+		<div class="form-row form-row-type--{{type}}">
+			<div class="form-label">
+				<label for="{{id}}">{{label}}</label>
+			</div>{{#if description}}
+			<div class="form-description">{{description}}</div>{{/if}}
+			<div class="form-field">
+				{{> formField .}}
+			</div>
+		</div>
+	</script>
+
+	<script type="text/json" id="json-info"><%= JSON.stringify(info) %></script>
+	<script src="cordova.js"></script>
+	<script src="js/all.js"></script>
+
+</body>
+</html>

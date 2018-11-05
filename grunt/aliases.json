@@ -1,0 +1,12 @@
+{
+	"default": [
+		"build",
+		"connect:static"
+	],
+	"build": [
+		"newer:cssmin",
+		"newer:browserify",
+		"newer:concat",
+		"copy"
+	]
+}

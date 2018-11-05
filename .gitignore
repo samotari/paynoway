@@ -1,4 +1,5 @@
 .gradle/
+build/
 node_modules/
 hooks/
 platforms/

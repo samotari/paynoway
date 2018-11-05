@@ -1,0 +1,44 @@
+.view.receive .page-title {
+	position: absolute;
+	left: 0;
+	top: 3rem;
+	width: 100%;
+	text-align: center;
+	margin: 0;
+}
+.view.receive .address-instructions,
+.view.receive .address-text {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	height: 4rem;
+	line-height: 4rem;
+	text-align: center;
+	margin: 0;
+}
+.view.receive .address-instructions {
+	top: 0;
+	padding-bottom: 2rem;
+}
+.view.receive .address-text {
+	bottom: 0;
+	font-family: 'Courier';
+	font-size: 1rem;
+	line-height: 1.8rem;
+	letter-spacing: .15rem;
+	word-break: break-all;
+	padding-top: 2rem;
+}
+.view.receive .address {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	padding-top: 6rem;
+	padding-bottom: 6rem;
+}
+.view.receive .address-qrcode {
+	display: block;
+	width: 100%;
+	height: 100%;
+}

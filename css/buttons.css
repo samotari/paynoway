@@ -1,0 +1,40 @@
+.button {
+	position: relative;
+	display: inline;
+	height: auto;
+	cursor: pointer;
+	color: #111;
+	font-size: .9rem;
+	font-weight: 400;
+	background-color: #f7f7f7;
+	border: none;
+	box-shadow: 0 .3rem .3rem 0 rgba(0,0,0,.14),
+				0 .45rem .15rem -.3rem rgba(0,0,0,.2),
+				0 .15rem .75rem 0 rgba(0,0,0,.12);
+	box-sizing: border-box;
+	outline: none;
+	user-select: none;
+	-webkit-user-select: none;
+	padding: .5rem;
+}
+.button.touchstart {
+	text-decoration: none;
+	background-color: #efefef;
+	box-shadow: 0 .15rem .15rem 0 rgba(0,0,0,.14),
+				0 .225rem .075rem -.15rem rgba(0,0,0,.2),
+				0 .075rem .375rem 0 rgba(0,0,0,.12);
+	transform: translate(.075rem,.15rem);
+}
+.button.disabled {
+	cursor: not-allowed;
+	pointer-events: none;
+	opacity: .5;
+}
+.button.disabled.touchstart {
+	color: #111;
+	background-color: #f7f7f7;
+	box-shadow: 0 .3rem .3rem 0 rgba(0,0,0,.14),
+				0 .45rem .15rem -.3rem rgba(0,0,0,.2),
+				0 .15rem .75rem 0 rgba(0,0,0,.12);
+	transform: none;
+}
