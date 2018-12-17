@@ -21,7 +21,6 @@ A mobile app for testing payment systems against double-spend attacks.
 ## Requirements
 
 * [nodejs](https://nodejs.org/) - For Linux and Mac install node via [nvm](https://github.com/creationix/nvm). For Windows, use an [installer](https://nodejs.org/en/download/) from the nodejs website.
-* [grunt-cli](https://gruntjs.com/getting-started) - `npm install -g grunt-cli`
 * [electrum](https://electrum.org/) - Used for the following:
   * Getting unspent transaction outputs
   * Getting the current network fee rate estimate
@@ -74,16 +73,16 @@ Follow the prompts, entering the same RPC details as you did earlier.
 Leave the electrum proxy running.
 
 
-### Build And Run Web App
+### Build and Run Web App
 
-To run the app in a browser:
+To build and then run the app in a browser:
 ```bash
-grunt
+npm build && npm run browser
 ```
 Open your browser and navigate to [localhost:3000](http://localhost:3000).
 
 
-### Build And Run Android App
+### Build and Run Android App
 
 Add the Android platform to the project (via cordova):
 ```bash
@@ -100,9 +99,9 @@ Once developer mode and USB debugging are enabled, connect the device to your co
 adb devices
 ```
 
-Once authorized, you can install and run the app from your computer onto the device:
+Once authorized, you can build then install and run the app from your computer onto the device:
 ```bash
-npm run android-device
+npm build && npm run android-device
 ```
 
 ## License
