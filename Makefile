@@ -31,54 +31,37 @@ SCRIPTS=scripts
 # (such as "all" below) isn't a file but instead a just label. Declaring
 # it as phony ensures that it always run, even if a file by the same name
 # exists.
-.PHONY: browserify clean concat copy cssmin
+.PHONY: all clean fonts images
 
-all: browserify cssmin concat copy
-
-browserify:
-	mkdir -p $(BUILD)/js
-	# bitcoinjs-lib:
-	$(BIN)/browserify \
-		--entry node_modules/bitcoinjs-lib/src/index.js \
-		--standalone bitcoin \
-		--transform [ babelify --presets [ @babel/preset-env ] ] \
-		--outfile $(BUILD)/js/bitcoin.js
-	# qrcode:
-	$(BIN)/browserify \
-		--entry node_modules/qrcode/lib/browser.js \
-		--standalone QRCode \
-		--outfile $(BUILD)/js/qrcode.js
-	# querystring:
-	$(BIN)/browserify \
-		--entry exports/querystring.js \
-		--standalone querystring \
-		--outfile $(BUILD)/js/querystring.js
+all: config.xml $(PUBLIC)/index.html $(PUBLIC)/css/all.min.css $(PUBLIC)/js/all.js fonts images
 
 clean:
-	# Delete build and final output files:
+	# Delete build and output files:
 	rm -rf $(BUILD) $(PUBLIC)
 
-copy:
-	# Images:
+fonts:
+	mkdir -p $(PUBLIC)/fonts/OpenSans
+	cp -r node_modules/open-sans-fontface/fonts/**/* $(PUBLIC)/fonts/OpenSans/
+
+images:
 	mkdir -p $(PUBLIC)/images/
 	cp -r $(IMAGES)/* $(PUBLIC)/images/
 	cp -r $(IMAGES)/favicon/* $(PUBLIC)/images/favicon/
 	cp -r $(IMAGES)/favicon/favicon.ico $(PUBLIC)/favicon.ico
-	# Fonts:
-	mkdir -p $(PUBLIC)/fonts/OpenSans
-	cp -r node_modules/open-sans-fontface/fonts/**/* $(PUBLIC)/fonts/OpenSans/
-	# CSS:
-	mkdir -p $(PUBLIC)/css/
-	cp $(BUILD)/all.min.css $(PUBLIC)/css/all.min.css
-	# JS:
-	mkdir -p $(PUBLIC)/js/
-	cp $(BUILD)/all.js $(PUBLIC)/js/all.js
+
+config.xml: config-template.xml
 	node $(SCRIPTS)/copy-config-xml.js
+
+$(PUBLIC)/index.html: index.html
+	mkdir -p $(PUBLIC)/
 	node $(SCRIPTS)/copy-index-html.js
 
-concat:
-	mkdir -p $(PUBLIC)/
-	# CSS:
+$(BUILD)/all.min.css: $(CSS)/*.css $(CSS)/views/*.css
+	# cssmin:
+	mkdir -p $(BUILD)/css
+	$(BIN)/postcss $(CSS)/*.css --dir $(BUILD)/css --ext min.css
+	$(BIN)/postcss $(CSS)/views/*.css --dir $(BUILD)/css/views --ext min.css
+	# concat:
 	cat $(BUILD)/css/fonts.min.css \
 		$(BUILD)/css/reset.min.css \
 		$(BUILD)/css/base.min.css \
@@ -90,7 +73,37 @@ concat:
 		$(BUILD)/css/views/receive.min.css \
 		$(BUILD)/css/views/send.min.css \
 		>> $(BUILD)/all.min.css
-	# JS:
+
+$(PUBLIC)/css/all.min.css: $(BUILD)/all.min.css
+	mkdir -p $(PUBLIC)/css/
+	cp $(BUILD)/all.min.css $(PUBLIC)/css/all.min.css
+
+# bitcoinjs-lib:
+$(BUILD)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
+	mkdir -p $(BUILD)/js
+	$(BIN)/browserify \
+		--entry node_modules/bitcoinjs-lib/src/index.js \
+		--standalone bitcoin \
+		--transform [ babelify --presets [ @babel/preset-env ] ] \
+		--outfile $(BUILD)/js/bitcoin.js
+
+# qrcode:
+$(BUILD)/js/qrcode.js: node_modules/qrcode/lib/browser.js
+	mkdir -p $(BUILD)/js
+	$(BIN)/browserify \
+		--entry node_modules/qrcode/lib/browser.js \
+		--standalone QRCode \
+		--outfile $(BUILD)/js/qrcode.js
+
+# querystring:
+$(BUILD)/js/querystring.js: exports/querystring.js
+	mkdir -p $(BUILD)/js
+	$(BIN)/browserify \
+		--entry exports/querystring.js \
+		--standalone querystring \
+		--outfile $(BUILD)/js/querystring.js
+
+$(BUILD)/dependencies.js: node_modules/core-js/client/shim.js node_modules/async/dist/async.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.js node_modules/underscore/underscore.js node_modules/backbone/backbone.js node_modules/backbone.localstorage/build/backbone.localStorage.js node_modules/handlebars/dist/handlebars.js node_modules/moment/min/moment-with-locales.js $(BUILD)/js/bitcoin.js $(BUILD)/js/qrcode.js $(BUILD)/js/querystring.js
 	cat \
 		node_modules/core-js/client/shim.js \
 		node_modules/async/dist/async.js \
@@ -104,6 +117,11 @@ concat:
 		$(BUILD)/js/qrcode.js \
 		$(BUILD)/js/bitcoin.js \
 		$(BUILD)/js/querystring.js \
+		>> $(BUILD)/dependencies.js
+
+$(BUILD)/all.js: $(BUILD)/dependencies.js $(JS)/*.js $(JS)/**/*.js
+	cat \
+		$(BUILD)/dependencies.js \
 		$(JS)/jquery.extend/jquery.serializeJSON.js \
 		$(JS)/handlebars.extend/i18n.js \
 		$(JS)/handlebars.extend/numbers.js \
@@ -137,7 +155,6 @@ concat:
 		$(JS)/init.js \
 		>> $(BUILD)/all.js
 
-cssmin:
-	mkdir -p $(BUILD)/css
-	$(BIN)/postcss $(CSS)/*.css --dir $(BUILD)/css --ext min.css
-	$(BIN)/postcss $(CSS)/views/*.css --dir $(BUILD)/css/views --ext min.css
+$(PUBLIC)/js/all.js: $(BUILD)/all.js
+	mkdir -p $(PUBLIC)/js/
+	cp $(BUILD)/all.js $(PUBLIC)/js/all.js
