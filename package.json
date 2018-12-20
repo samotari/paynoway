@@ -7,7 +7,7 @@
   "scripts": {
     "android-device": "cordova run android --device",
     "browser": "npm run server",
-    "build": "make clean all",
+    "build": "make all",
     "electrum-proxy": "node electrum-proxy-server.js",
     "server": "./node_modules/.bin/http-server ./www -p 3000 -a localhost",
     "test": "echo \"Error: no test specified\" && exit 1"
