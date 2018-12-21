@@ -11,10 +11,15 @@
 ## Variables
 BIN=node_modules/.bin
 BUILD=build
+BUILD_ALL_CSS=$(BUILD)/all.min.css
+BUILD_DEPENDENCIES_JS=$(BUILD)/dependencies.min.js
+BUILD_ALL_JS=$(BUILD)/all.min.js
 CSS=css
 IMAGES=images
 JS=js
 PUBLIC=www
+PUBLIC_ALL_CSS=$(PUBLIC)/css/all.min.css
+PUBLIC_ALL_JS=$(PUBLIC)/js/all.min.js
 SCRIPTS=scripts
 
 # Targets
@@ -33,7 +38,7 @@ SCRIPTS=scripts
 # exists.
 .PHONY: all clean fonts images
 
-all: config.xml $(PUBLIC)/index.html $(PUBLIC)/css/all.min.css $(PUBLIC)/js/all.js fonts images
+all: config.xml $(PUBLIC)/index.html $(PUBLIC_ALL_CSS) $(PUBLIC_ALL_JS) fonts images
 
 clean:
 	# Delete build and output files:
@@ -56,7 +61,7 @@ $(PUBLIC)/index.html: index.html
 	mkdir -p $(PUBLIC)/
 	node $(SCRIPTS)/copy-index-html.js
 
-$(BUILD)/all.min.css: $(CSS)/*.css $(CSS)/views/*.css
+$(BUILD_ALL_CSS): $(CSS)/*.css $(CSS)/views/*.css
 	# cssmin:
 	mkdir -p $(BUILD)/css
 	$(BIN)/postcss $(CSS)/*.css --dir $(BUILD)/css --ext min.css
@@ -69,16 +74,13 @@ $(BUILD)/all.min.css: $(CSS)/*.css $(CSS)/views/*.css
 		$(BUILD)/css/forms.min.css \
 		$(BUILD)/css/header.min.css \
 		$(BUILD)/css/secondary-controls.min.css \
-		$(BUILD)/css/views/configure.min.css \
-		$(BUILD)/css/views/receive.min.css \
-		$(BUILD)/css/views/send.min.css \
-		>> $(BUILD)/all.min.css
+		> $(BUILD_ALL_CSS)
+	find $(BUILD)/css/views/ -name '*.css' -exec cat {} \; -exec echo "" \; >> $(BUILD_ALL_CSS)
 
-$(PUBLIC)/css/all.min.css: $(BUILD)/all.min.css
+$(PUBLIC_ALL_CSS): $(BUILD_ALL_CSS)
 	mkdir -p $(PUBLIC)/css/
-	cp $(BUILD)/all.min.css $(PUBLIC)/css/all.min.css
+	cp $(BUILD_ALL_CSS) $(PUBLIC_ALL_CSS)
 
-# bitcoinjs-lib:
 $(BUILD)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
 	mkdir -p $(BUILD)/js
 	$(BIN)/browserify \
@@ -87,7 +89,9 @@ $(BUILD)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
 		--transform [ babelify --presets [ @babel/preset-env ] ] \
 		--outfile $(BUILD)/js/bitcoin.js
 
-# qrcode:
+$(BUILD)/js/bitcoin.min.js: $(BUILD)/js/bitcoin.js
+	$(BIN)/uglifyjs $(BUILD)/js/bitcoin.js --mangle reserved=['BigInteger','ECPair','Point'] -o $(BUILD)/js/bitcoin.min.js
+
 $(BUILD)/js/qrcode.js: node_modules/qrcode/lib/browser.js
 	mkdir -p $(BUILD)/js
 	$(BIN)/browserify \
@@ -95,7 +99,9 @@ $(BUILD)/js/qrcode.js: node_modules/qrcode/lib/browser.js
 		--standalone QRCode \
 		--outfile $(BUILD)/js/qrcode.js
 
-# querystring:
+$(BUILD)/js/qrcode.min.js: $(BUILD)/js/qrcode.js
+	$(BIN)/uglifyjs $(BUILD)/js/qrcode.js -o $(BUILD)/js/qrcode.min.js
+
 $(BUILD)/js/querystring.js: exports/querystring.js
 	mkdir -p $(BUILD)/js
 	$(BIN)/browserify \
@@ -103,58 +109,33 @@ $(BUILD)/js/querystring.js: exports/querystring.js
 		--standalone querystring \
 		--outfile $(BUILD)/js/querystring.js
 
-$(BUILD)/dependencies.js: node_modules/core-js/client/shim.js node_modules/async/dist/async.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.js node_modules/underscore/underscore.js node_modules/backbone/backbone.js node_modules/backbone.localstorage/build/backbone.localStorage.js node_modules/handlebars/dist/handlebars.js node_modules/moment/min/moment-with-locales.js $(BUILD)/js/bitcoin.js $(BUILD)/js/qrcode.js $(BUILD)/js/querystring.js
-	cat \
-		node_modules/core-js/client/shim.js \
-		node_modules/async/dist/async.js \
-		node_modules/bignumber.js/bignumber.min.js \
-		node_modules/jquery/dist/jquery.js \
-		node_modules/underscore/underscore.js \
-		node_modules/backbone/backbone.js \
-		node_modules/backbone.localstorage/build/backbone.localStorage.js \
-		node_modules/handlebars/dist/handlebars.js \
-		node_modules/moment/min/moment-with-locales.js \
-		$(BUILD)/js/qrcode.js \
-		$(BUILD)/js/bitcoin.js \
-		$(BUILD)/js/querystring.js \
-		>> $(BUILD)/dependencies.js
+$(BUILD)/js/querystring.min.js: $(BUILD)/js/querystring.js
+	$(BIN)/uglifyjs $(BUILD)/js/querystring.js -o $(BUILD)/js/querystring.min.js
 
-$(BUILD)/all.js: $(BUILD)/dependencies.js $(JS)/*.js $(JS)/**/*.js
-	cat \
-		$(BUILD)/dependencies.js \
-		$(JS)/jquery.extend/jquery.serializeJSON.js \
-		$(JS)/handlebars.extend/i18n.js \
-		$(JS)/handlebars.extend/numbers.js \
-		$(JS)/handlebars.extend/switch.js \
-		$(JS)/handlebars.extend/time.js \
-		$(JS)/app.js \
-		$(JS)/queues.js \
-		$(JS)/util.js \
-		$(JS)/device.js \
-		$(JS)/lang/en.js \
-		$(JS)/abstracts/base-collection.js \
-		$(JS)/abstracts/base-model.js \
-		$(JS)/abstracts/base-view.js \
-		$(JS)/abstracts/rpc-client.js \
-		$(JS)/services/electrum.js \
-		$(JS)/models/setting.js \
-		$(JS)/collections/settings.js \
-		$(JS)/views/utility/form.js \
-		$(JS)/views/utility/list-item.js \
-		$(JS)/views/utility/list.js \
-		$(JS)/views/configure.js \
-		$(JS)/views/main.js \
-		$(JS)/views/receive.js \
-		$(JS)/views/send.js \
-		$(JS)/config.js \
-		$(JS)/cache.js \
-		$(JS)/settings.js \
-		$(JS)/wallet.js \
-		$(JS)/i18n.js \
-		$(JS)/router.js \
-		$(JS)/init.js \
-		>> $(BUILD)/all.js
+DEPS_JS_FILES=node_modules/core-js/client/shim.min.js node_modules/async/dist/async.min.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.min.js node_modules/underscore/underscore-min.js node_modules/backbone/backbone-min.js node_modules/backbone.localstorage/build/backbone.localStorage.min.js node_modules/handlebars/dist/handlebars.min.js node_modules/moment/min/moment-with-locales.js $(BUILD)/js/bitcoin.min.js $(BUILD)/js/qrcode.min.js $(BUILD)/js/querystring.min.js
+$(BUILD_DEPENDENCIES_JS): $(DEPS_JS_FILES)
+	for file in $(DEPS_JS_FILES); do \
+		echo "" >> $(BUILD_DEPENDENCIES_JS); \
+		cat $$file >> $(BUILD_DEPENDENCIES_JS); \
+	done
 
-$(PUBLIC)/js/all.js: $(BUILD)/all.js
+APP_JS_FILES=$(JS)/jquery.extend/*.js $(JS)/handlebars.extend/*.js $(JS)/app.js $(JS)/queues.js $(JS)/util.js $(JS)/device.js $(JS)/lang/*.js $(JS)/abstracts/*.js $(JS)/services/*.js $(JS)/models/*.js $(JS)/collections/*.js $(JS)/views/utility/*.js $(JS)/views/*.js $(JS)/config.js $(JS)/cache.js $(JS)/settings.js $(JS)/wallet.js $(JS)/i18n.js $(JS)/router.js $(JS)/init.js
+APP_MIN_JS_FILES=$(addprefix $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
+$(APP_MIN_JS_FILES): $(APP_JS_FILES)
+	for file in $(APP_JS_FILES); do \
+		dirPath="$(BUILD)/$$(dirname "$$file")"; \
+		mkdir -p $$dirPath; \
+		outputFile="$$(basename "$$file" .js).min.js"; \
+		$(BIN)/uglifyjs -o $$dirPath/$$outputFile $$file; \
+	done
+
+JS_FILES=$(BUILD_DEPENDENCIES_JS) $(APP_MIN_JS_FILES)
+$(BUILD_ALL_JS): $(JS_FILES)
+	for file in $(JS_FILES); do \
+		echo "" >> $(BUILD_ALL_JS); \
+		cat $$file >> $(BUILD_ALL_JS); \
+	done
+
+$(PUBLIC_ALL_JS): $(BUILD_ALL_JS)
 	mkdir -p $(PUBLIC)/js/
-	cp $(BUILD)/all.js $(PUBLIC)/js/all.js
+	cp $(BUILD_ALL_JS) $(PUBLIC_ALL_JS)

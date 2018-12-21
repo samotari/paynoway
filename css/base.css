@@ -113,7 +113,7 @@ html.loaded #view {
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: 14rem 21rem;
-	background-image: url('../images/app-loading.svg');
+	background-image: url('../images/favicon.svg');
 	margin: 0 auto;
 }
 #cover-text {
