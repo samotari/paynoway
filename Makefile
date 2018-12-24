@@ -39,7 +39,12 @@ SCRIPTS=scripts
 # exists.
 .PHONY: all clean fonts images
 
-all: config.xml $(PUBLIC)/index.html $(PUBLIC_ALL_CSS) $(PUBLIC_ALL_JS) fonts images
+all: config.xml\
+$(PUBLIC)/index.html\
+$(PUBLIC_ALL_CSS)\
+$(PUBLIC_ALL_JS)\
+fonts\
+images
 
 clean:
 	# Delete build and output files:
@@ -70,7 +75,14 @@ $(BUILD)/css/views/*.min.css: $(CSS)/views/*.css
 	mkdir -p $(BUILD)/css/views
 	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css/views
 
-APP_CSS_FILES=$(CSS)/fonts.css $(CSS)/reset.css $(CSS)/base.css $(CSS)/buttons.css $(CSS)/forms.css $(CSS)/header.css $(CSS)/secondary-controls.css $(CSS)/views/*.css
+APP_CSS_FILES=$(CSS)/fonts.css\
+$(CSS)/reset.css\
+$(CSS)/base.css\
+$(CSS)/buttons.css\
+$(CSS)/forms.css\
+$(CSS)/header.css\
+$(CSS)/secondary-controls.css\
+$(CSS)/views/*.css
 APP_MIN_CSS_FILES=$(addprefix $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
 $(BUILD_ALL_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/views/*.min.css
 	for file in $(APP_MIN_CSS_FILES); do \
@@ -107,14 +119,27 @@ $(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
 $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
 	$(BIN)/uglifyjs $^ -o $@
 
-DEPS_JS_FILES=node_modules/core-js/client/shim.min.js node_modules/async/dist/async.min.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.min.js node_modules/underscore/underscore-min.js node_modules/backbone/backbone-min.js node_modules/backbone.localstorage/build/backbone.localStorage.min.js node_modules/handlebars/dist/handlebars.min.js node_modules/moment/min/moment-with-locales.min.js $(BUILD_DEPS)/js/bitcoin.min.js $(BUILD_DEPS)/js/QRCode.min.js $(BUILD_DEPS)/js/querystring.min.js
+DEPS_JS_FILES=node_modules/core-js/client/shim.min.js\
+node_modules/async/dist/async.min.js\
+node_modules/bignumber.js/bignumber.min.js\
+node_modules/jquery/dist/jquery.min.js\
+node_modules/underscore/underscore-min.js\
+node_modules/backbone/backbone-min.js\
+node_modules/backbone.localstorage/build/backbone.localStorage.min.js\
+node_modules/handlebars/dist/handlebars.min.js\
+node_modules/moment/min/moment-with-locales.min.js\
+$(BUILD_DEPS)/js/bitcoin.min.js\
+$(BUILD_DEPS)/js/QRCode.min.js\
+$(BUILD_DEPS)/js/querystring.min.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	for file in $(DEPS_JS_FILES); do \
 		cat $$file >> $(BUILD_DEPS_JS); \
 		echo "" >> $(BUILD_DEPS_JS); \
 	done
 
-$(BUILD)/js/**/*.min.js: $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
+$(BUILD)/js/**/*.min.js: $(JS)/*.js\
+$(JS)/**/*.js\
+$(JS)/**/**/*.js
 	for input in $^; do \
 		dir=$$(dirname $(BUILD)/$$input); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
@@ -122,7 +147,26 @@ $(BUILD)/js/**/*.min.js: $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
 		$(BIN)/uglifyjs -o $$output $$input; \
 	done
 
-APP_JS_FILES=$(JS)/jquery.extend/*.js $(JS)/handlebars.extend/*.js $(JS)/app.js $(JS)/queues.js $(JS)/util.js $(JS)/device.js $(JS)/lang/*.js $(JS)/abstracts/*.js $(JS)/services/*.js $(JS)/models/*.js $(JS)/collections/*.js $(JS)/views/utility/*.js $(JS)/views/*.js $(JS)/config.js $(JS)/cache.js $(JS)/settings.js $(JS)/wallet.js $(JS)/i18n.js $(JS)/router.js $(JS)/init.js
+APP_JS_FILES=$(JS)/jquery.extend/*.js\
+$(JS)/handlebars.extend/*.js\
+$(JS)/app.js\
+$(JS)/queues.js\
+$(JS)/util.js\
+$(JS)/device.js\
+$(JS)/lang/*.js\
+$(JS)/abstracts/*.js\
+$(JS)/services/*.js\
+$(JS)/models/*.js\
+$(JS)/collections/*.js\
+$(JS)/views/utility/*.js\
+$(JS)/views/*.js\
+$(JS)/config.js\
+$(JS)/cache.js\
+$(JS)/settings.js\
+$(JS)/wallet.js\
+$(JS)/i18n.js\
+$(JS)/router.js\
+$(JS)/init.js
 APP_MIN_JS_FILES=$(addprefix $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
 JS_FILES=$(BUILD_DEPS_JS) $(APP_MIN_JS_FILES)
 $(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(BUILD)/js/**/*.min.js
