@@ -11,8 +11,9 @@
 ## Variables
 BIN=node_modules/.bin
 BUILD=build
+BUILD_DEPS=$(BUILD)/deps
+BUILD_DEPS_JS=$(BUILD)/dependencies.min.js
 BUILD_ALL_CSS=$(BUILD)/all.min.css
-BUILD_DEPENDENCIES_JS=$(BUILD)/dependencies.min.js
 BUILD_ALL_JS=$(BUILD)/all.min.js
 CSS=css
 IMAGES=images
@@ -61,19 +62,18 @@ $(PUBLIC)/index.html: index.html
 	mkdir -p $(PUBLIC)/
 	node $(SCRIPTS)/copy-index-html.js
 
+$(BUILD)/css/*.min.css: $(CSS)/*.css
+	mkdir -p $(BUILD)/css
+	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css
+
+$(BUILD)/css/views/*.min.css: $(CSS)/views/*.css
+	mkdir -p $(BUILD)/css/views
+	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css/views
+
 APP_CSS_FILES=$(CSS)/fonts.css $(CSS)/reset.css $(CSS)/base.css $(CSS)/buttons.css $(CSS)/forms.css $(CSS)/header.css $(CSS)/secondary-controls.css $(CSS)/views/*.css
 APP_MIN_CSS_FILES=$(addprefix $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
-$(APP_MIN_CSS_FILES): $(APP_CSS_FILES)
-	for file in $(APP_CSS_FILES); do \
-		dirPath="$(BUILD)/$$(dirname "$$file")"; \
-		mkdir -p $$dirPath; \
-		outputFile="$$(basename "$$file" .css).min.css"; \
-		$(BIN)/postcss $$file -o $$dirPath/$$outputFile; \
-	done
-
-CSS_FILES=$(APP_MIN_CSS_FILES)
-$(BUILD_ALL_CSS): $(CSS_FILES)
-	for file in $(CSS_FILES); do \
+$(BUILD_ALL_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/views/*.min.css
+	for file in $(APP_MIN_CSS_FILES); do \
 		cat $$file >> $(BUILD_ALL_CSS); \
 		echo "" >> $(BUILD_ALL_CSS); \
 	done
@@ -82,56 +82,50 @@ $(PUBLIC_ALL_CSS): $(BUILD_ALL_CSS)
 	mkdir -p $(PUBLIC)/css/
 	cp $(BUILD_ALL_CSS) $(PUBLIC_ALL_CSS)
 
-$(BUILD)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
-	mkdir -p $(BUILD)/js
+$(BUILD_DEPS)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
+	mkdir -p $(BUILD_DEPS)/js
 	$(BIN)/browserify \
 		--entry node_modules/bitcoinjs-lib/src/index.js \
 		--standalone bitcoin \
 		--transform [ babelify --presets [ @babel/preset-env ] ] \
-		--outfile $(BUILD)/js/bitcoin.js
+		--outfile $(BUILD_DEPS)/js/bitcoin.js
 
-$(BUILD)/js/bitcoin.min.js: $(BUILD)/js/bitcoin.js
-	$(BIN)/uglifyjs $(BUILD)/js/bitcoin.js --mangle reserved=['BigInteger','ECPair','Point'] -o $(BUILD)/js/bitcoin.min.js
+$(BUILD_DEPS)/js/bitcoin.min.js: $(BUILD_DEPS)/js/bitcoin.js
+	$(BIN)/uglifyjs $(BUILD_DEPS)/js/bitcoin.js --mangle reserved=['BigInteger','ECPair','Point'] -o $(BUILD_DEPS)/js/bitcoin.min.js
 
-$(BUILD)/js/qrcode.js: node_modules/qrcode/lib/browser.js
-	mkdir -p $(BUILD)/js
-	$(BIN)/browserify \
-		--entry node_modules/qrcode/lib/browser.js \
-		--standalone QRCode \
-		--outfile $(BUILD)/js/qrcode.js
+$(BUILD_DEPS)/js/QRCode.js: node_modules/qrcode/lib/browser.js
+	mkdir -p $(BUILD_DEPS)/js
+	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
-$(BUILD)/js/qrcode.min.js: $(BUILD)/js/qrcode.js
-	$(BIN)/uglifyjs $(BUILD)/js/qrcode.js -o $(BUILD)/js/qrcode.min.js
+$(BUILD_DEPS)/js/querystring.js: exports/querystring.js
+	mkdir -p $(BUILD_DEPS)/js
+	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
-$(BUILD)/js/querystring.js: exports/querystring.js
-	mkdir -p $(BUILD)/js
-	$(BIN)/browserify \
-		--entry exports/querystring.js \
-		--standalone querystring \
-		--outfile $(BUILD)/js/querystring.js
+$(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
+	$(BIN)/uglifyjs $^ -o $@
 
-$(BUILD)/js/querystring.min.js: $(BUILD)/js/querystring.js
-	$(BIN)/uglifyjs $(BUILD)/js/querystring.js -o $(BUILD)/js/querystring.min.js
+$(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
+	$(BIN)/uglifyjs $^ -o $@
 
-DEPS_JS_FILES=node_modules/core-js/client/shim.min.js node_modules/async/dist/async.min.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.min.js node_modules/underscore/underscore-min.js node_modules/backbone/backbone-min.js node_modules/backbone.localstorage/build/backbone.localStorage.min.js node_modules/handlebars/dist/handlebars.min.js node_modules/moment/min/moment-with-locales.min.js $(BUILD)/js/bitcoin.min.js $(BUILD)/js/qrcode.min.js $(BUILD)/js/querystring.min.js
-$(BUILD_DEPENDENCIES_JS): $(DEPS_JS_FILES)
+DEPS_JS_FILES=node_modules/core-js/client/shim.min.js node_modules/async/dist/async.min.js node_modules/bignumber.js/bignumber.min.js node_modules/jquery/dist/jquery.min.js node_modules/underscore/underscore-min.js node_modules/backbone/backbone-min.js node_modules/backbone.localstorage/build/backbone.localStorage.min.js node_modules/handlebars/dist/handlebars.min.js node_modules/moment/min/moment-with-locales.min.js $(BUILD_DEPS)/js/bitcoin.min.js $(BUILD_DEPS)/js/QRCode.min.js $(BUILD_DEPS)/js/querystring.min.js
+$(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	for file in $(DEPS_JS_FILES); do \
-		cat $$file >> $(BUILD_DEPENDENCIES_JS); \
-		echo "" >> $(BUILD_DEPENDENCIES_JS); \
+		cat $$file >> $(BUILD_DEPS_JS); \
+		echo "" >> $(BUILD_DEPS_JS); \
+	done
+
+$(BUILD)/js/**/*.min.js: $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
+	for input in $^; do \
+		dir=$$(dirname $(BUILD)/$$input); \
+		output="$$dir/$$(basename $$input .js).min.js"; \
+		mkdir -p $$dir; \
+		$(BIN)/uglifyjs -o $$output $$input; \
 	done
 
 APP_JS_FILES=$(JS)/jquery.extend/*.js $(JS)/handlebars.extend/*.js $(JS)/app.js $(JS)/queues.js $(JS)/util.js $(JS)/device.js $(JS)/lang/*.js $(JS)/abstracts/*.js $(JS)/services/*.js $(JS)/models/*.js $(JS)/collections/*.js $(JS)/views/utility/*.js $(JS)/views/*.js $(JS)/config.js $(JS)/cache.js $(JS)/settings.js $(JS)/wallet.js $(JS)/i18n.js $(JS)/router.js $(JS)/init.js
 APP_MIN_JS_FILES=$(addprefix $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
-$(APP_MIN_JS_FILES): $(APP_JS_FILES)
-	for file in $(APP_JS_FILES); do \
-		dirPath="$(BUILD)/$$(dirname "$$file")"; \
-		mkdir -p $$dirPath; \
-		outputFile="$$(basename "$$file" .js).min.js"; \
-		$(BIN)/uglifyjs -o $$dirPath/$$outputFile $$file; \
-	done
-
-JS_FILES=$(BUILD_DEPENDENCIES_JS) $(APP_MIN_JS_FILES)
-$(BUILD_ALL_JS): $(JS_FILES)
+JS_FILES=$(BUILD_DEPS_JS) $(APP_MIN_JS_FILES)
+$(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(BUILD)/js/**/*.min.js
 	for file in $(JS_FILES); do \
 		echo "" >> $(BUILD_ALL_JS); \
 		cat $$file >> $(BUILD_ALL_JS); \
