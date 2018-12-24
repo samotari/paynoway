@@ -21,7 +21,7 @@ A mobile app for testing payment systems against double-spend attacks.
 
 ## Requirements
 
-* [nodejs](https://nodejs.org/) - For Linux and Mac install node via [nvm](https://github.com/creationix/nvm). For Windows, use an [installer](https://nodejs.org/en/download/) from the nodejs website.
+* [nodejs](https://nodejs.org/) - For Linux and Mac install node via [nvm](https://github.com/creationix/nvm).
 * [make](https://www.gnu.org/software/make/)
 * [electrum](https://electrum.org/) - Used for the following:
   * Getting unspent transaction outputs
@@ -39,7 +39,7 @@ A mobile app for testing payment systems against double-spend attacks.
 
 Before continuing, be sure you already have the project's [requirements](#requirements).
 
-### Get the Code
+### Project Files
 
 Download the project files via git:
 ```bash
@@ -51,7 +51,6 @@ Install the project's dependencies:
 cd pay-no-way
 npm install
 ```
-The next steps depend upon whether you wish to run the app [in your browser](#for-web) or [on an Android device](#for-android).
 
 
 ### Run Electrum Proxy
