@@ -22,6 +22,7 @@ A mobile app for testing payment systems against double-spend attacks.
 ## Requirements
 
 * [nodejs](https://nodejs.org/) - For Linux and Mac install node via [nvm](https://github.com/creationix/nvm). For Windows, use an [installer](https://nodejs.org/en/download/) from the nodejs website.
+* [make](https://www.gnu.org/software/make/)
 * [electrum](https://electrum.org/) - Used for the following:
   * Getting unspent transaction outputs
   * Getting the current network fee rate estimate
