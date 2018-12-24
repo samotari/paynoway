@@ -14,7 +14,8 @@ A mobile app for testing payment systems against double-spend attacks.
 
 ## Disclaimers
 
-* This project is intended to be used for testing purposes. Please do not use this app to double-spend against merchants without their explicit consent.
+* This project is intended to be used for testing purposes.
+* Please do not use this app to double-spend against merchants without their explicit consent.
 * A successful double-spend is not guaranteed - use at your own risk.
 
 
