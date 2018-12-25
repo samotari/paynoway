@@ -69,6 +69,8 @@ app.views.Send = (function() {
 				},
 				type: 'number',
 				default: 0,
+				min: 0,
+				step: 0.001,
 				visible: true,
 				required: true,
 				validate: function(value) {

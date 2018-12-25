@@ -128,10 +128,10 @@
 			</label>
 			{{/case}}
 			{{#case "number" break=true}}
-			<input class="form-input" type="number" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			<input class="form-input" type="number"{{#if min includeZero=true}} min="{{min}}"{{/if}}{{#if step}} step="{{step}}"{{/if}} id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
 			{{/case}}
 			{{#case "integer" break=true}}
-			<input class="form-input" type="number" min="0" step="1" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			<input class="form-input" type="number"{{#if min includeZero=true}} min="{{min}}"{{/if}} step="1" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
 			{{/case}}
 			{{#case "password" break=true}}
 			<input class="form-input" type="password" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
