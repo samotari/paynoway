@@ -1,7 +1,7 @@
 .gradle/
 build/
-node_modules/
 hooks/
+node_modules/
 platforms/
 plugins/
 www/

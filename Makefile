@@ -15,9 +15,10 @@ BUILD_DEPS=$(BUILD)/deps
 BUILD_DEPS_JS=$(BUILD)/dependencies.min.js
 BUILD_ALL_CSS=$(BUILD)/all.min.css
 BUILD_ALL_JS=$(BUILD)/all.min.js
-CSS=css
-IMAGES=images
-JS=js
+SRC=src
+CSS=$(SRC)/css
+IMAGES=$(SRC)/images
+JS=$(SRC)/js
 PUBLIC=www
 PUBLIC_ALL_CSS=$(PUBLIC)/css/all.min.css
 PUBLIC_ALL_JS=$(PUBLIC)/js/all.min.js
@@ -63,9 +64,9 @@ images:
 config.xml: config-template.xml
 	node $(SCRIPTS)/copy-config-xml.js
 
-$(PUBLIC)/index.html: index.html
+$(PUBLIC)/index.html: $(SRC)/index.html
 	mkdir -p $(PUBLIC)/
-	node $(SCRIPTS)/copy-index-html.js
+	node $(SCRIPTS)/copy-index-html.js $^ $@
 
 $(BUILD)/css/*.min.css: $(CSS)/*.css
 	mkdir -p $(BUILD)/css
@@ -83,7 +84,7 @@ $(CSS)/forms.css\
 $(CSS)/header.css\
 $(CSS)/secondary-controls.css\
 $(CSS)/views/*.css
-APP_MIN_CSS_FILES=$(addprefix $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
+APP_MIN_CSS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
 $(BUILD_ALL_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/views/*.min.css
 	for file in $(APP_MIN_CSS_FILES); do \
 		cat $$file >> $(BUILD_ALL_CSS); \
@@ -141,7 +142,7 @@ $(BUILD)/js/**/*.min.js: $(JS)/*.js\
 $(JS)/**/*.js\
 $(JS)/**/**/*.js
 	for input in $^; do \
-		dir=$$(dirname $(BUILD)/$$input); \
+		dir=$(BUILD)/$$(dirname $${input#$(SRC)/}); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
 		mkdir -p $$dir; \
 		$(BIN)/uglifyjs -o $$output $$input; \
@@ -167,7 +168,7 @@ $(JS)/wallet.js\
 $(JS)/i18n.js\
 $(JS)/router.js\
 $(JS)/init.js
-APP_MIN_JS_FILES=$(addprefix $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
+APP_MIN_JS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
 JS_FILES=$(BUILD_DEPS_JS) $(APP_MIN_JS_FILES)
 $(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(BUILD)/js/**/*.min.js
 	for file in $(JS_FILES); do \

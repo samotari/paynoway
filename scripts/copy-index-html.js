@@ -1,8 +1,8 @@
 var _ = require('underscore');
 var fs = require('fs');
 var path = require('path');
-var srcFile = path.join(__dirname, '..', 'index.html');
-var destFile = path.join(__dirname, '..', 'www', 'index.html');
+var srcFile = path.resolve(process.argv[2]);
+var destFile = path.resolve(process.argv[3]);
 var content = fs.readFileSync(srcFile);
 var pkg = require('../package.json');
 var data = {
