@@ -53,10 +53,10 @@
 	background-repeat: no-repeat;
 }
 .view.send .button.secondary-control.payment {
-	background-color: blue;
-	background-image: url('../images/send-darker.svg');
+	background-color: rgba(0,0,255,0.8);
+	background-image: url('../images/send-light.svg');
 }
 .view.send .button.secondary-control.double-spend {
-	background-color: red;
-	background-image: url('../images/wink.svg');
+	background-color: rgba(255,0,0,0.8);
+	background-image: url('../images/wink-light.svg');
 }
