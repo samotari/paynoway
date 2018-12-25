@@ -45,7 +45,9 @@ app.abstracts.RpcClient = (function() {
 
 				cb(null, result.result);
 
-			}).catch(cb);
+			}).catch(function(error) {
+				cb(error);
+			});
 		},
 	};
 
