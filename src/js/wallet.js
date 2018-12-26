@@ -225,7 +225,7 @@ app.wallet = (function() {
 				});
 				// Calculate the size of the sample tx (in kilobytes).
 				var size = sampleTx.toHex().length / 2000;
-				paymentTxFee = size * feeRate * 0.75;
+				paymentTxFee = size * feeRate * app.config.feeRateModifier.paymentTx;
 				var tx = buildTx(value, paymentAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
 					// The fee rate is satoshis/kilobyte.
@@ -251,7 +251,7 @@ app.wallet = (function() {
 				var minFeeBump = 134;// satoshis
 				var tx = buildTx(value, doubleSpendAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
-					fee: Math.max(size * feeRate * 1, paymentTxFee + minFeeBump),
+					fee: Math.max(size * feeRate * app.config.feeRateModifier.doubleSpendTx, paymentTxFee + minFeeBump),
 					sequence: sequence,
 					utxo: paymentTx.ins,
 				});

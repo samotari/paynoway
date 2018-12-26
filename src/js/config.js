@@ -5,6 +5,10 @@ app.config = (function() {
 	'use strict';
 
 	var config = {
+		feeRateModifier: {
+			paymentTx: 1,
+			doubleSpendTx: 3,
+		},
 		cache: {
 			onAppStartClearOlderThan: 86400000,// milliseconds
 		},
