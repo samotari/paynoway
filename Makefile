@@ -86,6 +86,7 @@ $(CSS)/secondary-controls.css\
 $(CSS)/views/*.css
 APP_MIN_CSS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
 $(BUILD_ALL_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/views/*.min.css
+	rm -f $(BUILD_ALL_CSS)
 	for file in $(APP_MIN_CSS_FILES); do \
 		cat $$file >> $(BUILD_ALL_CSS); \
 		echo "" >> $(BUILD_ALL_CSS); \
@@ -133,6 +134,7 @@ $(BUILD_DEPS)/js/bitcoin.min.js\
 $(BUILD_DEPS)/js/QRCode.min.js\
 $(BUILD_DEPS)/js/querystring.min.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
+	rm -f $(BUILD_DEPS_JS)
 	for file in $(DEPS_JS_FILES); do \
 		cat $$file >> $(BUILD_DEPS_JS); \
 		echo "" >> $(BUILD_DEPS_JS); \
@@ -171,6 +173,7 @@ $(JS)/init.js
 APP_MIN_JS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
 JS_FILES=$(BUILD_DEPS_JS) $(APP_MIN_JS_FILES)
 $(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(BUILD)/js/**/*.min.js
+	rm -f $(BUILD_ALL_JS)
 	for file in $(JS_FILES); do \
 		echo "" >> $(BUILD_ALL_JS); \
 		cat $$file >> $(BUILD_ALL_JS); \

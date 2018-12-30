@@ -2,16 +2,16 @@
 <widget id="com.github.samotari.paynoway" version="{{version}}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name short="{{shortName}}">{{name}}</name>
     <description>{{description}}</description>
-    <icon src="images/favicon.png" />
+    <icon src="src/images/favicon.png" />
     <access origin="https://*/*" />
     <platform name="android">
         <preference name="android-minSdkVersion" value="19" />
-        <icon density="ldpi" src="images/favicon/favicon-android-ldpi.png" />
-        <icon density="mdpi" src="images/favicon/favicon-android-mdpi.png" />
-        <icon density="hdpi" src="images/favicon/favicon-android-hdpi.png" />
-        <icon density="xhdpi" src="images/favicon/favicon-android-xhdpi.png" />
-        <icon density="xxhdpi" src="images/favicon/favicon-android-xxhdpi.png" />
-        <icon density="xxxhdpi" src="images/favicon/favicon-android-xxxhdpi.png" />
+        <icon density="ldpi" src="src/images/favicon/favicon-android-ldpi.png" />
+        <icon density="mdpi" src="src/images/favicon/favicon-android-mdpi.png" />
+        <icon density="hdpi" src="src/images/favicon/favicon-android-hdpi.png" />
+        <icon density="xhdpi" src="src/images/favicon/favicon-android-xhdpi.png" />
+        <icon density="xxhdpi" src="src/images/favicon/favicon-android-xxhdpi.png" />
+        <icon density="xxxhdpi" src="src/images/favicon/favicon-android-xxxhdpi.png" />
     </platform>
     <engine name="android" spec="7.0.0" />
     <engine name="browser" spec="5.0.3" />
