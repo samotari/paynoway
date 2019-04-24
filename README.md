@@ -28,7 +28,6 @@ A mobile app for testing payment systems against double-spend attacks.
   * Getting the current network fee rate estimate
   * Broadcasting raw transactions
 * For Android development:
-  * [cordova](https://cordova.apache.org/#getstarted) - `npm install -g cordova`
   * [Java Development Kit (JDK)](https://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html) version 8 or higher. Use your system's native package manager to install the JDK (if available).
   * [Android SDK](https://developer.android.com/studio/index.html) - On Ubuntu 18.04 or later, it is possible to install Android Studio from Ubuntu Software Sources.
   * [gradle](https://gradle.org/install/)
@@ -76,6 +75,11 @@ Leave the electrum proxy running.
 
 ### Build and Run Web App
 
+Before building and running the app in a browser, you must prepare the browser platform with cordova:
+```bash
+npm run prepare:browser
+```
+
 To build and then run the app in a browser:
 ```bash
 npm run build && npm run browser
@@ -85,9 +89,9 @@ Open your browser and navigate to [localhost:3000](http://localhost:3000).
 
 ### Build and Run Android App
 
-Add the Android platform to the project (via cordova):
+Before building and running the app on Android, you must prepare the Android platform with cordova:
 ```bash
-cordova platform add android
+npm run prepare:android
 ```
 This downloads the cordova plugins which are necessary to build the app for Android devices.
 
@@ -102,7 +106,7 @@ adb devices
 
 Once authorized, you can build then install and run the app from your computer onto the device:
 ```bash
-npm run build && npm run android-device
+npm run build && npm run android
 ```
 
 ## License

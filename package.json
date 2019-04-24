@@ -5,10 +5,12 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "android-device": "cordova run android --device",
-    "browser": "cordova run browser",
+    "android": "./node_modules/.bin/cordova run android --device",
+    "browser": "./node_modules/.bin/cordova run browser",
     "build": "make all",
     "electrum-proxy": "node electrum-proxy-server.js",
+    "prepare:android": "./node_modules/.bin/cordova platform add android",
+    "prepare:browser": "./node_modules/.bin/cordova platform add browser",
     "server": "./node_modules/.bin/http-server ./www -p 3000 -a localhost",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -49,6 +51,7 @@
     "bitcoinjs-lib": "4.0.2",
     "body-parser": "1.18.3",
     "browserify": "16.2.3",
+    "cordova": "8.1.2",
     "cordova-android": "7.1.4",
     "cordova-android-support-gradle-release": "2.0.1",
     "cordova-browser": "5.0.4",
