@@ -19,13 +19,35 @@ app.views.Configure = (function() {
 				name: 'network',
 				visible: true,
 				type: 'select',
-				options: [
-					{ key: 'bitcoin', label: 'Bitcoin (mainnet)' },
-					{ key: 'bitcoinTestnet', label: 'Bitcoin (testnet)' },
-					{ key: 'litecoin', label: 'Litecoin' },
-					{ key: 'litecoinTestnet', label: 'Litecoin (testnet)' },
-				],
+				options: function() {
+					return _.map(app.config.networks, function(network, key) {
+						return {
+							key: key,
+							label: network.label,
+						};
+					});
+				},
 				default: 'bitcoin',
+			},
+			{
+				name: 'electrumServer',
+				label: function() {
+					return app.i18n.t('configure.electrum-server');
+				},
+				visible: true,
+				type: 'select',
+				options: function() {
+					var networkConfig = app.wallet.getNetworkConfig();
+					return _.map(networkConfig.electrum.servers, function(host) {
+						return {
+							key: host,
+							label: host,
+						};
+					});
+				},
+				default: function() {
+					return app.wallet.getDefaultElectrumServer();
+				},
 			},
 			{
 				name: 'wif',
@@ -65,12 +87,19 @@ app.views.Configure = (function() {
 					{
 						name: 'cycle',
 						fn: function(value, cb) {
-							try {
-								var formData = this.getFormData();
-								var network = formData.network;
-								var wif = app.wallet.generateRandomPrivateKey(network);
-							} catch (error) {
-								return cb(error);
+							var wif;
+							if (confirm(app.i18n.t('configure.wif.confirm-change'))) {
+								// Confirmed - change the WIF.
+								try {
+									var formData = this.getFormData();
+									var network = formData.network;
+									wif = app.wallet.generateRandomPrivateKey(network);
+								} catch (error) {
+									return cb(error);
+								}
+							} else {
+								// Canceled - keep the current WIF.
+								wif = app.wallet.getWIF();
 							}
 							cb(null, wif);
 						},
@@ -118,21 +147,12 @@ app.views.Configure = (function() {
 					return app.wallet.getAddress();
 				},
 			},
-			{
-				name: 'electrum.proxy.url',
-				label: function() {
-					return app.i18n.t('configure.electrum.proxy.url');
-				},
-				type: 'text',
-				visible: true,
-				required: true,
-				default: 'http://localhost:3100',
-			},
 		],
 		initialize: function() {
 			app.views.utility.Form.prototype.initialize.apply(this, arguments);
-			this.listenTo(app.settings, 'change', this.updateAddress);
+			this.listenTo(app.settings, 'change:wallet', this.updateAddress);
 			this.listenTo(app.settings, 'change:network', this.updateWIF);
+			this.listenTo(app.settings, 'change:network', this.updateElectrumServer);
 		},
 		onRender: function() {
 			this.$buttons = {
@@ -176,7 +196,7 @@ app.views.Configure = (function() {
 			try {
 				var address = app.wallet.getAddress(network, wif);
 			} catch (error) {
-				console.log(error);
+				app.log(error);
 			}
 			this.$inputs.wif.val(wif || '');
 			this.$inputs.address.val(address || '');
@@ -194,16 +214,27 @@ app.views.Configure = (function() {
 			try {
 				app.wallet.getKeyPair(network, wif);
 			} catch (error) {
-				console.log(error);
+				app.log(error);
 				return false;
 			}
 			return true;
 		},
+		updateAddress: function() {
+			this.$inputs.address.val(app.wallet.getAddress());
+		},
 		updateWIF: function() {
 			this.$inputs.wif.val(app.wallet.getWIF());
 		},
-		updateAddress: function() {
-			this.$inputs.address.val(app.wallet.getAddress());
+		updateElectrumServer: function() {
+			var $select = this.$(':input[name="electrumServer"]');
+			$select.find('option').remove();
+			var networkConfig = app.wallet.getNetworkConfig();
+			_.each(networkConfig.electrum.servers, function(host) {
+				var $option = $('<option/>', { value: host });
+				$option.text(host);
+				$select.append($option);
+			});
+			$select.val(app.wallet.getDefaultElectrumServer()).change();
 		},
 		save: function(data) {
 			// All required input fields are filled-in and have valid values.
@@ -221,6 +252,14 @@ app.views.Configure = (function() {
 		done: function() {
 			app.router.navigate('receive', { trigger: true });
 		},
+		onClose: function() {
+			if (app.views.utility.Form.prototype.onClose) {
+				app.views.utility.Form.prototype.onClose.apply(this, arguments);
+			}
+			if (this.electrumServerFormFieldView) {
+				this.electrumServerFormFieldView.close();
+			}
+		}
 	});
 
 })();

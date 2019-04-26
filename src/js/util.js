@@ -132,13 +132,16 @@ app.util = (function() {
 			}
 			var parts = payReq.split(':');
 			var network = parts[0];
-			if (parts[1].indexOf('?') === -1) {
-				throw new Error(app.i18n.t('util.invalid-payment-request'));
+			var address, amount;
+			if (parts[1].indexOf('?') !== -1) {
+				var moreParts = parts[1].split('?');
+				var params = querystring.parse(moreParts[1]);
+				address = moreParts[0];
+				amount = params.amount;
+			} else {
+				address = parts[1];
+				amount = 0;
 			}
-			var moreParts = parts[1].split('?');
-			var address = moreParts[0];
-			var params = querystring.parse(moreParts[1]);
-			var amount = params.amount;
 			var parsed = {
 				network: network,
 				address: address,

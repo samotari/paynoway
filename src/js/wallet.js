@@ -19,11 +19,12 @@ app.wallet = (function() {
 		getKeyPair: function(network, wif) {
 			var constants = this.getNetworkConstants(network);
 			wif = wif || this.getWIF(network);
-			return wif && bitcoin.ECPair.fromWIF(wif, constants) || null;
+			var keyPair = wif && bitcoin.ECPair.fromWIF(wif, constants) || null;
+			return keyPair;
 		},
 
 		getWIF: function(network) {
-			network = network || app.settings.get('network') || 'bitcoin';
+			network = network || this.getNetwork();
 			var wallet = app.settings.get('wallet') || {};
 			return wallet[network] || null;
 		},
@@ -34,17 +35,36 @@ app.wallet = (function() {
 			app.settings.set('wallet', wallet);
 		},
 
+		getNetwork: function() {
+			return app.settings.get('network') || 'bitcoin';
+		},
+
+		getNetworkConfig: function(network) {
+			network = network || this.getNetwork();
+			return app.config.networks[network] || null;
+		},
+
+		// Prepare object of network constants (for bitcoinjs-lib).
 		getNetworkConstants: function(network) {
-			network = network || app.settings.get('network') || 'bitcoin';
-			return app.config.networks[network];
+			var networkConfig = this.getNetworkConfig(network);
+			return _.pick(networkConfig, 'bech32', 'bip32', 'messagePrefix', 'pubKeyHash', 'scriptHash', 'wif');
+		},
+
+		getDefaultElectrumServer: function(network) {
+			var networkConfig = this.getNetworkConfig(network);
+			return _.first(networkConfig.electrum.servers || []);
+		},
+
+		getOutputScriptHash: function(address, constants) {
+			var outputScript = bitcoin.address.toOutputScript(address, constants);
+			var hash = bitcoin.crypto.sha256(outputScript);
+			return Buffer.from(hash.reverse()).toString('hex');
 		},
 
 		getAddress: function(network, wif) {
-
 			var keyPair = this.getKeyPair(network, wif);
-			if (!keyPair) return '';
+			if (!keyPair) return null;
 			var type = app.settings.get('addressType');
-
 			switch (type) {
 				case 'p2wpkh':
 					var p2wpkh = bitcoin.payments.p2wpkh({
@@ -72,35 +92,53 @@ app.wallet = (function() {
 		},
 
 		getUnspentTxOutputs: function(cb) {
-
-			var address = this.getAddress();
-
 			if (!cb) {
 				cb = _.noop;
 			}
+			try {
+				var address = this.getAddress();
+				app.log('wallet.getUnspentTxOutputs', address);
+				var type = app.settings.get('addressType');
+				switch (type) {
+					case 'p2wpkh':
+						var constants = this.getNetworkConstants();
+						var outputScriptHash = this.getOutputScriptHash(address, constants);
+						app.services.electrum.cmd('blockchain.scripthash.listunspent', [outputScriptHash], cb);
+						break;
+					case 'p2wpkh-p2sh':
+					case 'p2pkh':
+					default:
+						app.services.electrum.cmd('blockchain.address.listunspent', [address], cb);
+						break;
+				}
+			} catch (error) {
+				return cb(error);
+			}
+		},
 
-			app.services.electrum.cmd('getaddressunspent', [address], cb);
+		getMinRelayFee: function(cb) {
+			var toBaseUnit = _.bind(this.toBaseUnit, this);
+			app.services.electrum.cmd('blockchain.relayfee', [], function(error, result) {
+				if (error) return cb(error);
+				var minRelayFee = toBaseUnit(result);
+				cb(null, minRelayFee);
+			});
 		},
 
 		getFeeRate: function(cb) {
-			app.services.electrum.cmd('getfeerate', cb);
+			var network = this.getNetwork();
+			var targetNumberOfBlocks = app.config.networks[network].fees.targetNumberOfBlocks;
+			var toBaseUnit = _.bind(this.toBaseUnit, this);
+			app.services.electrum.cmd('blockchain.estimatefee', [targetNumberOfBlocks], function(error, result) {
+				if (error) return cb(error);
+				var minRelayFee = toBaseUnit(result);
+				cb(null, minRelayFee);
+			});
 		},
 
 		broadcastRawTx: function(rawTx, cb) {
-			app.services.electrum.cmd('broadcast', [rawTx], function(error, result) {
+			app.services.electrum.cmd('blockchain.transaction.broadcast', [rawTx], function(error, result) {
 				if (error) return cb(error);
-				if (result[0] === false) {
-					// Failed.
-					var message = (function() {
-						try {
-							return result[1].split('\\n[')[0].split(", 'message': '")[1];
-						} catch (error) {
-							console.log(error);
-						}
-					})();
-					error = new Error(message);
-					return cb(error);
-				}
 				// Success.
 				var txid = result[1];
 				cb(null, txid);
@@ -205,19 +243,18 @@ app.wallet = (function() {
 			return txb.build();
 		},
 
-		buildTxsForPaymentAndDoubleSpend: function(value, paymentAddress, feeRate, utxo) {
+		buildTxsForPaymentAndDoubleSpend: function(value, paymentAddress, feeRate, minRelayFee, utxo) {
 
 			var keyPair = this.getKeyPair();
 			var doubleSpendAddress = this.getAddress();
+			var networkConfig = this.getNetworkConfig();
 			var buildTx = _.bind(this.buildTx, this);
 
 			// Sequence number for inputs must be less than the maximum.
 			// This allows RBF later.
 			var sequence = 0xffffffff - 9;
 
-			var paymentTxFee;
-
-			var paymentTx = (function() {
+			var payment = (function() {
 				// Build a sample tx so that we can calculate the fee.
 				var sampleTx = buildTx(value, paymentAddress, utxo, {
 					fee: 0,
@@ -225,18 +262,27 @@ app.wallet = (function() {
 				});
 				// Calculate the size of the sample tx (in kilobytes).
 				var size = sampleTx.toHex().length / 2000;
-				paymentTxFee = size * feeRate * app.config.feeRateModifier.paymentTx;
+				var fee = Math.ceil(Math.max(
+					minRelayFee,
+					size * feeRate
+				));
 				var tx = buildTx(value, paymentAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
 					// The fee rate is satoshis/kilobyte.
 					// Underpay on the fee here a little, to make the replacement tx cheaper.
-					fee: paymentTxFee,
+					fee: fee,
 					sequence: sequence,
 				});
-				return tx;
+				return {
+					address: paymentAddress,
+					amount: value,
+					fee: fee,
+					rawTx: tx.toHex(),
+					tx: tx,
+				};
 			})();
 
-			var doubleSpendTx = (function() {
+			var doubleSpend = (function() {
 				// Increment the sequence for the inputs.
 				// This should cause the double-spend tx to replace the previous tx.
 				sequence++;
@@ -244,23 +290,29 @@ app.wallet = (function() {
 				var sampleTx = buildTx(value, doubleSpendAddress, utxo, {
 					fee: 0,
 					sequence: sequence,
-					utxo: paymentTx.ins,
+					utxo: payment.tx.ins,
 				});
 				// Calculate the size of the sample tx (in kilobytes).
 				var size = sampleTx.toHex().length / 2000;
-				var minFeeBump = 134;// satoshis
+				var fee = Math.ceil(payment.fee + networkConfig.fees.minBump);
 				var tx = buildTx(value, doubleSpendAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
-					fee: Math.max(size * feeRate * app.config.feeRateModifier.doubleSpendTx, paymentTxFee + minFeeBump),
+					fee: fee,
 					sequence: sequence,
-					utxo: paymentTx.ins,
+					utxo: payment.tx.ins,
 				});
-				return tx;
+				return {
+					address: doubleSpendAddress,
+					amount: value,
+					fee: fee,
+					rawTx: tx.toHex(),
+					tx: tx,
+				};
 			})();
 
 			return {
-				paymentTx: paymentTx.toHex(),
-				doubleSpendTx: doubleSpendTx.toHex(),
+				payment: payment,
+				doubleSpend: doubleSpend,
 			};
 		},
 
@@ -270,13 +322,15 @@ app.wallet = (function() {
 
 			async.parallel({
 				feeRate: _.bind(this.getFeeRate, this),
+				minRelayFee: _.bind(this.getMinRelayFee, this),
 				utxo: _.bind(this.getUnspentTxOutputs, this),
 			}, function(error, results) {
 				if (error) return cb(error);
 				var feeRate = results.feeRate;
+				var minRelayFee = results.minRelayFee;
 				var utxo = results.utxo;
 				try {
-					var txs = buildTxsForPaymentAndDoubleSpend(value, paymentAddress, feeRate, utxo);
+					var txs = buildTxsForPaymentAndDoubleSpend(value, paymentAddress, feeRate, minRelayFee, utxo);
 				} catch (error) {
 					return cb(error);
 				}
@@ -285,12 +339,10 @@ app.wallet = (function() {
 		},
 
 		toBaseUnit: function(value) {
-
 			return Math.ceil((new BigNumber(value)).times(1e8).toNumber());
 		},
 
 		fromBaseUnit: function(value) {
-
 			return (new BigNumber(value)).dividedBy(1e8).toString();
 		},
 
@@ -308,10 +360,26 @@ app.wallet = (function() {
 		},
 
 		getBlockExplorerUrl: function(type, args) {
-			var network = app.settings.get('network') || 'bitcoin';
+			var network = this.getNetwork();
 			var urls = this.blockExplorerUrls[network];
 			var fn = urls[type];
 			return fn && fn.apply(undefined, args);
+		},
+
+		isValidAddress: function(address) {
+			try {
+				bitcoin.address.fromBase58Check(address);
+			} catch (error) {
+				// Legacy (base58) check failed.
+				// Try bech32.
+				try {
+					bitcoin.address.fromBech32(address);
+				} catch (error) {
+					// Both bech32 and legacy (base58) checks failed.
+					return false;
+				}
+			}
+			return true;
 		},
 
 	};

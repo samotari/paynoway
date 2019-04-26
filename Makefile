@@ -111,11 +111,18 @@ $(BUILD_DEPS)/js/QRCode.js: node_modules/qrcode/lib/browser.js
 	mkdir -p $(BUILD_DEPS)/js
 	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
+$(BUILD_DEPS)/js/buffer.js: exports/buffer.js
+	mkdir -p $(BUILD_DEPS)/js
+	$(BIN)/browserify --entry $^ --standalone Buffer --outfile $@
+
 $(BUILD_DEPS)/js/querystring.js: exports/querystring.js
 	mkdir -p $(BUILD_DEPS)/js
 	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
 $(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
+	$(BIN)/uglifyjs $^ -o $@
+
+$(BUILD_DEPS)/js/buffer.min.js: $(BUILD_DEPS)/js/buffer.js
 	$(BIN)/uglifyjs $^ -o $@
 
 $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
@@ -132,6 +139,7 @@ node_modules/handlebars/dist/handlebars.min.js\
 node_modules/moment/min/moment-with-locales.min.js\
 $(BUILD_DEPS)/js/bitcoin.min.js\
 $(BUILD_DEPS)/js/QRCode.min.js\
+$(BUILD_DEPS)/js/buffer.min.js \
 $(BUILD_DEPS)/js/querystring.min.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	rm -f $(BUILD_DEPS_JS)

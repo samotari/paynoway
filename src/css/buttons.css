@@ -28,7 +28,7 @@
 .button.disabled {
 	cursor: not-allowed;
 	pointer-events: none;
-	opacity: .5;
+	opacity: .3;
 }
 .button.disabled.touchstart {
 	color: #111;

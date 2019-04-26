@@ -45,8 +45,8 @@ app.Router = (function() {
 
 		notFound: function() {
 
-			// Default screen is starting the payment process.
-			this.navigate('receive', { trigger: true });
+			// Navigate to the default screen.
+			this.navigate('send', { trigger: true });
 		},
 
 		configure: function() {

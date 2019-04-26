@@ -4,17 +4,18 @@ app.settings = (function() {
 
 	'use strict';
 
-	var defaults = {};
-
-	_.each(app.views.Configure.prototype.inputs, function(input) {
-		input.path = input.name;
-		defaults[input.path] = _.result(input, 'default');
-	});
-
 	var settings = _.extend({}, {
-
+		getDefaultValue: function(key) {
+			var defaultValue;
+			var input = _.findWhere(app.views.Configure.prototype.inputs, { name: key });
+			if (input) {
+				defaultValue = _.result(input, 'default');
+			}
+			return defaultValue;
+		},
 		getAll: function() {
-			var keys = _.pluck(this.collection.toJSON(), 'key').concat(_.keys(defaults));
+			var defaultKeys = _.pluck(app.views.Configure.prototype.inputs, 'name');
+			var keys = _.pluck(this.collection.toJSON(), 'key').concat(defaultKeys);
 			return _.chain(keys).uniq().map(function(key) {
 				return [key, this.get(key)];
 			}, this).object().value();
@@ -25,8 +26,9 @@ app.settings = (function() {
 			if (model) {
 				value = model.get('value');
 			}
-			if (_.isUndefined(value) && !_.isUndefined(defaults[key])) {
-				value = defaults[key];
+			var defaultValue = this.getDefaultValue(key);
+			if (_.isUndefined(value) && !_.isUndefined(defaultValue)) {
+				value = defaultValue;
 			}
 			return value;
 		},
@@ -62,7 +64,7 @@ app.settings = (function() {
 		settings.collection = new app.collections.Settings();
 
 		app.onStart(function(done) {
-			settings.collection.on('add update change', function(model) {
+			settings.collection.on('change', function(model) {
 				var key = model.get('key');
 				var value = model.get('value');
 				settings.trigger('change:' + key, value);

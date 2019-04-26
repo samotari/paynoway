@@ -3,9 +3,11 @@
 	letter-spacing: .1rem;
 }
 .view.send .utxo {
-	margin-bottom: 2rem;
+	font-size: .85rem;
+	margin-bottom: 1.5rem;
 }
 .view.send .utxo table {
+	width: 100%;
 	border: .1rem solid #eee;
 }
 .view.send .utxo th {
@@ -59,4 +61,15 @@
 .view.send .button.secondary-control.double-spend {
 	background-color: rgba(255,0,0,0.8);
 	background-image: url('../images/wink-light.svg');
+}
+.view.send .form-field.id-address {
+	position: relative;
+	padding-right: 3rem;
+}
+.view.send .form-field.id-address .form-field-action {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: auto;
+	margin-top: 0;
 }

@@ -26,15 +26,7 @@ app.views.Send = (function() {
 				visible: true,
 				required: true,
 				validate: function(value) {
-					var isValid;
-					try {
-						bitcoin.address.fromBase58Check(value);
-						isValid = true;
-					} catch (error) {
-						console.log(error);
-						isValid = false;
-					}
-					if (!isValid) {
+					if (!app.wallet.isValidAddress(value)) {
 						throw new Error(app.i18n.t('send.invalid-address'));
 					}
 				},
@@ -69,7 +61,7 @@ app.views.Send = (function() {
 				},
 				type: 'number',
 				default: 0,
-				min: 0,
+				min: 0.00000500,
 				step: 0.001,
 				visible: true,
 				required: true,
@@ -77,7 +69,7 @@ app.views.Send = (function() {
 					try {
 						value = new BigNumber(value);
 					} catch (error) {
-						console.log(error);
+						app.log(error);
 						value = null;
 					}
 					if (_.isNull(value)) {
@@ -91,10 +83,12 @@ app.views.Send = (function() {
 		],
 		initialize: function() {
 			app.views.utility.Form.prototype.initialize.apply(this, arguments);
+			_.bindAll(this, 'toggleDoubleSpendButton', 'refreshUnspentTxOutputs');
+			this.doRefreshUnspentTxOutputs = _.throttle(this.refreshUnspentTxOutputs, 200);
 			this.model = new Backbone.Model;
-			this.listenTo(this.model, 'change', this.render);
-			this.listenTo(this.model, 'change', this.toggleDoubleSpendButton);
-			this.doRefreshUnspentTxOutputs = _.throttle(_.bind(this.refreshUnspentTxOutputs, this), 200);
+			this.listenTo(this.model, 'change:utxo', this.render);
+			this.listenTo(this.model, 'change:doubleSpend', this.toggleDoubleSpendButton);
+			app.settings.on('change:wallet', this.doRefreshUnspentTxOutputs);
 			this.refreshUnspentTxOutputs();
 		},
 		onRender: function() {
@@ -108,18 +102,24 @@ app.views.Send = (function() {
 			};
 		},
 		refreshUnspentTxOutputs: function() {
-			var model = this.model
+			app.busy(true);
+			var model = this.model;
 			app.wallet.getUnspentTxOutputs(function(error, utxo) {
-				if (utxo) {
-					utxo = _.map(utxo, function(output) {
-						var txid = output.tx_hash;
-						return {
-							amount: app.wallet.fromBaseUnit(output.value),
-							txid: txid.substr(0, 20),
-							url: app.wallet.getBlockExplorerUrl('tx', [txid]),
-						};
-					});
-					model.set('utxo', utxo);
+				app.busy(false);
+				if (error) {
+					app.mainView.showMessage(error);
+				} else {
+					if (utxo) {
+						utxo = _.map(utxo, function(output) {
+							var txid = output.tx_hash;
+							return {
+								amount: app.wallet.fromBaseUnit(output.value),
+								txid: txid.substr(0, 20),
+								url: app.wallet.getBlockExplorerUrl('tx', [txid]),
+							};
+						});
+						model.set('utxo', utxo);
+					}
 				}
 			});
 		},
@@ -140,47 +140,69 @@ app.views.Send = (function() {
 			this.$buttons.payment.toggleClass('disabled', !this.allRequiredFieldsFilledIn());
 		},
 		pay: function() {
-			app.busy(true);
 			var formData = this.getFormData();
 			var value = app.wallet.toBaseUnit(formData.amount);
 			var paymentAddress = formData.address;
 			var model = this.model;
 			var refreshUnspentTxOutputs = _.bind(this.refreshUnspentTxOutputs, this);
-			var doubleSpendTx;
-			async.seq(
-				function(next) {
-					app.wallet.createPaymentAndDoubleSpendTxs(value, paymentAddress, next);
-				},
-				function(txs, next) {
-					doubleSpendTx = txs.doubleSpendTx;
-					app.wallet.broadcastRawTx(txs.paymentTx, next);
-				}
-			)(function(error) {
+			app.busy(true);
+			app.wallet.createPaymentAndDoubleSpendTxs(value, paymentAddress, function(error, txs) {
 				app.busy(false);
 				if (error) {
-					app.mainView.showMessage(error);
+					app.log(error);
+					return app.mainView.showMessage(error);
+				}
+				var message = app.i18n.t('send.confirm-tx-details', {
+					address: txs.payment.address,
+					amount: app.wallet.fromBaseUnit(txs.payment.amount),
+					fee: app.wallet.fromBaseUnit(txs.payment.fee),
+					symbol: app.wallet.getNetworkConfig().symbol,
+				});
+				if (confirm(message)) {
+					// Confirmed - send the payment tx.
+					app.busy(true);
+					app.wallet.broadcastRawTx(txs.payment.rawTx, function(error) {
+						app.busy(false);
+						if (error) {
+							app.log(error);
+							return app.mainView.showMessage(error);
+						}
+						refreshUnspentTxOutputs();
+						model.set('doubleSpend', _.omit(txs.doubleSpend, 'tx'));
+					});
 				} else {
-					model.set('doubleSpendTx', doubleSpendTx);
+					// Canceled - do nothing.
 				}
 			});
 		},
 		toggleDoubleSpendButton: function() {
 			// The payment was sent successfully.
 			// Enable the double-spend button.
-			this.$buttons.doubleSpend.toggleClass('disabled', !this.model.get('doubleSpendTx'));
+			this.$buttons.doubleSpend.toggleClass('disabled', !this.model.get('doubleSpend'));
 		},
 		doubleSpend: function() {
-			app.busy(true);
-			var doubleSpendTx = this.model.get('doubleSpendTx');
+			var doubleSpend = this.model.get('doubleSpend');
 			var model = this.model;
-			app.wallet.broadcastRawTx(doubleSpendTx, function(error) {
-				app.busy(false);
-				if (error) {
-					app.mainView.showMessage(error);
-				} else {
-					model.set('doubleSpendTx', null);
-				}
+			var message = app.i18n.t('send.confirm-tx-details', {
+				address: doubleSpend.address,
+				amount: app.wallet.fromBaseUnit(doubleSpend.amount),
+				fee: app.wallet.fromBaseUnit(doubleSpend.fee),
+				symbol: app.wallet.getNetworkConfig().symbol,
 			});
+			if (confirm(message)) {
+				// Confirmed - send double-spend transaction.
+				app.busy(true);
+				app.wallet.broadcastRawTx(doubleSpend.rawTx, function(error) {
+					app.busy(false);
+					if (error) {
+						app.mainView.showMessage(error);
+					} else {
+						model.set('doubleSpend', null);
+					}
+				});
+			} else {
+				// Canceled - do nothing.
+			}
 		},
 	});
 
