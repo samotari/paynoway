@@ -51,14 +51,25 @@ Build the application files:
 npm run build
 ```
 
-
-### Build and Run Android App
-
-Before building and running the app on Android, you must prepare the Android platform with cordova:
+Before installing and running the app on Android, you must prepare the Android platform with cordova:
 ```bash
 npm run prepare:android
 ```
 This downloads the cordova plugins which are necessary to build the app for Android devices.
+
+### Running on Android (VM)
+
+Run the following command to check to see if there are any available Android virtual devices:
+```bash
+adb devices
+```
+
+Install and run the app on the virtual device with the following command:
+```bash
+npm run android-vm
+```
+
+### Running on Android (Device)
 
 To install and run the app on an Android device, you must first:
 * [Enable developer mode](https://developer.android.com/studio/debug/dev-options) on the device.
@@ -69,9 +80,9 @@ Once developer mode and USB debugging are enabled, connect the device to your co
 adb devices
 ```
 
-Once authorized, you can build then install and run the app from your computer onto the device:
+Install and run the app on the device: with the following command
 ```bash
-npm run build && npm run android
+npm run android
 ```
 
 ## License
