@@ -32,7 +32,7 @@ app.lang['en'] = (function() {
 		'send.no-utxo': 'Your wallet does not have any unspent tx outputs.',
 		'send.confirm-tx-details': 'Are you sure you want to send {{amount}} {{symbol}} to {{address}} with a miner fee of {{fee}} {{symbol}}?',
 
-		'services.electrum.not-connected': 'Electrum server connection failure',
+		'services.electrum.connection-failed': 'Electrum server connection failure',
 
 		'wallet.insuffient-funds': 'Insufficient funds',
 	};

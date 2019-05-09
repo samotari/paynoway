@@ -37,7 +37,7 @@ app.views.utility.Form = (function() {
 			input = _.clone(input);
 			input.id = input.id || input.name;
 			input.path = input.path || input.name;
-			var value = this.getSavedValue(input.path);
+			var value = this.getInputValueOverride(input.path);
 			if (!_.isUndefined(value)) {
 				input.value = value;
 			} else if (input.value) {
@@ -224,7 +224,7 @@ app.views.utility.Form = (function() {
 			return _.findWhere(this.inputs, { name: name });
 		},
 
-		getSavedValue: function(key) {
+		getInputValueOverride: function(key) {
 			// Left empty intentionally.
 			// Override as needed.
 		},

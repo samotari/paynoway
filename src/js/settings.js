@@ -64,7 +64,7 @@ app.settings = (function() {
 		settings.collection = new app.collections.Settings();
 
 		app.onStart(function(done) {
-			settings.collection.on('change', function(model) {
+			settings.collection.on('add change', function(model) {
 				var key = model.get('key');
 				var value = model.get('value');
 				settings.trigger('change:' + key, value);

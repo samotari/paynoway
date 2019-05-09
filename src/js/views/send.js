@@ -88,7 +88,6 @@ app.views.Send = (function() {
 			this.model = new Backbone.Model;
 			this.listenTo(this.model, 'change:utxo', this.render);
 			this.listenTo(this.model, 'change:doubleSpend', this.toggleDoubleSpendButton);
-			app.settings.on('change:wallet', this.doRefreshUnspentTxOutputs);
 			this.refreshUnspentTxOutputs();
 		},
 		onRender: function() {

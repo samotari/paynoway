@@ -38,7 +38,7 @@ SCRIPTS=scripts
 # (such as "all" below) isn't a file but instead a just label. Declaring
 # it as phony ensures that it always run, even if a file by the same name
 # exists.
-.PHONY: all clean fonts images
+.PHONY: all clean clean-light fonts images
 
 all: config.xml\
 $(PUBLIC)/index.html\
@@ -49,7 +49,10 @@ images
 
 clean:
 	# Delete build and output files:
-	rm -rf $(BUILD) $(PUBLIC)
+	rm -rf $(BUILD) $(PUBLIC) config.xml
+
+clean-light:
+	rm -rf $(PUBLIC)/index.html config.xml
 
 fonts:
 	mkdir -p $(PUBLIC)/fonts/OpenSans
@@ -61,7 +64,7 @@ images:
 	cp -r $(IMAGES)/favicon/* $(PUBLIC)/images/favicon/
 	cp -r $(IMAGES)/favicon/favicon.ico $(PUBLIC)/favicon.ico
 
-config.xml: config-template.xml
+config.xml: config-template.xml package.json
 	node $(SCRIPTS)/copy-config-xml.js
 
 $(PUBLIC)/index.html: $(SRC)/index.html
@@ -128,8 +131,7 @@ $(BUILD_DEPS)/js/buffer.min.js: $(BUILD_DEPS)/js/buffer.js
 $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
 	$(BIN)/uglifyjs $^ -o $@
 
-DEPS_JS_FILES=node_modules/core-js/client/shim.min.js\
-node_modules/async/dist/async.min.js\
+DEPS_JS_FILES=node_modules/async/dist/async.min.js\
 node_modules/bignumber.js/bignumber.min.js\
 node_modules/jquery/dist/jquery.min.js\
 node_modules/underscore/underscore-min.js\

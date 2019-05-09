@@ -56,11 +56,13 @@ app.views.Configure = (function() {
 				},
 				type: 'text',
 				visible: true,
-				required: true,
 				validate: function(value, data) {
-					if (!value) return;
-					if (!this.validateWIF(value, data.network)) {
-						throw new Error(app.i18n.t('configure.wif.invalid'));
+					if (value) {
+						try {
+							app.wallet.getKeyPair(data.network, value);
+						} catch (error) {
+							throw new Error(app.i18n.t('configure.wif.invalid'));
+						}
 					}
 				},
 				actions: [
@@ -88,7 +90,8 @@ app.views.Configure = (function() {
 						name: 'cycle',
 						fn: function(value, cb) {
 							var wif;
-							if (confirm(app.i18n.t('configure.wif.confirm-change'))) {
+							// If WIF not already set, then skip the confirm prompt.
+							if (!value || confirm(app.i18n.t('configure.wif.confirm-change'))) {
 								// Confirmed - change the WIF.
 								try {
 									var formData = this.getFormData();
@@ -143,123 +146,120 @@ app.views.Configure = (function() {
 				type: 'text',
 				visible: true,
 				readonly: true,
-				value: function() {
-					return app.wallet.getAddress();
-				},
 			},
 		],
 		initialize: function() {
 			app.views.utility.Form.prototype.initialize.apply(this, arguments);
-			this.listenTo(app.settings, 'change:wallet', this.updateAddress);
-			this.listenTo(app.settings, 'change:network', this.updateWIF);
-			this.listenTo(app.settings, 'change:network', this.updateElectrumServer);
+			this.listenTo(app.settings, 'change', function(key, value) {
+				if (key.indexOf('.') !== -1) {
+					var parts = key.split('.');
+					switch (parts[1]) {
+						case 'addressType':
+						case 'wif':
+							this.updateAddress();
+							break;
+					}
+				}
+			});
+			this.listenTo(app.settings, 'change:network', this.updateInputs);
 		},
 		onRender: function() {
-			this.$buttons = {
-				done: this.$('.button.done'),
-			};
 			this.$inputs = {
 				address: this.$(':input[name="address"]'),
+				addressType: this.$(':input[name="addressType"]'),
+				electrumServer: this.$(':input[name="electrumServer"]'),
 				network: this.$(':input[name="network"]'),
 				wif: this.$(':input[name="wif"]'),
 			};
+			app.views.utility.Form.prototype.onRender.apply(this, arguments);
 		},
 		setAddressType: function(addressType) {
-			var $select = this.$('select[name="addressType"]');
-			var $options = $select.find('option');
-			$options.removeAttr('selected')
-				.filter('[value="' + addressType + '"]')
-				.attr('selected');
+			this.$inputs.addressType.val(addressType);
 		},
-		onValidationErrors: function() {
-			this.$buttons.done.addClass('disabled');
+		getInputValueOverride: function(key) {
+			return this.getValue(key);
 		},
-		getSavedValue: function(key) {
+		getValue: function(key, network) {
+			network = network || app.wallet.getNetwork();
 			switch (key) {
-				case 'wif':
-					return app.wallet.getWIF();
+				case 'address':
+					return app.wallet.getAddress(network);
+				case 'network':
+					return network;
 				default:
-					return app.settings.get(key);
+					return app.wallet.getSetting(key, network) || this.getInputDefaultValue(key);
 			}
 		},
-		process: function() {
-			var network = this.$inputs.network.val();
-			var wif = this.$inputs.wif.val();
-			var networkWIF = app.wallet.getWIF(network);
-			if (this.isOtherNetworkWIF(wif, network)) {
-				if (networkWIF && wif !== networkWIF) {
-					wif = networkWIF;
-				} else if (!networkWIF) {
-					wif = '';
-				}
-			}
-			try {
-				var address = app.wallet.getAddress(network, wif);
-			} catch (error) {
-				app.log(error);
-			}
-			this.$inputs.wif.val(wif || '');
-			this.$inputs.address.val(address || '');
-			app.views.utility.Form.prototype.process.apply(this, arguments);
+		getInputDefaultValue: function(key) {
+			var input = _.find(this.inputs, { name: key });
+			return input && _.result(input, 'default') || null;
 		},
-		isOtherNetworkWIF: function(wif) {
-			if (!wif) return false;
-			var input = this.getInputByName('network');
-			return !!_.find(input.options, function(option) {
-				var networkWIF = app.wallet.getWIF(option.key);
-				return networkWIF && networkWIF === wif;
-			});
+		updateInputs: function(network) {
+			this.updateElectrumServer(network);
+			_.each(['address', 'addressType', 'wif'], function(key) {
+				this.$inputs[key].val(this.getValue(key, network));
+			}, this);
 		},
-		validateWIF: function(wif, network) {
-			try {
-				app.wallet.getKeyPair(network, wif);
-			} catch (error) {
-				app.log(error);
-				return false;
-			}
-			return true;
+		updateAddress: function(network) {
+			this.$inputs.address.val(this.getValue('address', network));
 		},
-		updateAddress: function() {
-			this.$inputs.address.val(app.wallet.getAddress());
-		},
-		updateWIF: function() {
-			this.$inputs.wif.val(app.wallet.getWIF());
-		},
-		updateElectrumServer: function() {
-			var $select = this.$(':input[name="electrumServer"]');
+		updateElectrumServer: function(network) {
+			var $select = this.$inputs.electrumServer;
 			$select.find('option').remove();
-			var networkConfig = app.wallet.getNetworkConfig();
+			var networkConfig = app.wallet.getNetworkConfig(network);
 			_.each(networkConfig.electrum.servers, function(host) {
 				var $option = $('<option/>', { value: host });
 				$option.text(host);
 				$select.append($option);
 			});
-			$select.val(app.wallet.getDefaultElectrumServer()).change();
+			var electrumServer = this.getValue('electrumServer', network) || app.wallet.getDefaultElectrumServer(network);
+			$select.val(electrumServer);
+		},
+		process: function(evt) {
+			var $target = $(evt.target);
+			if ($target[0] === this.$inputs.network[0]) {
+				// Network was changed.
+				// Load settings for that network.
+				var network = this.$inputs.network.val();
+				_.each(this.inputs, function(input) {
+					switch (input.name) {
+						case 'network':
+							// Skip network input.
+							break;
+						case 'electrumServer':
+							this.updateElectrumServer(network);
+							break;
+						default:
+							if (this.$inputs[input.name]) {
+								this.$inputs[input.name].val(this.getValue(input.name, network));
+							}
+							break;
+					}
+				}, this);
+				this.updateAddress(network);
+				// Save the network (only) - do not save any other settings.
+				app.settings.set('network', network);
+			} else {
+				// Process the form normally.
+				app.views.utility.Form.prototype.process.apply(this, arguments);
+			}
 		},
 		save: function(data) {
-			// All required input fields are filled-in and have valid values.
-			this.$buttons.done.toggleClass('disabled', !this.allRequiredFieldsFilledIn());
-			app.wallet.saveWIF(data.wif, data.network);
+			var network = data.network;
 			_.each(this.inputs, function(input) {
 				switch (input.type) {
-					case'checkbox':
+					case 'checkbox':
 						data[path] = !!data[path];
 						break;
 				}
 			});
-			app.settings.set(_.omit(data, 'wif'));
+			data = _.chain(data).omit('network', 'address').map(function(value, key) {
+				var path = [network, key].join('.');
+				return [path, value];
+			}).object().value();
+			data.network = network;
+			app.settings.set(data);
 		},
-		done: function() {
-			app.router.navigate('receive', { trigger: true });
-		},
-		onClose: function() {
-			if (app.views.utility.Form.prototype.onClose) {
-				app.views.utility.Form.prototype.onClose.apply(this, arguments);
-			}
-			if (this.electrumServerFormFieldView) {
-				this.electrumServerFormFieldView.close();
-			}
-		}
 	});
 
 })();

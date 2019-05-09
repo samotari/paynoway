@@ -36,9 +36,13 @@ app.services.electrum = (function() {
 		queue: queue,
 	};
 
+	var getServer = function() {
+		return app.wallet.getSetting('electrumServer') || app.wallet.getDefaultElectrumServer();
+	};
+
 	var isConnected = function(host) {
 		if (!service.client) return false;
-		host = host || app.settings.get('electrumServer');
+		host = host || getServer();
 		var clientHost = service.client.options.hostname + ':' + service.client.options.port;
 		return service.client.isConnected() && clientHost === host;
 	};
@@ -48,7 +52,7 @@ app.services.electrum = (function() {
 			cb = host;
 			host = null;
 		}
-		host = host || app.settings.get('electrumServer');
+		host = host || getServer();
 		cb = cb || _.noop;
 		if (isConnected(host)) {
 			// Already connected - do nothing.
@@ -83,6 +87,9 @@ app.services.electrum = (function() {
 	var connect = _.debounce(tryConnect, 300);
 
 	var createClient = function(host) {
+		if (!host || !_.isString(host)) {
+			throw new Error('Invalid host provided');
+		}
 		var options = {};
 		if (host.indexOf(':') !== -1) {
 			var parts = host.split(':');
@@ -98,9 +105,13 @@ app.services.electrum = (function() {
 	app.onDeviceReady(function() {
 		app.onReady(function() {
 			connect();
-			app.settings.on('change:electrumServer', function(host) {
-				app.log('app.settings.on change:electrumServer', host);
-				connect(host);
+			app.settings.on('change', function(key, value) {
+				if (key.indexOf('.') !== -1) {
+					var parts = key.split('.');
+					if (parts[1] === 'electrumServer') {
+						connect(value);
+					}
+				}
 			});
 		});
 	});

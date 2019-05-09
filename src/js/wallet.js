@@ -7,7 +7,7 @@ app.wallet = (function() {
 	var wallet = {
 
 		isSetup: function() {
-			return !!app.settings.get('wallet');
+			return !!this.getWIF();
 		},
 
 		generateRandomPrivateKey: function(network) {
@@ -24,15 +24,13 @@ app.wallet = (function() {
 		},
 
 		getWIF: function(network) {
-			network = network || this.getNetwork();
-			var wallet = app.settings.get('wallet') || {};
-			return wallet[network] || null;
+			return this.getSetting('wif', network);
 		},
 
-		saveWIF: function(wif, network) {
-			var wallet = app.settings.get('wallet') || {};
-			wallet[network] = wif;
-			app.settings.set('wallet', wallet);
+		getSetting: function(key, network) {
+			network = network || this.getNetwork();
+			var path = [network, key].join('.');
+			return app.settings.get(path);
 		},
 
 		getNetwork: function() {
@@ -64,7 +62,7 @@ app.wallet = (function() {
 		getAddress: function(network, wif) {
 			var keyPair = this.getKeyPair(network, wif);
 			if (!keyPair) return null;
-			var type = app.settings.get('addressType');
+			var type = this.getSetting('addressType', network);
 			switch (type) {
 				case 'p2wpkh':
 					var p2wpkh = bitcoin.payments.p2wpkh({
@@ -98,7 +96,7 @@ app.wallet = (function() {
 			try {
 				var address = this.getAddress();
 				app.log('wallet.getUnspentTxOutputs', address);
-				var type = app.settings.get('addressType');
+				var type = this.getSetting('addressType');
 				switch (type) {
 					case 'p2wpkh':
 						var constants = this.getNetworkConstants();
@@ -158,7 +156,7 @@ app.wallet = (function() {
 
 			var keyPair = this.getKeyPair();
 			var changeAddress = this.getAddress();
-			var addressType = app.settings.get('addressType');
+			var addressType = this.getSetting('addressType');
 			var p2wpkh = bitcoin.payments.p2wpkh({
 				network: keyPair.network,
 				pubkey: keyPair.publicKey,
