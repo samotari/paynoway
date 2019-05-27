@@ -29,15 +29,15 @@ app.views.utility.Form = (function() {
 
 		prepareInputs: function() {
 
-			this.inputs = _.map(this.inputs || [], this.prepareInput, this);
+			var inputs = _.result(this, 'inputs') || [];
+			this.inputs = _.map(inputs, this.prepareInput, this);
 		},
 
 		prepareInput: function(input) {
 
 			input = _.clone(input);
 			input.id = input.id || input.name;
-			input.path = input.path || input.name;
-			var value = this.getInputValueOverride(input.path);
+			var value = this.getInputValueOverride(input.name);
 			if (!_.isUndefined(value)) {
 				input.value = value;
 			} else if (input.value) {
@@ -57,6 +57,7 @@ app.views.utility.Form = (function() {
 					});
 					break;
 			}
+			input.visible = input.visible !== false;
 			return input;
 		},
 
@@ -69,11 +70,10 @@ app.views.utility.Form = (function() {
 
 		onFormFieldAction: function(evt) {
 
-			if (!this.inputs) return;
 			var $target = $(evt.target);
 			var name = $target.attr('data-input');
 			if (!name) return;
-			var input = _.findWhere(this.inputs, { name: name });
+			var input = this.getInputByName(name);
 			if (!input) return;
 			var action = _.findWhere(input.actions || [], { name: $target.attr('data-action') });
 			if (!action || !action.fn) return;
@@ -81,9 +81,16 @@ app.views.utility.Form = (function() {
 			var formData = this.getFormData();
 			var value = formData[name];
 			var $input = this.$(':input[name="' + name + '"]');
+
 			fn(value, function(error, newValue) {
-				if (error) return app.mainView.showMessage(error);
-				$input.val(newValue).trigger('change');
+
+				if (error) {
+					return app.mainView.showMessage(error);
+				}
+
+				if (newValue) {
+					$input.val(newValue).trigger('change');
+				}
 			});
 		},
 
@@ -133,6 +140,13 @@ app.views.utility.Form = (function() {
 
 			var data = this.getFormData();
 
+			// Set defaults.
+			_.each(this.inputs, function(input) {
+				if (_.isUndefined(data[input.name]) && !_.isUndefined(input.default)) {
+					data[input.name] = input.default;
+				}
+			});
+
 			this.validate(data, _.bind(function(error, validationErrors) {
 
 				if (error) {
@@ -144,6 +158,14 @@ app.views.utility.Form = (function() {
 					this.onValidationErrors(validationErrors);
 				} else {
 					// No validation errors.
+					_.each(this.inputs, function(input) {
+						switch (input.type) {
+							case 'checkbox':
+								// Force checkbox fields to have boolean values.
+								data[input.name] = !!data[input.name];
+								break;
+						}
+					});
 					try {
 						// Try saving.
 						this.save(data);
@@ -163,16 +185,17 @@ app.views.utility.Form = (function() {
 
 			async.map(this.inputs || [], _.bind(function(input, next) {
 
-				var value = data[input.path];
+				var value = data[input.name];
 				var errors = [];
 
 				if (input.required && _.isEmpty(value)) {
 					errors.push({
-						field: input.path,
+						field: input.name,
 						error: app.i18n.t('form.field-required', {
 							label: _.result(input, 'label')
 						}),
 					});
+					return next(null, errors);
 				}
 
 				if (input.validate) {
@@ -181,7 +204,7 @@ app.views.utility.Form = (function() {
 						validateFn(value, data);
 					} catch (error) {
 						errors.push({
-							field: input.path,
+							field: input.name,
 							error: error,
 						});
 					}
@@ -196,7 +219,7 @@ app.views.utility.Form = (function() {
 					validateAsyncFn(value, data, function(error) {
 						if (error) {
 							errors.push({
-								field: input.path,
+								field: input.name,
 								error: error,
 							});
 						}
@@ -219,19 +242,25 @@ app.views.utility.Form = (function() {
 			});
 		},
 
+		getInputValueOverride: function(name) {
+
+			return app.settings.get(name);
+		},
+
+		getInputDefaultValue: function(name) {
+
+			var input = this.getInputByName(name);
+			return input && _.result(input, 'default') || null;
+		},
+
 		getInputByName: function(name) {
 
 			return _.findWhere(this.inputs, { name: name });
 		},
 
-		getInputValueOverride: function(key) {
-			// Left empty intentionally.
-			// Override as needed.
-		},
-
 		save: function(data) {
-			// `data` is an object containing the form data.
-			// Put your custom save methods here.
+
+			app.settings.set(data);
 		},
 
 		onValidationErrors: function(validationErrors) {

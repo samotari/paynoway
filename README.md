@@ -5,9 +5,9 @@ A mobile app for testing payment systems against double-spend attacks.
 * [Disclaimers](#disclaimers)
 * [Requirements](#requirements)
 * [Getting Started](#getting-started)
-  * [Project Files](#project-files)
-  * [Build And Run Web App](#build-and-run-web-app)
-  * [Build And Run Android App](#build-and-run-android-app)
+  * [Android](#android)
+    * [Running on Android (VM)](#running-on-android-vm)
+    * [Running on Android (Device)](#running-on-android-device)
 * [License](#license)
 
 
@@ -33,8 +33,6 @@ A mobile app for testing payment systems against double-spend attacks.
 
 Before continuing, be sure you already have the project's [requirements](#requirements).
 
-### Project Files
-
 Download the project files via git:
 ```bash
 git clone https://github.com/samotari/pay-no-way.git
@@ -51,13 +49,15 @@ Build the application files:
 npm run build
 ```
 
+### Android
+
 Before installing and running the app on Android, you must prepare the Android platform with cordova:
 ```bash
 npm run prepare:android
 ```
 This downloads the cordova plugins which are necessary to build the app for Android devices.
 
-### Running on Android (VM)
+#### Running on Android (VM)
 
 Run the following command to check to see if there are any available Android virtual devices:
 ```bash
@@ -69,7 +69,7 @@ Install and run the app on the virtual device with the following command:
 npm run android-vm
 ```
 
-### Running on Android (Device)
+#### Running on Android (Device)
 
 To install and run the app on an Android device, you must first:
 * [Enable developer mode](https://developer.android.com/studio/debug/dev-options) on the device.

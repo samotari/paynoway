@@ -7,14 +7,27 @@ app.settings = (function() {
 	var settings = _.extend({}, {
 		getDefaultValue: function(key) {
 			var defaultValue;
-			var input = _.findWhere(app.views.Configure.prototype.inputs, { name: key });
+			var input = this.getInputByName(key);
 			if (input) {
 				defaultValue = _.result(input, 'default');
 			}
 			return defaultValue;
 		},
+		getInputByName: function(name) {
+			var inputs = this.getInputs();
+			return _.findWhere(inputs, { name: name });
+		},
+		getInputNames: function() {
+			var inputs = this.getInputs();
+			return _.pluck(inputs, 'name');
+		},
+		getInputs: function() {
+			var inputs = [];
+			inputs = inputs.concat(app.config.settings);
+			return inputs;
+		},
 		getAll: function() {
-			var defaultKeys = _.pluck(app.views.Configure.prototype.inputs, 'name');
+			var defaultKeys = this.getInputNames();
 			var keys = _.pluck(this.collection.toJSON(), 'key').concat(defaultKeys);
 			return _.chain(keys).uniq().map(function(key) {
 				return [key, this.get(key)];
