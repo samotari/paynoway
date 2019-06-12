@@ -14,6 +14,7 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 			pass: null,
 			version: '2.0',
 			timeout: app.config.jsonRpcTcpSocketClient.timeout,
+			autoReconnect: true,
 		});
 		this.socket = null;
 	};
@@ -51,6 +52,19 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 				done(error);
 			}
 		);
+		if (options.autoReconnect) {
+			this.on('close', function() {
+				app.log('json-rpc-tcp-socket-client.reconnect');
+				socket.open(options.hostname, options.port, options.timeout,
+					function onReconnectSuccess() {
+						app.log('json-rpc-tcp-socket-client.onReconnectSuccess', options);
+					},
+					function onReconnectError(error) {
+						app.log('json-rpc-tcp-socket-client.onReconnectError', options, error);
+					}
+				);
+			});
+		}
 	};
 
 	JsonRpcTcpSocketClient.prototype.parseData = function(dataByteArray) {
