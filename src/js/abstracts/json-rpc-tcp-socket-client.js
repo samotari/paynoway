@@ -25,6 +25,10 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 		return !!this.socket && this.socket.state === 2;
 	};
 
+	JsonRpcTcpSocketClient.prototype.getHost = function() {
+		return [this.options.hostname, this.options.port].join(':');
+	};
+
 	JsonRpcTcpSocketClient.prototype.open = function(cb) {
 		var options = this.options;
 		app.log('json-rpc-tcp-socket-client.open', options);

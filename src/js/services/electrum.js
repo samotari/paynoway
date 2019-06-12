@@ -37,10 +37,14 @@ app.services.electrum = (function() {
 			});
 		},
 
-		getHosts: function(network) {
+		getKnownPeers: function(network) {
 			network = network || app.settings.get('network');
+			var fromCache = app.cache.get('services.electrum.peers.' + network);
+			if (!_.isEmpty(fromCache)) return fromCache;
+			// Fallback to hard-coded peers list in config.
 			var networkConfig = app.config.networks[network];
-			return networkConfig && networkConfig.electrum.servers || [];
+			var fromConfig = networkConfig && networkConfig.electrum.servers || [];
+			return fromConfig;
 		},
 
 		getClients: function(network) {
@@ -51,10 +55,11 @@ app.services.electrum = (function() {
 		initializeClients: function(network, cb) {
 			cb = cb || _.noop;
 			network = network || app.settings.get('network');
-			var hosts = service.getHosts(network);
+			var hosts = service.getKnownPeers(network);
 			var done = _.once(function(error) {
 				if (error) return cb(error);
 				queue.resume();
+				service.fetchPeers();
 				cb();
 			});
 			service.clients[network] = [];
@@ -80,6 +85,7 @@ app.services.electrum = (function() {
 			var clients = service.getClients(network);
 			var done = _.once(cb);
 			async.each(clients, function(client, next) {
+				var host = client.getHost();
 				app.log('services.electrum: Destroying client for server at ' + host);
 				client.destroy(function(error) {
 					if (error) {
@@ -106,6 +112,26 @@ app.services.electrum = (function() {
 				options.port = 50001;
 			}
 			return new app.abstracts.JsonRpcTcpSocketClient(options);
+		},
+
+		fetchPeers: function(cb) {
+			cb = cb || _.noop;
+			var network = app.settings.get('network');
+			service.cmd('server.peers.subscribe', function(error, results) {
+				if (error) return cb(error);
+				var peers = _.map(service.getClients(network), function(client) {
+					return client.getHost();
+				});
+				_.each(results, function(result) {
+					var ipAddress = result[0];
+					var tcpPort = result[2][2].substr(1);
+					var host = [ipAddress, tcpPort].join(':');
+					peers.push(host);
+				});
+				peers = _.uniq(peers);
+				app.cache.set('services.electrum.peers.' + network, peers);
+				cb(null, peers);
+			});
 		},
 	};
 
