@@ -11,14 +11,16 @@ app.onDeviceReady(function() {
 	Handlebars.registerPartial('formFieldRow', $('#template-form-field-row').html());
 
 	app.onReady(function() {
+
 		// Initialize the main view.
 		app.mainView = new app.views.Main();
 
-		// Initialize the router.
-		app.router = new app.Router();
+		app.device.initialize();
 
 		$('html').addClass('loaded');
-		app.device.overrideBackButton();
+
+		// Initialize the router.
+		app.router = new app.Router();
 
 		// Don't initialize backbone history when testing.
 		if (!app.isTest()) {
