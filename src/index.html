@@ -5,7 +5,11 @@
 	<meta http-equiv="x-ua-compatible" content="IE=Edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><%= info.name %></title>
+<% if (target === 'dev') { %>
+	<link href="css/all.css" rel="stylesheet">
+<% } else { %>
 	<link href="css/all.min.css" rel="stylesheet">
+<% } %>
 	<!-- favicon -->
 	<link rel="apple-touch-icon-precomposed" sizes="57x57" href="images/favicon/apple-touch-icon-57x57.png">
 	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/favicon/apple-touch-icon-114x114.png">
@@ -164,7 +168,11 @@
 
 	<script type="text/json" id="json-info"><%= JSON.stringify(info) %></script>
 	<script src="cordova.js"></script>
+<% if (target === 'dev') { %>
+	<script src="js/all.js"></script>
+<% } else { %>
 	<script src="js/all.min.js"></script>
+<% } %>
 
 </body>
 </html>

@@ -5,23 +5,29 @@
 # And then you can run various commands:
 #
 #   $ make            # compile files that need compiling
-#   $ make clean all  # remove target files and recompile from scratch
+#   $ make clean dev  # remove target files and recompile dev build from scratch
+#   $ make clean prod  # remove target files and recompile production build from scratch
 #
 
 ## Variables
 BIN=node_modules/.bin
 BUILD=build
 BUILD_DEPS=$(BUILD)/deps
-BUILD_DEPS_JS=$(BUILD)/dependencies.min.js
-BUILD_ALL_CSS=$(BUILD)/all.min.css
-BUILD_ALL_JS=$(BUILD)/all.min.js
+BUILD_DEPS_JS=$(BUILD)/dependencies.js
+BUILD_DEPS_MIN_JS=$(BUILD)/dependencies.min.js
+BUILD_ALL_JS=$(BUILD)/all.js
+BUILD_ALL_MIN_JS=$(BUILD)/all.min.js
+BUILD_ALL_CSS=$(BUILD)/all.css
+BUILD_ALL_MIN_CSS=$(BUILD)/all.min.css
 SRC=src
 CSS=$(SRC)/css
 IMAGES=$(SRC)/images
 JS=$(SRC)/js
 PUBLIC=www
-PUBLIC_ALL_CSS=$(PUBLIC)/css/all.min.css
-PUBLIC_ALL_JS=$(PUBLIC)/js/all.min.js
+PUBLIC_ALL_CSS=$(PUBLIC)/css/all.css
+PUBLIC_ALL_MIN_CSS=$(PUBLIC)/css/all.min.css
+PUBLIC_ALL_JS=$(PUBLIC)/js/all.js
+PUBLIC_ALL_MIN_JS=$(PUBLIC)/js/all.min.js
 SCRIPTS=scripts
 
 # Targets
@@ -38,14 +44,26 @@ SCRIPTS=scripts
 # (such as "all" below) isn't a file but instead a just label. Declaring
 # it as phony ensures that it always run, even if a file by the same name
 # exists.
-.PHONY: all clean clean-light fonts images
-
-all: config.xml\
-$(PUBLIC)/index.html\
-$(PUBLIC_ALL_CSS)\
-$(PUBLIC_ALL_JS)\
+.PHONY: app\
+dev\
+prod\
+clean\
+clean-light\
 fonts\
 images
+
+app: config.xml\
+$(PUBLIC)/index.html\
+fonts\
+images
+
+dev: app\
+$(PUBLIC_ALL_CSS)\
+$(PUBLIC_ALL_JS)
+
+prod: app\
+$(PUBLIC_ALL_MIN_CSS)\
+$(PUBLIC_ALL_MIN_JS)
 
 clean:
 	# Delete build and output files:
@@ -65,19 +83,26 @@ images:
 	cp -r $(IMAGES)/favicon/favicon.ico $(PUBLIC)/favicon.ico
 
 config.xml: config-template.xml package.json
-	node $(SCRIPTS)/copy-config-xml.js
+	node $(SCRIPTS)/copy-config-xml.js config-template.xml $@
 
-$(PUBLIC)/index.html: $(SRC)/index.html
-	mkdir -p $(PUBLIC)/
-	node $(SCRIPTS)/copy-index-html.js $^ $@
+$(PUBLIC)/index.html: package.json $(SRC)/index.html
+	mkdir -p $$(dirname $@)
+	node $(SCRIPTS)/copy-index-html.js $(SRC)/index.html $@
 
 $(BUILD)/css/*.min.css: $(CSS)/*.css
-	mkdir -p $(BUILD)/css
+	mkdir -p $$(dirname $@)
 	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css
 
-$(BUILD)/css/views/*.min.css: $(CSS)/views/*.css
-	mkdir -p $(BUILD)/css/views
-	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css/views
+$(BUILD)/css/**/*.min.css: $(CSS)/**/*.css
+	for input in $^; do \
+		dir=$$(dirname $(BUILD)/$${input#src/}); \
+		output="$$dir/$$(basename $$input .css).min.css"; \
+		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
+			mkdir -p $$dir; \
+			echo "postcss $$input --output $$output"; \
+			$(BIN)/postcss $$input --output $$output; \
+		fi; \
+	done
 
 APP_CSS_FILES=$(CSS)/fonts.css\
 $(CSS)/reset.css\
@@ -87,62 +112,81 @@ $(CSS)/forms.css\
 $(CSS)/header.css\
 $(CSS)/secondary-controls.css\
 $(CSS)/views/*.css
-APP_MIN_CSS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.css, %.min.css, $(APP_CSS_FILES)))
-$(BUILD_ALL_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/views/*.min.css
+APP_CSS_MIN_FILES=$(addprefix $(BUILD)/, $(subst $(SRC), , $(patsubst %.css, %.min.css, $(APP_CSS_FILES))))
+
+$(BUILD_ALL_CSS): $(CSS)/*.css $(CSS)/**/*.css
+	mkdir -p $$(dirname $@)
 	rm -f $(BUILD_ALL_CSS)
-	for file in $(APP_MIN_CSS_FILES); do \
+	for file in $(APP_CSS_FILES); do \
 		cat $$file >> $(BUILD_ALL_CSS); \
 		echo "" >> $(BUILD_ALL_CSS); \
 	done
 
+$(BUILD_ALL_MIN_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/**/*.min.css
+	mkdir -p $$(dirname $@)
+	rm -f $(BUILD_ALL_MIN_CSS)
+	for file in $(APP_CSS_MIN_FILES); do \
+		cat $$file >> $(BUILD_ALL_MIN_CSS); \
+		echo "" >> $(BUILD_ALL_MIN_CSS); \
+	done
+
 $(PUBLIC_ALL_CSS): $(BUILD_ALL_CSS)
-	mkdir -p $(PUBLIC)/css/
+	mkdir -p $$(dirname $@)
 	cp $(BUILD_ALL_CSS) $(PUBLIC_ALL_CSS)
 
+$(PUBLIC_ALL_MIN_CSS): $(BUILD_ALL_MIN_CSS)
+	mkdir -p $$(dirname $@)
+	cp $(BUILD_ALL_MIN_CSS) $(PUBLIC_ALL_MIN_CSS)
+
 $(BUILD_DEPS)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
-	mkdir -p $(BUILD_DEPS)/js
+	mkdir -p $$(dirname $@)
 	$(BIN)/browserify \
 		--entry node_modules/bitcoinjs-lib/src/index.js \
 		--standalone bitcoin \
 		--transform [ babelify --presets [ @babel/preset-env ] ] \
 		--outfile $(BUILD_DEPS)/js/bitcoin.js
 
-$(BUILD_DEPS)/js/bitcoin.min.js: $(BUILD_DEPS)/js/bitcoin.js
-	$(BIN)/uglifyjs $(BUILD_DEPS)/js/bitcoin.js --mangle reserved=['BigInteger','ECPair','Point'] -o $(BUILD_DEPS)/js/bitcoin.min.js
+$(BUILD_DEPS)/js/Buffer.js: exports/buffer.js
+	mkdir -p $$(dirname $@)
+	$(BIN)/browserify \
+		--entry $^ \
+		--standalone $$(basename $@ .js) \
+		--transform [ babelify --presets [ @babel/preset-env ] ] \
+		--outfile $@
 
 $(BUILD_DEPS)/js/QRCode.js: node_modules/qrcode/lib/browser.js
-	mkdir -p $(BUILD_DEPS)/js
+	mkdir -p $$(dirname $@)
 	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
-
-$(BUILD_DEPS)/js/buffer.js: exports/buffer.js
-	mkdir -p $(BUILD_DEPS)/js
-	$(BIN)/browserify --entry $^ --standalone Buffer --outfile $@
 
 $(BUILD_DEPS)/js/querystring.js: exports/querystring.js
-	mkdir -p $(BUILD_DEPS)/js
+	mkdir -p $$(dirname $@)
 	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
-$(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
+$(BUILD_DEPS)/js/bitcoin.min.js: $(BUILD_DEPS)/js/bitcoin.js
+	$(BIN)/uglifyjs $^ --mangle reserved=['BigInteger','ECPair','Point'] -o $@
+
+$(BUILD_DEPS)/js/Buffer.min.js: $(BUILD_DEPS)/js/Buffer.js
 	$(BIN)/uglifyjs $^ -o $@
 
-$(BUILD_DEPS)/js/buffer.min.js: $(BUILD_DEPS)/js/buffer.js
+$(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
 	$(BIN)/uglifyjs $^ -o $@
 
 $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
 	$(BIN)/uglifyjs $^ -o $@
 
-DEPS_JS_FILES=node_modules/async/dist/async.min.js\
-node_modules/bignumber.js/bignumber.min.js\
-node_modules/jquery/dist/jquery.min.js\
-node_modules/underscore/underscore-min.js\
-node_modules/backbone/backbone-min.js\
-node_modules/backbone.localstorage/build/backbone.localStorage.min.js\
-node_modules/handlebars/dist/handlebars.min.js\
-node_modules/moment/min/moment-with-locales.min.js\
-$(BUILD_DEPS)/js/bitcoin.min.js\
-$(BUILD_DEPS)/js/QRCode.min.js\
-$(BUILD_DEPS)/js/buffer.min.js \
-$(BUILD_DEPS)/js/querystring.min.js
+DEPS_JS_FILES=node_modules/core-js/client/shim.js\
+node_modules/async/dist/async.js\
+node_modules/bignumber.js/bignumber.js\
+node_modules/jquery/dist/jquery.js\
+node_modules/underscore/underscore.js\
+node_modules/backbone/backbone.js\
+node_modules/backbone.localstorage/build/backbone.localStorage.js\
+node_modules/handlebars/dist/handlebars.js\
+$(BUILD_DEPS)/js/bitcoin.js\
+$(BUILD_DEPS)/js/Buffer.js\
+$(BUILD_DEPS)/js/QRCode.js\
+$(BUILD_DEPS)/js/querystring.js\
+node_modules/moment/min/moment-with-locales.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	rm -f $(BUILD_DEPS_JS)
 	for file in $(DEPS_JS_FILES); do \
@@ -150,14 +194,57 @@ $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 		echo "" >> $(BUILD_DEPS_JS); \
 	done
 
-$(BUILD)/js/**/*.min.js: $(JS)/*.js\
-$(JS)/**/*.js\
-$(JS)/**/**/*.js
+DEPS_MIN_JS_FILES=node_modules/core-js/client/shim.min.js\
+node_modules/async/dist/async.min.js\
+node_modules/bignumber.js/bignumber.min.js\
+node_modules/jquery/dist/jquery.min.js\
+node_modules/underscore/underscore-min.js\
+node_modules/backbone/backbone-min.js\
+node_modules/backbone.localstorage/build/backbone.localStorage.min.js\
+node_modules/handlebars/dist/handlebars.min.js\
+$(BUILD_DEPS)/js/bitcoin.min.js\
+$(BUILD_DEPS)/js/Buffer.min.js\
+$(BUILD_DEPS)/js/QRCode.min.js\
+$(BUILD_DEPS)/js/querystring.min.js\
+node_modules/moment/min/moment-with-locales.min.js
+$(BUILD_DEPS_MIN_JS): $(DEPS_MIN_JS_FILES)
+	rm -f $(BUILD_DEPS_MIN_JS)
+	for file in $(DEPS_MIN_JS_FILES); do \
+		cat $$file >> $(BUILD_DEPS_MIN_JS); \
+		echo "" >> $(BUILD_DEPS_MIN_JS); \
+	done
+
+$(BUILD)/js/*.min.js:$(JS)/*.js
 	for input in $^; do \
-		dir=$(BUILD)/$$(dirname $${input#$(SRC)/}); \
+		dir=$$(dirname $(BUILD)/$${input#src/}); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
-		mkdir -p $$dir; \
-		$(BIN)/uglifyjs -o $$output $$input; \
+		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
+			mkdir -p $$dir; \
+			echo "uglifyjs -o $$output $$input"; \
+			$(BIN)/uglifyjs -o $$output $$input; \
+		fi; \
+	done
+
+$(BUILD)/js/**/*.min.js:$(JS)/**/*.js
+	for input in $^; do \
+		dir=$$(dirname $(BUILD)/$${input#src/}); \
+		output="$$dir/$$(basename $$input .js).min.js"; \
+		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
+			mkdir -p $$dir; \
+			echo "uglifyjs -o $$output $$input"; \
+			$(BIN)/uglifyjs -o $$output $$input; \
+		fi; \
+	done
+
+$(BUILD)/js/**/**/*.min.js:$(JS)/**/**/*.js
+	for input in $^; do \
+		dir=$$(dirname $(BUILD)/$${input#src/}); \
+		output="$$dir/$$(basename $$input .js).min.js"; \
+		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
+			mkdir -p $$dir; \
+			echo "uglifyjs -o $$output $$input"; \
+			$(BIN)/uglifyjs -o $$output $$input; \
+		fi; \
 	done
 
 APP_JS_FILES=$(JS)/jquery.extend/*.js\
@@ -180,15 +267,28 @@ $(JS)/wallet.js\
 $(JS)/i18n.js\
 $(JS)/router.js\
 $(JS)/init.js
-APP_MIN_JS_FILES=$(subst $(SRC)/, $(BUILD)/, $(patsubst %.js, %.min.js, $(APP_JS_FILES)))
-JS_FILES=$(BUILD_DEPS_JS) $(APP_MIN_JS_FILES)
-$(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(BUILD)/js/**/*.min.js
+APP_JS_MIN_FILES=$(addprefix $(BUILD)/, $(subst $(SRC), , $(patsubst %.js, %.min.js, $(APP_JS_FILES))))
+
+JS_FILES=$(BUILD_DEPS_JS) $(APP_JS_FILES)
+$(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
 	rm -f $(BUILD_ALL_JS)
 	for file in $(JS_FILES); do \
-		echo "" >> $(BUILD_ALL_JS); \
 		cat $$file >> $(BUILD_ALL_JS); \
+		echo "" >> $(BUILD_ALL_JS); \
+	done
+
+JS_MIN_FILES=$(BUILD_DEPS_MIN_JS) $(APP_JS_MIN_FILES)
+$(BUILD_ALL_MIN_JS): $(BUILD_DEPS_MIN_JS) $(BUILD)/js/*.min.js $(BUILD)/js/**/*.min.js $(BUILD)/js/**/**/*.min.js
+	rm -f $(BUILD_ALL_MIN_JS)
+	for file in $(JS_MIN_FILES); do \
+		cat $$file >> $(BUILD_ALL_MIN_JS); \
+		echo "" >> $(BUILD_ALL_MIN_JS); \
 	done
 
 $(PUBLIC_ALL_JS): $(BUILD_ALL_JS)
-	mkdir -p $(PUBLIC)/js/
+	mkdir -p $$(dirname $@)
 	cp $(BUILD_ALL_JS) $(PUBLIC_ALL_JS)
+
+$(PUBLIC_ALL_MIN_JS): $(BUILD_ALL_MIN_JS)
+	mkdir -p $$(dirname $@)
+	cp $(BUILD_ALL_MIN_JS) $(PUBLIC_ALL_MIN_JS)

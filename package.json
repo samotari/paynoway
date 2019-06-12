@@ -7,7 +7,11 @@
   "scripts": {
     "android": "./node_modules/.bin/cordova run android --device",
     "android-vm": "./node_modules/.bin/cordova run android",
-    "build": "make clean-light all",
+    "build": "npm run build:prod",
+    "build:apk": "./scripts/build-signed-apk.sh",
+    "build:dev": "NODE_ENV=dev make clean-light dev",
+    "build:prod": "NODE_ENV=prod make clean-light prod",
+    "build:test": "NODE_ENV=test make clean-light prod",
     "prepare:android": "./node_modules/.bin/cordova platform add android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -38,8 +42,8 @@
     }
   },
   "dependencies": {
-    "@babel/core": "7.2.2",
-    "@babel/preset-env": "7.2.0",
+    "@babel/core": "7.4.4",
+    "@babel/preset-env": "7.4.4",
     "async": "2.6.1",
     "babelify": "10.0.0",
     "backbone": "1.3.3",
@@ -52,6 +56,7 @@
     "cordova-android-support-gradle-release": "3.0.0",
     "cordova-plugin-inappbrowser": "2.0.2",
     "cordova-plugin-whitelist": "1.3.3",
+    "core-js": "2.6.4",
     "cssnano": "4.1.7",
     "cz.blocshop.socketsforcordova": "https://github.com/chill117/sockets-for-cordova.git",
     "handlebars": "4.1.2",
