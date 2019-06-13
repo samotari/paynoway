@@ -27,6 +27,10 @@ app.onDeviceReady(function() {
 			// Start storing in-app browsing history.
 			Backbone.history.start();
 		}
+
+		if (!app.hasReadDisclaimers()) {
+			app.router.navigate('#disclaimers', { trigger: true });
+		}
 	});
 
 	app.queues.onStart.resume();

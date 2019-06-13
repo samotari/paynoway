@@ -4,6 +4,14 @@ var app = app || {};
 
 	'use strict';
 
+	app.hasReadDisclaimers = function() {
+		return app.settings.get('hasReadDisclaimers') === true;
+	};
+
+	app.setHasReadDisclaimersFlag = function() {
+		app.settings.set('hasReadDisclaimers', true);
+	};
+
 	app.exit = function() {
 		navigator.app.exitApp();
 	};

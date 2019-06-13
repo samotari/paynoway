@@ -45,3 +45,49 @@
 .secondary-control:first-child:nth-last-child(4) ~ .secondary-control {
 	width: 23%;
 }
+.button.secondary-control {
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: 2.4rem;
+	background-repeat: no-repeat;
+}
+.button.secondary-control.back {
+	background-image: url('../images/back.svg');
+}
+.button.secondary-control.continue {
+	background-image: url('../images/continue.svg');
+}
+.button.secondary-control.accept,
+.button.secondary-control.done,
+.button.secondary-control.submit {
+	background-image: url('../images/checkmark.svg');
+}
+.button.secondary-control.cancel,
+.button.secondary-control.reject {
+	background-image: url('../images/cancel.svg');
+}
+.button.secondary-control.back {
+	background-color: rgba(255,153,0,0.8);
+}
+.button.secondary-control.back.touchstart {
+	background-color: rgba(255,153,0,0.7);
+}
+.button.secondary-control.accept,
+.button.secondary-control.continue,
+.button.secondary-control.submit,
+.button.secondary-control.done {
+	background-color: rgba(0,128,0,0.6);
+}
+.button.secondary-control.accept.touchstart,
+.button.secondary-control.continue.touchstart,
+.button.secondary-control.submit.touchstart {
+	background-color: rgba(0,128,0,0.5);
+}
+.button.secondary-control.cancel,
+.button.secondary-control.reject {
+	background-color: rgba(255,0,0,0.6);
+}
+.button.secondary-control.cancel.touchstart,
+.button.secondary-control.reject.touchstart {
+	background-color: rgba(255,0,0,0.5);
+}

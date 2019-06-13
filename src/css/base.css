@@ -63,6 +63,13 @@ html.loaded #view {
 	text-align: center;
 	margin-bottom: 1rem;
 }
+.view ul {
+	box-sizing: border-box;
+	padding-left: 1.5rem;
+}
+.view li + li {
+	margin-top: 1rem;
+}
 #message {
 	position: absolute;
 	left: 0;

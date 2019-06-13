@@ -20,6 +20,11 @@ app.lang['en'] = (function() {
 
 		'device.camera.not-available': 'The device\'s camera is not available',
 
+		'disclaimers.title': 'Disclaimers',
+		'disclaimers.1': 'This app is intended to be used for testing purposes.',
+		'disclaimers.2': 'Please do not use this app to double-spend against merchants without their explicit consent.',
+		'disclaimers.3': 'A successful double-spend is not guaranteed - use at your own risk.',
+
 		'form.field-required': 'This field is required',
 
 		'receive.title': 'Receiving Address',

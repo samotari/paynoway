@@ -8,6 +8,7 @@ app.Router = (function() {
 		// !! IMPORTANT !!
 		// These are router function names, not URI hashes.
 		'configure',
+		'disclaimers',
 	];
 
 	var isAllowedWhenNotConfigured = function(routerMethodName) {
@@ -19,6 +20,7 @@ app.Router = (function() {
 
 		routes: {
 			'configure': 'configure',
+			'disclaimers': 'disclaimers',
 			'receive': 'receive',
 			'send': 'send',
 
@@ -52,6 +54,11 @@ app.Router = (function() {
 		configure: function() {
 
 			app.mainView.renderView('Configure');
+		},
+
+		disclaimers: function() {
+
+			app.mainView.renderView('Disclaimers');
 		},
 
 		receive: function() {
