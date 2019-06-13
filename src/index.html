@@ -77,8 +77,7 @@
 		</div>
 	</script>
 
-	<script type="text/html" id="template-send">
-		<div class="utxo">
+	<script type="text/html" id="template-send-utxo">
 		{{#if utxo}}
 		<table>
 			<thead>
@@ -100,7 +99,10 @@
 		<p class="utxo-empty">{{i18n "send.no-utxo"}}</p>
 		{{/if}}
 		<a class="button refresh-utxo"></a>
-		</div>
+	</script>
+
+	<script type="text/html" id="template-send">
+		<div class="utxo"></div>
 		<div class="form">
 			<form>
 		{{#each inputs}}

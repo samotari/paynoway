@@ -114,10 +114,11 @@ app.wallet = (function() {
 			}
 		},
 
-		getMinRelayFee: function(cb) {
+		getMinRelayFeeRate: function(cb) {
 			var toBaseUnit = _.bind(this.toBaseUnit, this);
 			app.services.electrum.cmd('blockchain.relayfee', [], function(error, result) {
 				if (error) return cb(error);
+				// satoshis/kilobyte
 				var minRelayFee = toBaseUnit(result);
 				cb(null, minRelayFee);
 			});
@@ -129,8 +130,9 @@ app.wallet = (function() {
 			var toBaseUnit = _.bind(this.toBaseUnit, this);
 			app.services.electrum.cmd('blockchain.estimatefee', [targetNumberOfBlocks], function(error, result) {
 				if (error) return cb(error);
-				var minRelayFee = toBaseUnit(result);
-				cb(null, minRelayFee);
+				// satoshis/kilobyte
+				var feeRate = toBaseUnit(result);
+				cb(null, feeRate);
 			});
 		},
 
@@ -241,12 +243,18 @@ app.wallet = (function() {
 			return txb.build();
 		},
 
-		buildTxsForPaymentAndDoubleSpend: function(value, paymentAddress, feeRate, minRelayFee, utxo) {
+		buildTxsForPaymentAndDoubleSpend: function(value, paymentAddress, utxo, options) {
 
 			var keyPair = this.getKeyPair();
 			var doubleSpendAddress = this.getAddress();
 			var networkConfig = this.getNetworkConfig();
 			var buildTx = _.bind(this.buildTx, this);
+
+			options = options || {};
+			options.feeRate = _.defaults(options.feeRate || {}, {
+				payment: 1000,// satoshis/kilobyte
+				doubleSpend: 1150,// satoshis/kilobyte
+			});
 
 			// Sequence number for inputs must be less than the maximum.
 			// This allows RBF later.
@@ -260,10 +268,7 @@ app.wallet = (function() {
 				});
 				// Calculate the size of the sample tx (in kilobytes).
 				var size = sampleTx.toHex().length / 2000;
-				var fee = Math.ceil(Math.max(
-					minRelayFee,
-					size * feeRate
-				));
+				var fee = Math.ceil(size * options.feeRate.payment);
 				var tx = buildTx(value, paymentAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
 					// The fee rate is satoshis/kilobyte.
@@ -292,7 +297,10 @@ app.wallet = (function() {
 				});
 				// Calculate the size of the sample tx (in kilobytes).
 				var size = sampleTx.toHex().length / 2000;
-				var fee = Math.ceil(payment.fee + networkConfig.fees.minBump);
+				var fee = Math.ceil(Math.max(
+					size * options.feeRate.doubleSpend,
+					payment.fee * (options.feeRate.doubleSpend / options.feeRate.payment)
+				));
 				var tx = buildTx(value, doubleSpendAddress, utxo, {
 					// Use the size of the tx to calculate the fee.
 					fee: fee,
@@ -312,28 +320,6 @@ app.wallet = (function() {
 				payment: payment,
 				doubleSpend: doubleSpend,
 			};
-		},
-
-		createPaymentAndDoubleSpendTxs: function(value, paymentAddress, cb) {
-
-			var buildTxsForPaymentAndDoubleSpend = _.bind(this.buildTxsForPaymentAndDoubleSpend, this);
-
-			async.parallel({
-				feeRate: _.bind(this.getFeeRate, this),
-				minRelayFee: _.bind(this.getMinRelayFee, this),
-				utxo: _.bind(this.getUnspentTxOutputs, this),
-			}, function(error, results) {
-				if (error) return cb(error);
-				var feeRate = results.feeRate;
-				var minRelayFee = results.minRelayFee;
-				var utxo = results.utxo;
-				try {
-					var txs = buildTxsForPaymentAndDoubleSpend(value, paymentAddress, feeRate, minRelayFee, utxo);
-				} catch (error) {
-					return cb(error);
-				}
-				cb(null, txs);
-			});
 		},
 
 		toBaseUnit: function(value) {
