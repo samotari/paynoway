@@ -86,6 +86,7 @@ app.views.Send = (function() {
 			_.bindAll(this, 'toggleDoubleSpendButton', 'refreshUnspentTxOutputs');
 			this.doRefreshUnspentTxOutputs = _.throttle(this.refreshUnspentTxOutputs, 200);
 			this.model = new Backbone.Model;
+			this.model.set('doubleSpend', app.cache.get('doubleSpend'));
 			this.listenTo(this.model, 'change:utxo', this.render);
 			this.listenTo(this.model, 'change:doubleSpend', this.toggleDoubleSpendButton);
 			this.refreshUnspentTxOutputs();
@@ -99,6 +100,7 @@ app.views.Send = (function() {
 				payment: this.$('.button.payment'),
 				doubleSpend: this.$('.button.double-spend'),
 			};
+			this.toggleDoubleSpendButton();
 		},
 		refreshUnspentTxOutputs: function() {
 			app.busy(true);
@@ -167,7 +169,9 @@ app.views.Send = (function() {
 							return app.mainView.showMessage(error);
 						}
 						refreshUnspentTxOutputs();
-						model.set('doubleSpend', _.omit(txs.doubleSpend, 'tx'));
+						var doubleSpend = _.omit(txs.doubleSpend, 'tx');
+						app.cache.set('doubleSpend', doubleSpend);
+						model.set('doubleSpend', doubleSpend);
 					});
 				} else {
 					// Canceled - do nothing.
@@ -196,6 +200,7 @@ app.views.Send = (function() {
 					if (error) {
 						app.mainView.showMessage(error);
 					} else {
+						app.cache.clear('doubleSpend');
 						model.set('doubleSpend', null);
 					}
 				});
