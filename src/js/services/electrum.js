@@ -17,7 +17,7 @@ app.services.electrum = (function() {
 					}
 					client.cmd(method, params, function(error, result) {
 						if (error) {
-							var codeMatch = error.message.match(/(.*) \(code ([0-9]+)\)/);;
+							var codeMatch = error.message && error.message.match(/(.*) \(code ([0-9]+)\)/);;
 							if (codeMatch) {
 								error = new Error(codeMatch[1]);
 								error.code = parseInt(codeMatch[2]);
