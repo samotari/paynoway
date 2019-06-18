@@ -95,18 +95,15 @@
 	box-sizing: border-box;
 	padding: .9rem 1.2rem;
 }
-.form-field.has-1-actions { padding-right: 3rem; }
-.form-field.has-2-actions { padding-right: 6rem; }
-.form-field.has-3-actions { padding-right: 9rem; }
 .form-field-action + .form-field-action {
 	margin-left: .3rem;
 }
-.form-field-action.button {
-	box-shadow: 0 0.2rem 0.2rem 0 rgba(0,0,0,.14),
-				0 0.22rem 0.1rem -0.2rem rgba(0,0,0,.2),
-				0 0.1rem 0.4rem 0 rgba(0,0,0,.12);
+.form-field.has-1-actions { padding-right: 3rem; }
+.form-field.has-2-actions { padding-right: 6rem; }
+.form-field.has-3-actions { padding-right: 9rem; }
+.form-field-action.camera {
+	background-image: url('../images/camera.svg');
 }
-.form-field-action.camera { background-image: url('../images/camera.svg'); }
 .form-field-action.cycle {
 	background-size: 1rem;
 	background-image: url('../images/cycle.svg');

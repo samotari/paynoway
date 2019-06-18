@@ -50,6 +50,10 @@
 	background-repeat: no-repeat;
 	background-size: 2.4rem;
 	background-repeat: no-repeat;
+	background-color: rgba(180,180,180,0.8);
+}
+.button.secondary-control.back.touchstart {
+	background-color: rgba(200,200,200,0.6);
 }
 .button.secondary-control.back {
 	background-image: url('../images/back.svg');

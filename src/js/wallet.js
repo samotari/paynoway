@@ -152,8 +152,8 @@ app.wallet = (function() {
 				fee: 0,
 				// Input sequence number:
 				sequence: null,
-				// Require specific unspent outputs to be used:
-				utxo: null,
+				// Require specific utxo to be used as inputs:
+				inputs: null,
 			});
 
 			var keyPair = this.getKeyPair();
@@ -172,14 +172,12 @@ app.wallet = (function() {
 			var utxoValueConsumed;
 			var utxoToConsume;
 
-			if (options.utxo) {
-				// Use only specific unspent outputs.
+			if (options.inputs) {
+				// Use only specific utxo as inputs.
 				utxoToConsume = _.filter(utxo, function(output) {
-					return !!_.find(options.utxo, function(utxo) {
-						var txHash = utxo.hash.reverse().toString('hex');
-						// Reverse the hash UIntArray one more time - to restore its original state.
-						utxo.hash.reverse();
-						var outputIndex = utxo.index;
+					return !!_.find(options.inputs, function(input) {
+						var txHash = Buffer.from(input.hash && input.hash.data || input.hash).reverse().toString('hex');
+						var outputIndex = input.index;
 						return txHash === output.tx_hash && outputIndex === output.tx_pos;
 					});
 				});
@@ -241,85 +239,6 @@ app.wallet = (function() {
 			});
 
 			return txb.build();
-		},
-
-		buildTxsForPaymentAndDoubleSpend: function(value, paymentAddress, utxo, options) {
-
-			var keyPair = this.getKeyPair();
-			var doubleSpendAddress = this.getAddress();
-			var networkConfig = this.getNetworkConfig();
-			var buildTx = _.bind(this.buildTx, this);
-
-			options = options || {};
-			options.feeRate = _.defaults(options.feeRate || {}, {
-				payment: 1000,// satoshis/kilobyte
-				doubleSpend: 1150,// satoshis/kilobyte
-			});
-
-			// Sequence number for inputs must be less than the maximum.
-			// This allows RBF later.
-			var sequence = 0xffffffff - 9;
-
-			var payment = (function() {
-				// Build a sample tx so that we can calculate the fee.
-				var sampleTx = buildTx(value, paymentAddress, utxo, {
-					fee: 0,
-					sequence: sequence,
-				});
-				// Calculate the size of the sample tx (in kilobytes).
-				var size = sampleTx.toHex().length / 2000;
-				var fee = Math.ceil(size * options.feeRate.payment);
-				var tx = buildTx(value, paymentAddress, utxo, {
-					// Use the size of the tx to calculate the fee.
-					// The fee rate is satoshis/kilobyte.
-					// Underpay on the fee here a little, to make the replacement tx cheaper.
-					fee: fee,
-					sequence: sequence,
-				});
-				return {
-					address: paymentAddress,
-					amount: value,
-					fee: fee,
-					rawTx: tx.toHex(),
-					tx: tx,
-				};
-			})();
-
-			var doubleSpend = (function() {
-				// Increment the sequence for the inputs.
-				// This should cause the double-spend tx to replace the previous tx.
-				sequence++;
-				// Build a sample tx so that we can calculate the fee.
-				var sampleTx = buildTx(value, doubleSpendAddress, utxo, {
-					fee: 0,
-					sequence: sequence,
-					utxo: payment.tx.ins,
-				});
-				// Calculate the size of the sample tx (in kilobytes).
-				var size = sampleTx.toHex().length / 2000;
-				var fee = Math.ceil(Math.max(
-					size * options.feeRate.doubleSpend,
-					payment.fee * (options.feeRate.doubleSpend / options.feeRate.payment)
-				));
-				var tx = buildTx(value, doubleSpendAddress, utxo, {
-					// Use the size of the tx to calculate the fee.
-					fee: fee,
-					sequence: sequence,
-					utxo: payment.tx.ins,
-				});
-				return {
-					address: doubleSpendAddress,
-					amount: value,
-					fee: fee,
-					rawTx: tx.toHex(),
-					tx: tx,
-				};
-			})();
-
-			return {
-				payment: payment,
-				doubleSpend: doubleSpend,
-			};
 		},
 
 		toBaseUnit: function(value) {

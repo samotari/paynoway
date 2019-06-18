@@ -62,9 +62,7 @@
 		<div class="form">
 			<form>
 		{{#each inputs}}
-			{{#if visible}}
-				{{> formFieldRow .}}
-			{{/if}}
+			{{> formFieldRow .}}
 		{{/each}}
 			</form>
 	</script>
@@ -106,15 +104,14 @@
 		<div class="form">
 			<form>
 		{{#each inputs}}
-			{{#if visible}}
-				{{> formFieldRow .}}
-			{{/if}}
+			{{> formFieldRow .}}
 		{{/each}}
 			</form>
 		</div>
 		<div class="secondary-controls">
 			<a class="secondary-control button payment disabled"></a>
 			<a class="secondary-control button double-spend disabled"></a>
+			<a class="secondary-control button reset disabled"></a>
 		</div>
 	</script>
 
@@ -157,15 +154,17 @@
 	</script>
 
 	<script type="text/html" id="template-form-field-row">
-		<div class="form-row form-row-type--{{type}}">
+	{{#if visible}}
+		<div class="form-row form-row--{{name}} form-row-key--{{key}}">
 			<div class="form-label">
 				<label for="{{id}}">{{label}}</label>
 			</div>{{#if description}}
 			<div class="form-description">{{description}}</div>{{/if}}
-			<div class="form-field id-{{id}}">
+			<div class="form-field id-{{id}} has-{{actions.length}}-actions">
 				{{> formField .}}
 			</div>
 		</div>
+	{{/if}}
 	</script>
 
 	<script type="text/html" id="template-disclaimers">

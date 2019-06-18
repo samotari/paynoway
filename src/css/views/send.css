@@ -62,14 +62,6 @@
 	background-color: rgba(255,0,0,0.8);
 	background-image: url('../images/wink-light.svg');
 }
-.view.send .form-field.id-address {
-	position: relative;
-	padding-right: 3rem;
-}
-.view.send .form-field.id-address .form-field-action {
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: auto;
-	margin-top: 0;
+.view.send .button.secondary-control.reset {
+	background-image: url('../images/cancel.svg');
 }
