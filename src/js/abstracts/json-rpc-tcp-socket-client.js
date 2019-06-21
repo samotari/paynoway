@@ -17,6 +17,7 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 			autoReconnect: true,
 		});
 		this.socket = null;
+		this.incompleteMessageBuffer = '';
 	};
 
 	_.extend(JsonRpcTcpSocketClient.prototype, Backbone.Events);
@@ -71,12 +72,37 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 		}
 	};
 
+	var messageRegEx = {
+		start: new RegExp('^{"jsonrpc": ?"2.0",'),
+		end: new RegExp(', ?"id": ?("[0-9]+"|[0-9]+)}$'),
+	};
+
+	JsonRpcTcpSocketClient.prototype.hasMessageStart = function(part) {
+		return messageRegEx.start.test(part);
+	};
+
+	JsonRpcTcpSocketClient.prototype.hasMessageEnd = function(part) {
+		return messageRegEx.end.test(part);
+	};
+
 	JsonRpcTcpSocketClient.prototype.parseData = function(dataByteArray) {
 		try {
 			var dataString = this.fromByteArray(dataByteArray);
+			if (this.incompleteMessageBuffer) {
+				dataString = this.incompleteMessageBuffer + dataString;
+				this.incompleteMessageBuffer = '';
+			}
 			// Split the data string by line-break character.
 			// Each line is a separate data object.
-			var data = _.chain(dataString.split('\n')).compact().map(function(message) {
+			var data = _.chain(dataString.split('\n')).compact().filter(function(message) {
+				var hasStart = this.hasMessageStart(message);
+				var hasEnd = this.hasMessageEnd(message);
+				var isComplete = hasStart && hasEnd;
+				if (!isComplete) {
+					this.incompleteMessageBuffer += message;
+				}
+				return isComplete;
+			}, this).map(function(message) {
 				try {
 					var result = JSON.parse(message);
 				} catch (error) {
@@ -164,7 +190,6 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 			dataByteArray[index] = dataString.charCodeAt(index);
 		}
 		return dataByteArray;
-
 	};
 
 	return JsonRpcTcpSocketClient;
