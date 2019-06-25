@@ -16,6 +16,7 @@ app.views.Send = (function() {
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.refresh-utxo': 'refreshUnspentTxOutputs',
 			'click .button.reset': 'reset',
+			'click .button.use-all-funds': 'useAllFunds',
 		},
 		inputs: [
 			{
@@ -80,6 +81,19 @@ app.views.Send = (function() {
 						throw new Error(app.i18n.t('send.invalid-amount.greater-than-zero'));
 					}
 				},
+				actions: [
+					{
+						name: 'select-all',
+						fn: function(value, cb) {
+							try {
+								var maxAmount = this.calculateMaximumAmount();
+							} catch (error) {
+								return cb(error);
+							}
+							cb(null, maxAmount);
+						},
+					},
+				],
 			},
 			{
 				name: 'feeRate',
@@ -380,10 +394,31 @@ app.views.Send = (function() {
 		paymentWasSent: function() {
 			return !!this.model.get('payment');
 		},
-		onClose: function() {
-			if (this.unspentTxOutputsView) {
-				this.unspentTxOutputsView.close();
-			}
+		calculateMaximumAmount: function() {
+			var formData = this.getFormData();
+			var address = app.wallet.getAddress();
+			// Convert to satoshis/kilobyte.
+			var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
+			// Need the unspent transaction outputs that will be used as inputs for this tx.
+			var utxo = this.model.get('utxo');
+			// A zero amount here will send all the funds (less fees) as change to the given address.
+			var amount = 1;
+			// Build a sample tx so that we can calculate the fee.
+			var sampleTx = app.wallet.buildTx(amount, address, utxo, {
+				fee: 0,
+			});
+			// Calculate the size of the sample tx (in kilobytes).
+			var size = sampleTx.toHex().length / 2000;
+			// Use the size of the tx to calculate the fee.
+			// The fee rate is satoshis/kilobyte.
+			var fee = Math.ceil(size * feeRate);
+			var tx = app.wallet.buildTx(amount, address, utxo, {
+				fee: fee,
+			});
+			var maxAmount = _.reduce(tx.outs, function(memo, out) {
+				return memo + out.value;
+			}, 0);
+			return app.wallet.fromBaseUnit(maxAmount);
 		},
 	});
 
