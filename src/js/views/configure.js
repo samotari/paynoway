@@ -21,6 +21,7 @@ app.views.Configure = (function() {
 						case 'addressType':
 						case 'wif':
 							this.updateAddress();
+							this.updateBlockExplorerOptions();
 							break;
 					}
 				}
@@ -59,9 +60,25 @@ app.views.Configure = (function() {
 			_.each(['address', 'addressType', 'wif'], function(key) {
 				this.$inputs[key].val(this.getValue(key, network));
 			}, this);
+			this.updateBlockExplorerOptions();
 		},
 		updateAddress: function(network) {
 			this.$inputs.address.val(this.getValue('address', network));
+		},
+		updateBlockExplorerOptions: function() {
+			var formData = this.getFormData();
+			var network = formData.network;
+			var addressType = formData.addressType;
+			var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
+			var $select = this.$('select[name=blockExplorer]');
+			$select.empty();
+			_.map(blockExplorers, function(blockExplorer) {
+				var $option = $('<option>', {
+					value: blockExplorer.key,
+					text: blockExplorer.label,
+				});
+				$select.append($option);
+			});
 		},
 		updateElectrumServer: function(network) {
 			var $select = this.$inputs.electrumServer;

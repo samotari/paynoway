@@ -13,6 +13,7 @@ app.lang['en'] = (function() {
 		'configure.address-type.p2pkh': 'Legacy',
 		'configure.address-type.p2wpkh-p2sh': 'Segwit (backwards compatible)',
 		'configure.address-type.p2wpkh': 'Segwit (bech32)',
+		'configure.block-explorer': 'Block Explorer',
 		'configure.wif': 'Private Key (WIF)',
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',

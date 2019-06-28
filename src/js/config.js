@@ -47,6 +47,48 @@ app.config = (function() {
 					minBump: 250,
 					targetNumberOfBlocks: 28,
 				},
+				blockExplorers: [
+					{
+						key: 'bitaps.com',
+						label: 'bitaps.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://btc.bitaps.com/{{txid}}',
+						},
+					},
+					{
+						key: 'blockchair.com',
+						label: 'blockchair.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://blockchair.com/bitcoin/transaction/{{txid}}',
+						},
+					},
+					{
+						key: 'blockcypher.com',
+						label: 'blockcypher.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
+						url: {
+							tx: 'https://live.blockcypher.com/btc/tx/{{txid}}',
+						},
+					},
+					{
+						key: 'btc.com',
+						label: 'btc.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
+						url: {
+							tx: 'https://btc.com/{{txid}}',
+						},
+					},
+					{
+						key: 'chain.so',
+						label: 'chain.so',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://chain.so/tx/BTC/{{txid}}',
+						},
+					},
+				],
 			},
 			bitcoinTestnet: {
 				label: 'Bitcoin (testnet)',
@@ -77,6 +119,32 @@ app.config = (function() {
 					minBump: 250,
 					targetNumberOfBlocks: 28,
 				},
+				blockExplorers: [
+					{
+						key: 'bitaps.com',
+						label: 'bitaps.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://tbtc.bitaps.com/{{txid}}',
+						},
+					},
+					{
+						key: 'blockcypher.com',
+						label: 'blockcypher.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
+						url: {
+							tx: 'https://live.blockcypher.com/btc-testnet/tx/{{txid}}',
+						},
+					},
+					{
+						key: 'chain.so',
+						label: 'chain.so',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://chain.so/tx/BTCTEST/{{txid}}',
+						},
+					},
+				],
 			},
 			litecoin: {
 				label: 'Litecoin',
@@ -105,6 +173,48 @@ app.config = (function() {
 					minBump: 250,
 					targetNumberOfBlocks: 28,
 				},
+				blockExplorers: [
+					{
+						key: 'bitaps.com',
+						label: 'bitaps.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://ltc.bitaps.com/{{txid}}',
+						},
+					},
+					{
+						key: 'blockchair.com',
+						label: 'blockchair.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://blockchair.com/litecoin/transaction/{{txid}}',
+						},
+					},
+					{
+						key: 'blockcypher.com',
+						label: 'blockcypher.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
+						url: {
+							tx: 'https://live.blockcypher.com/ltc/tx/{{txid}}',
+						},
+					},
+					{
+						key: 'btc.com',
+						label: 'btc.com',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
+						url: {
+							tx: 'https://ltc.btc.com/{{txid}}',
+						},
+					},
+					{
+						key: 'chain.so',
+						label: 'chain.so',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://chain.so/tx/LTC/{{txid}}',
+						},
+					},
+				],
 			},
 		},
 		numberFormats: {
@@ -171,6 +281,26 @@ app.config = (function() {
 				},
 				default: function() {
 					return app.wallet.getDefaultElectrumServer();
+				},
+			},
+			{
+				name: 'blockExplorer',
+				label: function() {
+					return app.i18n.t('configure.block-explorer');
+				},
+				visible: true,
+				type: 'select',
+				options: function() {
+					var network = app.wallet.getNetwork();
+					var addressType = app.wallet.getSetting('addressType');
+					var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
+					return _.map(blockExplorers, function(blockExplorer) {
+						return _.pick(blockExplorer, 'key', 'label');
+					});
+				},
+				default: function() {
+					var networkConfig = app.wallet.getNetworkConfig();
+					return _.first(networkConfig.blockExplorers).key;
 				},
 			},
 			{
@@ -242,18 +372,21 @@ app.config = (function() {
 				type: 'select',
 				options: [
 					{
+						// Legacy
 						key: 'p2pkh',
 						label: function() {
 							return app.i18n.t('configure.address-type.p2pkh');
 						},
 					},
 					{
+						// Segwit (backwards-compatible)
 						key: 'p2wpkh-p2sh',
 						label: function() {
 							return app.i18n.t('configure.address-type.p2wpkh-p2sh');
 						},
 					},
 					{
+						// Segwit
 						key: 'p2wpkh',
 						label: function() {
 							return app.i18n.t('configure.address-type.p2wpkh');

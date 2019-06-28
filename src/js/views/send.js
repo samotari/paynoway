@@ -158,7 +158,7 @@ app.views.Send = (function() {
 				return {
 					amount: app.wallet.fromBaseUnit(output.value),
 					txid: txid.substr(0, 20),
-					url: app.wallet.getBlockExplorerUrl('tx', [txid]),
+					url: app.wallet.getBlockExplorerUrl('tx', { txid: txid }),
 				};
 			});
 			var data = {

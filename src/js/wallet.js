@@ -53,6 +53,30 @@ app.wallet = (function() {
 			return _.first(networkConfig.electrum.servers || []);
 		},
 
+		getBlockExplorers: function(network, addressType) {
+			network = network || this.getNetwork();
+			addressType = addressType || this.getSetting('addressType', network);
+			var networkConfig = app.wallet.getNetworkConfig(network);
+			return _.filter(networkConfig.blockExplorers, function(blockExplorer) {
+				return _.contains(blockExplorer.supportedAddressTypes, addressType);
+			});
+		},
+
+		getBlockExplorerUrl: function(type, data) {
+			var network = this.getNetwork();
+			var networkConfig = this.getNetworkConfig(network);
+			var key = this.getSetting('blockExplorer', network);
+			var blockExplorer = _.findWhere(networkConfig.blockExplorers, { key: key });
+			if (!blockExplorer) {
+				var addressType = this.getSetting('addressType', network);
+				var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
+				blockExplorer = _.first(blockExplorers);
+			}
+			if (!blockExplorer) return '';
+			var template = Handlebars.compile(blockExplorer.url[type]);
+			return template(data);
+		},
+
 		getOutputScriptHash: function(address, constants) {
 			var outputScript = bitcoin.address.toOutputScript(address, constants);
 			var hash = bitcoin.crypto.sha256(outputScript);
@@ -247,26 +271,6 @@ app.wallet = (function() {
 
 		fromBaseUnit: function(value) {
 			return (new BigNumber(value)).dividedBy(1e8).toString();
-		},
-
-		blockExplorerUrls: {
-			bitcoin: {
-				tx: function(txid) {
-					return 'https://live.blockcypher.com/btc/tx/' + txid + '/';
-				},
-			},
-			bitcoinTestnet: {
-				tx: function(txid) {
-					return 'https://live.blockcypher.com/btc-testnet/tx/' + txid + '/';
-				},
-			},
-		},
-
-		getBlockExplorerUrl: function(type, args) {
-			var network = this.getNetwork();
-			var urls = this.blockExplorerUrls[network];
-			var fn = urls[type];
-			return fn && fn.apply(undefined, args);
 		},
 
 		isValidAddress: function(address) {
