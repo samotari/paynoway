@@ -48,9 +48,39 @@ app.wallet = (function() {
 			return _.pick(networkConfig, 'bech32', 'bip32', 'messagePrefix', 'pubKeyHash', 'scriptHash', 'wif');
 		},
 
-		getDefaultElectrumServer: function(network) {
+		getDefaultElectrumServer: function(network, options) {
+			var electrumServers = this.getElectrumServers(network, options);
+			return _.first(electrumServers || []);
+		},
+
+		getElectrumServers: function(network, options) {
 			var networkConfig = this.getNetworkConfig(network);
-			return _.first(networkConfig.electrum.servers || []);
+			options = _.defaults(options || {}, {
+				protocol: 'tcp',// 'ssl' or 'tcp'
+			});
+			return _.chain(networkConfig.electrum.servers).map(function(server) {
+				var parts = server.split(' ');
+				var hostname = parts[0];
+				var port = _.chain(parts).rest(1).find(function(protocol) {
+					switch (options.protocol) {
+						case 'ssl':
+							return protocol.substr(0, 1) === 's';
+						break;
+						case 'tcp':
+							return protocol.substr(0, 1) === 't';
+						break;
+					}
+					return false;
+				}).value();
+				if (port) {
+					if (port.length > 1) {
+						port = port.substr(1);
+					} else {
+						port = networkConfig.electrum.defaultPorts[options.protocol];
+					}
+				}
+				return hostname + ':' + port;
+			}).compact().value();
 		},
 
 		getBlockExplorers: function(network, addressType) {

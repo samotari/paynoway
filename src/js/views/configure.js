@@ -83,8 +83,8 @@ app.views.Configure = (function() {
 		updateElectrumServer: function(network) {
 			var $select = this.$inputs.electrumServer;
 			$select.find('option').remove();
-			var networkConfig = app.wallet.getNetworkConfig(network);
-			_.each(networkConfig.electrum.servers, function(host) {
+			var electrumServers = app.wallet.getElectrumServers(network);
+			_.each(electrumServers, function(host) {
 				var $option = $('<option/>', { value: host });
 				$option.text(host);
 				$select.append($option);

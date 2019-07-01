@@ -36,11 +36,16 @@ app.config = (function() {
 						ssl: 50002,
 					},
 					servers: [
-						'94.230.153.108:50001',
-						'188.165.238.185:50001',
-						'51.15.77.78:50001',
-						'5.135.68.240:50001',
-						'27.102.129.56:50001',
+						'electrumx.paralelnipolis.cz s t',
+						'btc.smsys.me s995',
+						'E-X.not.fyi s t',
+						'electrum.vom-stausee.de s t',
+						'electrum.hsmiths.com s t',
+						'helicarrier.bauerj.eu s t',
+						'hsmiths4fyqlw5xw.onion s t',
+						'ozahtqwp25chjdjd.onion s t',
+						'node.arihanc.com s t',
+						'arihancckjge66iv.onion s t',
 					],
 				},
 				fees: {
@@ -108,11 +113,13 @@ app.config = (function() {
 						ssl: 51002,
 					},
 					servers: [
-						'94.230.153.108:51001',
-						'76.174.26.91:53011',
-						'95.216.96.235:51001',
-						'81.2.249.49:50001',
-						'172.92.140.254:51001',
+						'electrumx.paralelnipolis.cz t51001 s51002',
+						'testnet.hsmiths.com t53011 s53012',
+						'hsmithsxurybd7uh.onion t53011 s53012',
+						'testnet.qtornado.com s t',
+						'testnet1.bauerj.eu t50001 s50002',
+						'tn.not.fyi t55001 s55002',
+						'bitcoin.cluelessperson.com s t',
 					],
 				},
 				fees: {
@@ -164,9 +171,13 @@ app.config = (function() {
 						ssl: 50002,
 					},
 					servers: [
-						'206.189.14.248:50001',
-						'209.94.191.212:50001',
-						'37.48.123.213:50001',
+						'ex.lug.gs s444',
+						'electrum-ltc.bysh.me s t',
+						'electrum-ltc.ddns.net s t',
+						'electrum-ltc.wilv.in s t',
+						'electrum.cryptomachine.com p1000 s t',
+						'electrum.ltc.xurious.com s t',
+						'eywr5eubdbbe2laq.onion s50008 t50007',
 					],
 				},
 				fees: {
@@ -271,8 +282,8 @@ app.config = (function() {
 				visible: true,
 				type: 'select',
 				options: function() {
-					var networkConfig = app.wallet.getNetworkConfig();
-					return _.map(networkConfig.electrum.servers, function(host) {
+					var electrumServers = app.wallet.getElectrumServers();
+					return _.map(electrumServers, function(host) {
 						return {
 							key: host,
 							label: host,

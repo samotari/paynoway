@@ -42,9 +42,7 @@ app.services.electrum = (function() {
 			var fromCache = app.cache.get('services.electrum.peers.' + network);
 			if (!_.isEmpty(fromCache)) return fromCache;
 			// Fallback to hard-coded peers list in config.
-			var networkConfig = app.config.networks[network];
-			var fromConfig = networkConfig && networkConfig.electrum.servers || [];
-			return fromConfig;
+			return app.wallet.getElectrumServers();
 		},
 
 		getClients: function(network) {
