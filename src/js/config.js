@@ -275,26 +275,6 @@ app.config = (function() {
 				default: 'bitcoin',
 			},
 			{
-				name: 'electrumServer',
-				label: function() {
-					return app.i18n.t('configure.electrum-server');
-				},
-				visible: true,
-				type: 'select',
-				options: function() {
-					var electrumServers = app.wallet.getElectrumServers();
-					return _.map(electrumServers, function(host) {
-						return {
-							key: host,
-							label: host,
-						};
-					});
-				},
-				default: function() {
-					return app.wallet.getDefaultElectrumServer();
-				},
-			},
-			{
 				name: 'blockExplorer',
 				label: function() {
 					return app.i18n.t('configure.block-explorer');

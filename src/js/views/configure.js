@@ -32,7 +32,6 @@ app.views.Configure = (function() {
 			this.$inputs = {
 				address: this.$(':input[name="address"]'),
 				addressType: this.$(':input[name="addressType"]'),
-				electrumServer: this.$(':input[name="electrumServer"]'),
 				network: this.$(':input[name="network"]'),
 				wif: this.$(':input[name="wif"]'),
 			};
@@ -56,7 +55,6 @@ app.views.Configure = (function() {
 			}
 		},
 		updateInputs: function(network) {
-			this.updateElectrumServer(network);
 			_.each(['address', 'addressType', 'wif'], function(key) {
 				this.$inputs[key].val(this.getValue(key, network));
 			}, this);
@@ -80,18 +78,6 @@ app.views.Configure = (function() {
 				$select.append($option);
 			});
 		},
-		updateElectrumServer: function(network) {
-			var $select = this.$inputs.electrumServer;
-			$select.find('option').remove();
-			var electrumServers = app.wallet.getElectrumServers(network);
-			_.each(electrumServers, function(host) {
-				var $option = $('<option/>', { value: host });
-				$option.text(host);
-				$select.append($option);
-			});
-			var electrumServer = this.getValue('electrumServer', network) || app.wallet.getDefaultElectrumServer(network);
-			$select.val(electrumServer);
-		},
 		process: function(evt) {
 			var $target = $(evt.target);
 			if ($target[0] === this.$inputs.network[0]) {
@@ -102,9 +88,6 @@ app.views.Configure = (function() {
 					switch (input.name) {
 						case 'network':
 							// Skip network input.
-							break;
-						case 'electrumServer':
-							this.updateElectrumServer(network);
 							break;
 						default:
 							if (this.$inputs[input.name]) {

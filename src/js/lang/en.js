@@ -17,7 +17,6 @@ app.lang['en'] = (function() {
 		'configure.wif': 'Private Key (WIF)',
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
-		'configure.electrum-server': 'Electrum Server',
 
 		'device.camera.not-available': 'The device\'s camera is not available',
 
