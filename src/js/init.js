@@ -33,5 +33,18 @@ app.onDeviceReady(function() {
 		}
 	});
 
+	app.onReady(function() {
+		var service = app.services.electrum;
+		var network = service.network = app.settings.get('network');
+		service.initializeClients(network);
+		app.settings.on('change:network', function(network) {
+			if (service.network && network !== service.network) {
+				service.destroyClients(service.network);
+				service.initializeClients(network);
+				service.network = network;
+			}
+		});
+	});
+
 	app.queues.onStart.resume();
 });

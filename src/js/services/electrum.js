@@ -141,18 +141,6 @@ app.services.electrum = (function() {
 	// Immediately pause the queue to prevent execution of tasks until at least one client is connected.
 	queue.pause();
 
-	app.onReady(function() {
-		var network = service.network = app.settings.get('network');
-		service.initializeClients(network);
-		app.settings.on('change:network', function(network) {
-			if (service.network && network !== service.network) {
-				service.destroyClients(service.network);
-				service.initializeClients(network);
-				service.network = network;
-			}
-		});
-	});
-
 	return service;
 
 })();
