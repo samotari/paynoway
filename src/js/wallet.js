@@ -87,6 +87,9 @@ app.wallet = (function() {
 			network = network || this.getNetwork();
 			addressType = addressType || this.getSetting('addressType', network);
 			var networkConfig = app.wallet.getNetworkConfig(network);
+			if (!addressType) {
+				return networkConfig.blockExplorers;
+			}
 			return _.filter(networkConfig.blockExplorers, function(blockExplorer) {
 				return _.contains(blockExplorer.supportedAddressTypes, addressType);
 			});
