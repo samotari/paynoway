@@ -52,7 +52,7 @@
     "bignumber.js": "8.0.1",
     "bitcoinjs-lib": "4.0.2",
     "browserify": "16.2.3",
-    "cordova": "8.1.2",
+    "cordova": "git://github.com/apache/cordova-cli.git#1c8ca07f04b2f2a8b0477a0440904584fb01b76f",
     "cordova-android": "7.1.4",
     "cordova-android-support-gradle-release": "3.0.0",
     "cordova-plugin-inappbrowser": "2.0.2",
