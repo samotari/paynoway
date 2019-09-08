@@ -78,6 +78,14 @@ app.config = (function() {
 						},
 					},
 					{
+						key: 'blockstream.info',
+						label: 'blockstream.info',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://blockstream.info/nojs/tx/{{txid}}',
+						},
+					},
+					{
 						key: 'btc.com',
 						label: 'btc.com',
 						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
@@ -141,6 +149,14 @@ app.config = (function() {
 						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
 						url: {
 							tx: 'https://live.blockcypher.com/btc-testnet/tx/{{txid}}',
+						},
+					},
+					{
+						key: 'blockstream.info',
+						label: 'blockstream.info',
+						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+						url: {
+							tx: 'https://blockstream.info/testnet/nojs/tx/{{txid}}',
 						},
 					},
 					{
