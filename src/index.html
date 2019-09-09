@@ -111,7 +111,7 @@
 		<div class="secondary-controls">
 			<a class="secondary-control button payment disabled"></a>
 			<a class="secondary-control button double-spend disabled"></a>
-			<a class="secondary-control button reset disabled"></a>
+			<a class="secondary-control button reset disabled">{{i18n "send.reset"}}</a>
 		</div>
 	</script>
 
@@ -147,7 +147,7 @@
 		{{#if actions}}
 			<div class="form-field-actions">
 			{{#each actions}}
-				<a class="form-field-action button {{name}}" data-action="{{name}}" data-input="{{../name}}"></a>
+				<a class="form-field-action button {{name}}" data-action="{{name}}" data-input="{{../name}}">{{label}}</a>
 			{{/each}}
 			</div>
 		{{/if}}

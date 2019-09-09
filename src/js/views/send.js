@@ -84,6 +84,9 @@ app.views.Send = (function() {
 				actions: [
 					{
 						name: 'select-all',
+						label: function() {
+							return app.i18n.t('send.amount.use-all')
+						},
 						fn: function(value, cb) {
 							try {
 								var maxAmount = this.calculateMaximumAmount();
@@ -131,8 +134,10 @@ app.views.Send = (function() {
 			this.model = new Backbone.Model;
 			this.model.set('payment', app.cache.get('payment'));
 			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
+			this.listenTo(this.model, 'change:amount', this.updateAmount);
+			this.listenTo(this.model, 'change:address', this.updateAddress);
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
-			this.listenTo(this.model, 'change:payment', this.toggleFlags);
+			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
 		},
@@ -149,8 +154,15 @@ app.views.Send = (function() {
 			};
 			this.$utxo = this.$('.utxo');
 			this.toggleFlags();
+			this.updateAddress();
+			this.updateAmount();
+			this.updateFeeRate();
+			if (this.paymentWasSent()) {
+				this.updateFieldsWithDoubleSpendInfo();
+			}
 		},
 		updateUnspentTxOutputs: function() {
+			if (!this.$utxo) return;
 			var templateHtml = $('#template-send-utxo').html();
 			var template = Handlebars.compile(templateHtml);
 			var utxo = _.map(this.model.get('utxo') || [], function(output) {
@@ -168,15 +180,25 @@ app.views.Send = (function() {
 			this.$utxo.html(html);
 		},
 		updateFeeRate: function() {
+			if (!this.$inputs) return;
 			var feeRate = this.model.get('feeRate') || 1000;// satoshis/kilobyte
 			// Convert to satoshis/byte for the UI.
-			var feeRate = (new BigNumber(feeRate)).dividedBy(1000);
-			if (this.paymentWasSent()) {
-				var minRelayFeeRate = this.model.get('minRelayFeeRate') || 1000;// satoshis/kilobyte
-				// Double-spend fee-rate must be at least more the minimum relay fee-rate more than the payment fee-rate.
-				feeRate.plus(minRelayFeeRate);
-			}
+			feeRate = (new BigNumber(feeRate)).dividedBy(1000);
 			this.$inputs.feeRate.val(feeRate.toString());
+		},
+		updateAddress: function() {
+			if (!this.$inputs) return;
+			var address = this.model.get('address');
+			if (!address) return;
+			this.$inputs.address.val(address);
+		},
+		updateAmount: function() {
+			if (!this.$inputs) return;
+			var amount = this.model.get('amount');
+			if (!amount) return;
+			// Convert to whole BTC for the UI.
+			amount = app.wallet.fromBaseUnit(amount);
+			this.$inputs.amount.val(amount);
 		},
 		fetchUnspentTxOutputs: function() {
 			var model = this.model;
@@ -199,13 +221,29 @@ app.views.Send = (function() {
 					app.log(error);
 					app.mainView.showMessage(error);
 				} else {
-					model.set('feeRate', results.feeRate);
-					model.set('minRelayFeeRate', results.minRelayFeeRate);
+					_.each(['feeRate', 'minRelayFeeRate'], function(field) {
+						if (!model.get(field)) {
+							model.set(field, results[field]);
+						}
+					});
 				}
 			});
 		},
 		onChangeInputs: function() {
 			this.toggleFlags();
+		},
+		onPaymentChange: function() {
+			this.toggleFlags();
+			if (this.paymentWasSent()) {
+				this.updateFieldsWithDoubleSpendInfo();
+			}
+		},
+		updateFieldsWithDoubleSpendInfo: function() {
+			var doubleSpend = this.createDoubleSpend();
+			// Update the form with the address, amount, feeRate of the double-spend tx.
+			this.model.set('address', doubleSpend.address);
+			this.model.set('amount', doubleSpend.amount);
+			this.model.set('feeRate', doubleSpend.feeRate);
 		},
 		process: function() {
 			// Don't continue until all required fields have been filled-in.
@@ -236,10 +274,10 @@ app.views.Send = (function() {
 				sequence: sequence,
 			});
 			// Calculate the size of the sample tx (in kilobytes).
-			var size = sampleTx.toHex().length / 2000;
+			var virtualSize = sampleTx.virtualSize() / 1000;
 			// Use the size of the tx to calculate the fee.
 			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(size * feeRate);
+			var fee = Math.ceil(virtualSize * feeRate);
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 				sequence: sequence,
@@ -255,17 +293,27 @@ app.views.Send = (function() {
 				utxo: utxo,
 			};
 		},
-		createDoubleSpend: function(payment) {
+		createDoubleSpend: function(payment, options) {
 			payment = payment || this.model.get('payment');
-			var formData = this.getFormData();
+			options = _.defaults(options || {}, {
+				fee: null,
+			});
+			var fee;
+			if (options.fee) {
+				// Use an exact fee amount.
+				fee = options.fee;
+			} else {
+				// Calculate the fee based on the size of the tx and a fee-rate.
+				var formData = this.getFormData();
+				var minRelayFeeRate = this.model.get('minRelayFeeRate') || 1000;// satoshis/kilobyte
+				var feeRate = Math.max(
+					// Convert to satoshis/kilobyte.
+					(new BigNumber(formData.feeRate || 0)).times(1000).toNumber(),
+					// Already satoshis/kilobyte.
+					(new BigNumber(payment.feeRate || 0)).plus(minRelayFeeRate).toNumber()
+				);
+			}
 			var address = app.wallet.getAddress();
-			var minRelayFeeRate = this.model.get('minRelayFeeRate') || 1000;// satoshis/kilobyte
-			var feeRate = Math.max(
-				// Convert to satoshis/kilobyte.
-				(new BigNumber(formData.feeRate)).times(1000).toNumber(),
-				// Already satoshis/kilobyte.
-				(new BigNumber(payment.feeRate)).plus(minRelayFeeRate).toNumber()
-			);
 			// Need the unspent transaction outputs that will be used as inputs for this tx.
 			var utxo = payment.utxo;
 			// Increment the sequence number by 1.
@@ -279,14 +327,17 @@ app.views.Send = (function() {
 			var amount = 0;
 			// Build a sample tx so that we can calculate the fee.
 			var sampleTx = app.wallet.buildTx(amount, address, utxo, {
-				fee: 0,
+				fee: !_.isUndefined(fee) ? fee : 0,
 				sequence: sequence,
 				inputs: inputs,
 			});
-			// Calculate the size of the sample tx (in kilobytes).
-			var size = sampleTx.toHex().length / 2000;
-			// Use the size of the tx to calculate the fee.
-			var fee = size * feeRate;
+			if (_.isUndefined(fee)) {
+				// Calculate the size of the sample tx (in kilobytes).
+				var virtualSize = sampleTx.virtualSize() / 1000;
+				// Use the size of the tx to calculate the fee.
+				// The fee rate is satoshis/kilobyte.
+				fee = Math.ceil(virtualSize * feeRate);
+			}
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 				sequence: sequence,
@@ -343,35 +394,75 @@ app.views.Send = (function() {
 			}
 		},
 		doubleSpend: function() {
-			try {
-				var doubleSpend = this.createDoubleSpend();
-				var model = this.model;
-				var message = app.i18n.t('send.confirm-tx-details', {
-					address: doubleSpend.address,
-					amount: app.wallet.fromBaseUnit(doubleSpend.amount),
-					fee: app.wallet.fromBaseUnit(doubleSpend.fee),
-					symbol: app.wallet.getNetworkConfig().symbol,
-				});
-				if (confirm(message)) {
-					var resetForm = _.bind(this.resetForm, this);
-					// Confirmed - send double-spend transaction.
-					app.busy(true);
-					app.wallet.broadcastRawTx(doubleSpend.rawTx, function(error) {
-						app.busy(false);
-						if (error) {
-							app.log(error);
-							app.mainView.showMessage(error);
-						} else {
-							resetForm();
-						}
+			var createDoubleSpend = _.bind(this.createDoubleSpend, this);
+			var resetForm = _.bind(this.resetForm, this);
+			var model = this.model;
+			var sent = false;
+			var canceled = false;
+			var fee;
+			async.until(function() {
+				return sent || canceled;
+			}, function(next) {
+				try {
+					var doubleSpend = createDoubleSpend(null, { fee: fee });
+					var message = app.i18n.t('send.confirm-tx-details', {
+						address: doubleSpend.address,
+						amount: app.wallet.fromBaseUnit(doubleSpend.amount),
+						fee: app.wallet.fromBaseUnit(doubleSpend.fee),
+						symbol: app.wallet.getNetworkConfig().symbol,
 					});
-				} else {
-					// Canceled - do nothing.
+					if (confirm(message)) {
+						// Confirmed - send double-spend transaction.
+						app.busy(true);
+						app.wallet.broadcastRawTx(doubleSpend.rawTx, function(error) {
+							app.busy(false);
+							try {
+								if (error) {
+									var match;
+									if (/Missing inputs/i.test(error.message)) {
+										return next(new Error(app.i18n.t('send.error-missing-inputs')));
+									} else if ((match = error.message.match(/insufficient fee, rejecting replacement [^ ]+, not enough additional fees to relay; [0-9.]+ < ([0-9.]+)/i))) {
+										var minFeeBump = app.wallet.toBaseUnit(match[1]);// satoshis
+										var payment = model.get('payment');
+										var suggestedFee = payment.fee + minFeeBump;
+										var retryMessage = app.i18n.t('send.error-insufficient-fee-confirm-retry', {
+											fee: app.wallet.fromBaseUnit(suggestedFee),
+											symbol: app.wallet.getNetworkConfig().symbol,
+										});
+										if (confirm(retryMessage)) {
+											// Try again with the higher fee.
+											fee = suggestedFee;// satoshis
+										} else {
+											// Canceled.
+											canceled = true;
+										}
+										// Error: insufficient fee, rejecting replacement TXID; new feerate 0.00001000 BTC/kB <= old feerate 0.00001000 BTC/kB
+									} else {
+										return next(error);
+									}
+								} else {
+									sent = true;
+								}
+							} catch (error) {
+								return next(error);
+							}
+							next();
+						});
+					} else {
+						// Canceled.
+						canceled = true;
+					}
+				} catch (error) {
+					return next(error);
 				}
-			} catch (error) {
-				app.log(error);
-				app.mainView.showMessage(error);
-			}
+			}, function(error) {
+				if (error) {
+					app.log(error);
+					app.mainView.showMessage(error);
+				} else if (sent) {
+					resetForm();
+				}
+			});
 		},
 		reset: function() {
 			if (confirm(app.i18n.t('send.reset-confirm'))) {
@@ -379,12 +470,16 @@ app.views.Send = (function() {
 			}
 		},
 		resetForm: function() {
-			this.$inputs.address.val('');
-			this.$inputs.amount.val(0).trigger('change');
+			if (this.$inputs) {
+				this.$inputs.address.val('');
+				this.$inputs.amount.val(0).trigger('change');
+				this.$inputs.feeRate.val(1);
+			}
 			app.cache.clear('payment');
 			this.model.set('payment', null);
 		},
 		toggleFlags: function() {
+			if (!this.$buttons) return;
 			// The payment was sent successfully.
 			// Enable the double-spend button.
 			this.$buttons.payment.toggleClass('disabled', !this.allRequiredFieldsFilledIn() || this.paymentWasSent());
@@ -408,10 +503,10 @@ app.views.Send = (function() {
 				fee: 0,
 			});
 			// Calculate the size of the sample tx (in kilobytes).
-			var size = sampleTx.toHex().length / 2000;
+			var virtualSize = sampleTx.virtualSize() / 1000;
 			// Use the size of the tx to calculate the fee.
 			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(size * feeRate);
+			var fee = Math.ceil(virtualSize * feeRate);
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 			});

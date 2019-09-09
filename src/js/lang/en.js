@@ -32,12 +32,17 @@ app.lang['en'] = (function() {
 		'send.address': 'Payment Address',
 		'send.invalid-address': 'Invalid payment address',
 		'send.amount': 'Amount',
+		'send.amount.use-all': 'Use All',
 		'send.invalid-amount.number': 'Amount must be a number',
 		'send.invalid-amount.greater-than-zero': 'Amount must be greater than zero',
-		'send.fee-rate': 'Miner fee (sats / byte)',
+		'send.fee-rate': 'Miner fee (sats / vbyte)',
 		'send.fee-rate.invalid-number': 'Must be a number',
 		'send.no-utxo': 'Your wallet does not have any unspent tx outputs.',
 		'send.confirm-tx-details': 'Are you sure you want to send {{amount}} {{symbol}} to {{address}} with a miner fee of {{fee}} {{symbol}}?',
+		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee of {{fee}} {{symbol}}?',
+		'send.error-missing-inputs': 'TRANSACTION REJECTED:\nMissing inputs. It is possible that the payment transaction was already confirmed :(',
+		'send.reset-confirm': 'Are you sure you want to reset? (The last double-spend tx will be lost)',
+		'send.reset': 'Reset',
 
 		'services.electrum.failed-request.no-connected-servers': 'Unable to complete request - no connected Electrum servers',
 

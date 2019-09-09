@@ -63,5 +63,20 @@
 	background-image: url('../images/wink-light.svg');
 }
 .view.send .button.secondary-control.reset {
-	background-image: url('../images/cancel.svg');
+	background-image: none;
+	text-transform: lowercase;
+}
+.view.send .form-row--amount .form-field.has-1-actions {
+	padding-right: 5.6rem;
+}
+.view.send .form-field-action.select-all {
+	width: 5rem;
+	line-height: 2rem;
+	height: 2rem;
+	text-align: center;
+	text-transform: lowercase;
+	padding: 0 .6rem;
+	box-sizing: border-box;
+	background-size: initial;
+	background-image: none;
 }

@@ -96,6 +96,7 @@ html.loaded #view {
 	vertical-align: top;
 	color: #f7f7f7;
 	text-align: left;
+	word-break: break-word;
 	background: rgba(0, 0, 0, .9);
 	border-radius: .5rem;
 	padding: 1rem;
