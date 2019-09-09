@@ -22,10 +22,11 @@
 }
 .view.receive .address-text {
 	bottom: 0;
+	font-weight: 700;
 	font-family: 'Courier';
-	font-size: 1rem;
+	font-size: 1.25rem;
 	line-height: 1.8rem;
-	letter-spacing: .15rem;
+	letter-spacing: .3rem;
 	word-break: break-all;
 	padding-top: 2rem;
 }

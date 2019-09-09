@@ -1,0 +1,6 @@
+.view-configure .form-input[name="address"] {
+	color: #fff;
+	font-weight: 700;
+	font-family: 'Courier';
+	letter-spacing: .2rem;
+}

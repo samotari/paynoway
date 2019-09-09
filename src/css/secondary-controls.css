@@ -55,9 +55,6 @@
 .button.secondary-control.back.touchstart {
 	background-color: rgba(200,200,200,0.6);
 }
-.button.secondary-control.back {
-	background-image: url('../images/back.svg');
-}
 .button.secondary-control.continue {
 	background-image: url('../images/continue.svg');
 }

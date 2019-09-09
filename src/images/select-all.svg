@@ -54,7 +54,7 @@
      style="fill:none" />
   <path
      id="path4"
-     style="fill:#666666"
+     style="fill:#ccc"
      d="M 0,4 H 4 V 0 C 1.79,0 0,1.79 0,4 Z M 0,20 H 4 V 16 H 0 Z m 8,16 h 4 V 32 H 8 Z M 0,12 H 4 V 8 H 0 Z M 20,0 h -4 v 4 h 4 z m 12,0 v 4 h 4 C 36,1.79 34.21,0 32,0 Z M 4,36 V 32 H 0 c 0,2.21 1.79,4 4,4 z M 0,28 H 4 V 24 H 0 Z M 12,0 H 8 v 4 h 4 z m 4,36 h 4 V 32 H 16 Z M 32,20 h 4 v -4 h -4 z m 0,16 c 2.21,0 4,-1.79 4,-4 h -4 z m 0,-24 h 4 V 8 h -4 z m 0,16 h 4 v -4 h -4 z m -8,8 h 4 V 32 H 24 Z M 24,4 h 4 V 0 H 24 Z M 8,28 H 28 V 8 H 8 Z M 12,12 H 24 V 24 H 12 Z"
      inkscape:connector-curvature="0" />
 </svg>
