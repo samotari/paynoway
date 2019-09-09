@@ -25,17 +25,17 @@ app.queues = (function() {
 	// This prevents execution of queued items until queue.resume() is called.
 	_.invoke(queues, 'pause');
 
-	queues.onStart.drain = function() {
+	queues.onStart.drain(function() {
 		// All on-start callbacks have been executed.
 		// Resume the on-ready queue.
 		queues.onReady.resume();
 		queues.onStart = null;
 		app.log('app started');
-	};
+	});
 
-	queues.onStart.error = function(error) {
+	queues.onStart.error(function(error) {
 		app.log(error);
-	};
+	});
 
 	_.each(_.keys(queues), function(key) {
 		app[key] = function(fn) {

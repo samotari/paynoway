@@ -48,39 +48,9 @@ app.wallet = (function() {
 			return _.pick(networkConfig, 'bech32', 'bip32', 'messagePrefix', 'pubKeyHash', 'scriptHash', 'wif');
 		},
 
-		getDefaultElectrumServer: function(network, options) {
-			var electrumServers = this.getElectrumServers(network, options);
-			return _.first(electrumServers || []);
-		},
-
-		getElectrumServers: function(network, options) {
-			var networkConfig = this.getNetworkConfig(network);
-			options = _.defaults(options || {}, {
-				protocol: 'tcp',// 'ssl' or 'tcp'
-			});
-			return _.chain(networkConfig.electrum.servers).map(function(server) {
-				var parts = server.split(' ');
-				var hostname = parts[0];
-				var port = _.chain(parts).rest(1).find(function(protocol) {
-					switch (options.protocol) {
-						case 'ssl':
-							return protocol.substr(0, 1) === 's';
-						break;
-						case 'tcp':
-							return protocol.substr(0, 1) === 't';
-						break;
-					}
-					return false;
-				}).value();
-				if (port) {
-					if (port.length > 1) {
-						port = port.substr(1);
-					} else {
-						port = networkConfig.electrum.defaultPorts[options.protocol];
-					}
-				}
-				return hostname + ':' + port;
-			}).compact().value();
+		electrumService: function() {
+			var network = this.getNetwork();
+			return app.services && app.services.electrum && network && app.services.electrum[network] || null;
 		},
 
 		getBlockExplorers: function(network, addressType) {
@@ -151,29 +121,28 @@ app.wallet = (function() {
 				cb = _.noop;
 			}
 			try {
+				var electrumService = _.result(this, 'electrumService');
+				if (!electrumService) return cb(new Error('Electrum service unavailable'));
 				var address = this.getAddress();
 				app.log('wallet.getUnspentTxOutputs', address);
-				var type = this.getSetting('addressType');
-				switch (type) {
-					case 'p2wpkh':
-						var constants = this.getNetworkConstants();
-						var outputScriptHash = this.getOutputScriptHash(address, constants);
-						app.services.electrum.cmd('blockchain.scripthash.listunspent', [outputScriptHash], cb);
-						break;
-					case 'p2wpkh-p2sh':
-					case 'p2pkh':
-					default:
-						app.services.electrum.cmd('blockchain.address.listunspent', [address], cb);
-						break;
-				}
+				var constants = this.getNetworkConstants();
+				var outputScriptHash = this.getOutputScriptHash(address, constants);
+				electrumService.cmd('blockchain.scripthash.listunspent', [outputScriptHash], function(error, result) {
+					if (error && error.message === 'unknown method "blockchain.scripthash.listunspent"') {
+						return electrumService.cmd('blockchain.address.listunspent', [address], cb);
+					}
+					cb(error, result);
+				});
 			} catch (error) {
 				return cb(error);
 			}
 		},
 
 		getMinRelayFeeRate: function(cb) {
+			var electrumService = _.result(this, 'electrumService');
+			if (!electrumService) return cb(new Error('Electrum service unavailable'));
 			var toBaseUnit = _.bind(this.toBaseUnit, this);
-			app.services.electrum.cmd('blockchain.relayfee', [], function(error, result) {
+			electrumService.cmd('blockchain.relayfee', [], function(error, result) {
 				if (error) return cb(error);
 				// satoshis/kilobyte
 				var minRelayFee = toBaseUnit(result);
@@ -182,10 +151,12 @@ app.wallet = (function() {
 		},
 
 		getFeeRate: function(cb) {
+			var electrumService = _.result(this, 'electrumService');
+			if (!electrumService) return cb(new Error('Electrum service unavailable'));
 			var network = this.getNetwork();
 			var targetNumberOfBlocks = app.config.networks[network].fees.targetNumberOfBlocks;
 			var toBaseUnit = _.bind(this.toBaseUnit, this);
-			app.services.electrum.cmd('blockchain.estimatefee', [targetNumberOfBlocks], function(error, result) {
+			electrumService.cmd('blockchain.estimatefee', [targetNumberOfBlocks], function(error, result) {
 				if (error) return cb(error);
 				// satoshis/kilobyte
 				var feeRate = toBaseUnit(result);
@@ -194,7 +165,9 @@ app.wallet = (function() {
 		},
 
 		broadcastRawTx: function(rawTx, cb) {
-			app.services.electrum.cmd('blockchain.transaction.broadcast', [rawTx], function(error, result) {
+			var electrumService = _.result(this, 'electrumService');
+			if (!electrumService) return cb(new Error('Electrum service unavailable'));
+			electrumService.cmd('blockchain.transaction.broadcast', [rawTx], function(error, result) {
 				if (error) return cb(error);
 				// Success.
 				var txid = result[1];

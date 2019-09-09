@@ -33,17 +33,19 @@ app.onDeviceReady(function() {
 		}
 	});
 
-	app.onReady(function() {
-		var service = app.services.electrum;
-		var network = service.network = app.settings.get('network');
-		service.initializeClients(network);
-		app.settings.on('change:network', function(network) {
-			if (service.network && network !== service.network) {
-				service.destroyClients(service.network);
-				service.initializeClients(network);
-				service.network = network;
+	app.onStart(function(done) {
+		_.delay(function() {
+			try {
+				app.initializeElectrumServices();
+			} catch (error) {
+				app.log(error);
 			}
-		});
+			done();
+		}, 50);
+	});
+
+	app.onReady(function() {
+		app.settings.on('change:network', _.debounce(app.initializeElectrumServices, 50));
 	});
 
 	app.queues.onStart.resume();

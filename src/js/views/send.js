@@ -400,8 +400,8 @@ app.views.Send = (function() {
 			var sent = false;
 			var canceled = false;
 			var fee;
-			async.until(function() {
-				return sent || canceled;
+			async.until(function(next) {
+				next(null, sent || canceled);
 			}, function(next) {
 				try {
 					var doubleSpend = createDoubleSpend(null, { fee: fee });

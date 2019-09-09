@@ -4,6 +4,27 @@ var app = app || {};
 
 	'use strict';
 
+	app.initializeElectrumServices = function() {
+		app.services = app.services || {};
+		app.services.electrum = app.services.electrum || {};
+		var network = app.settings.get('network');
+		if (!app.services.electrum[network]) {
+			var networkConfig = app.wallet.getNetworkConfig(network);
+			var options = {
+				servers: networkConfig.electrum.servers,
+				defaultPorts: networkConfig.electrum.defaultPorts,
+			};
+			var service = app.services.electrum[network] = new app.abstracts.ElectrumService(network, options);
+			service.initialize(function(error) {
+				if (error) {
+					app.log('Failed to initialize ElectrumService', network, error);
+				} else {
+					app.log('ElectrumService initialized!', network);
+				}
+			});
+		}
+	};
+
 	app.hasReadDisclaimers = function() {
 		return app.settings.get('hasReadDisclaimers') === true;
 	};
