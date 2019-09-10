@@ -12,6 +12,7 @@ app.views.Send = (function() {
 		events: {
 			'change :input[name="address"]': 'onChangeInputs',
 			'change :input[name="amount"]': 'onChangeInputs',
+			'change :input[name="feeRate"]': 'onChangeInputs',
 			'click .button.payment': 'pay',
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.refresh-utxo': 'refreshUnspentTxOutputs',
@@ -89,7 +90,7 @@ app.views.Send = (function() {
 						},
 						fn: function(value, cb) {
 							try {
-								var maxAmount = this.calculateMaximumAmount();
+								var maxAmount = this.model.get('maxAmount') || this.calculateMaximumAmount();
 							} catch (error) {
 								return cb(error);
 							}
@@ -126,11 +127,13 @@ app.views.Send = (function() {
 			app.views.utility.Form.prototype.initialize.apply(this, arguments);
 			_.bindAll(this,
 				'fetchUnspentTxOutputs',
+				'precalculateMaximumAmount',
 				'updateFeeRate',
 				'updateUnspentTxOutputs',
 				'updateScoreboard',
 				'toggleFlags'
 			);
+			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
 			this.model = new Backbone.Model;
 			this.model.set('payment', app.cache.get('payment'));
@@ -141,6 +144,7 @@ app.views.Send = (function() {
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
 			this.listenTo(this.model, 'change:scoreboard', this.updateScoreboard);
+			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
 			async.forever(_.bind(function(next) {
@@ -259,6 +263,7 @@ app.views.Send = (function() {
 		},
 		onChangeInputs: function() {
 			this.toggleFlags();
+			this.precalculateMaximumAmount();
 		},
 		onPaymentChange: function() {
 			this.toggleFlags();
@@ -604,13 +609,19 @@ app.views.Send = (function() {
 		paymentWasSent: function() {
 			return !!this.model.get('payment');
 		},
+		precalculateMaximumAmount: function() {
+			requestAnimationFrame(_.bind(function() {
+				this.model.set('maxAmount', this.calculateMaximumAmount());
+			}, this));
+		},
 		calculateMaximumAmount: function() {
-			var formData = this.getFormData();
-			var address = app.wallet.getAddress();
-			// Convert to satoshis/kilobyte.
-			var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
 			// Need the unspent transaction outputs that will be used as inputs for this tx.
 			var utxo = this.model.get('utxo');
+			if (!utxo) return null;
+			var formData = this.getFormData();
+			var address = formData.address || app.wallet.getAddress();
+			// Convert to satoshis/kilobyte.
+			var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
 			// A zero amount here will send all the funds (less fees) as change to the given address.
 			var amount = 1;
 			// Build a sample tx so that we can calculate the fee.
