@@ -345,8 +345,8 @@ app.abstracts.ElectrumService = (function() {
 		return this.initialized === true;
 	};
 
-	ElectrumService.prototype.getNextUnconnectedPeer = function() {
-		return _.find(this.getKnownPeers(), function(host) {
+	ElectrumService.prototype.getUnconnectedPeers = function() {
+		return _.filter(this.getKnownPeers(), function(host) {
 			return !this.isBadPeer(host) && !this.isConnectedToPeer(host);
 		}, this);
 	};
@@ -364,44 +364,73 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.connectClients = function(done) {
-		var test = _.bind(function(next) {
-			next(null, !this.getNextUnconnectedPeer() || this.getConnectedClients().length >= this.options.targetConnectedClients);
-		}, this);
-		var iteratee = _.bind(function(next) {
-			var host = this.getNextUnconnectedPeer();
-			this.connect(host, _.bind(function(error, client) {
+		done = done || _.noop;
+		var queue = async.queue(_.bind(function(task, next) {
+			var host = task.host;
+			this.connect(host, function(error, client) {
 				if (error) {
-					this.removePeer(host);
-					this.saveBadPeer(host);
-					return next();
+					log('ElectrumService: Failed to connect to peer', error);
+					onBadHost(host)
+				} else {
+					onGoodClient(client);
 				}
-				this.clients.push(client);
-				this.savePeer(host);
-				this.removeBadPeer(host);
-				this.toggleCmdQueueState();
-				client.cmd('server.peers.subscribe', [], _.bind(function(error, results) {
-					try {
-						if (!error && results) {
-							var newHosts = _.chain(results).filter(function(result) {
-								return !!result[2] && !!result[2][2];
-							}, this).map(function(result) {
-								var ipAddress = result[0];
-								if (!result[2] || !result[2][2]) return;
-								var tcpPort = result[2][2].substr(1);
-								return [ipAddress, tcpPort].join(':');
-							}).value();
-							if (newHosts.length > 0) {
-								this.savePeers(newHosts);
-							}
-						}
-					} catch (error) {
-						this.log('ElectrumService:', 'Error while parsing peers from server response', error);
-					}
-					next();
-				}, this));
-			}, this));
+				next();
+			});
+		}, this), 3/* concurrency */);
+		queue.pause();
+		var log = _.bind(this.log, this);
+		var onBadHost = _.bind(function(host) {
+			this.removePeer(host);
+			this.saveBadPeer(host);
+		});
+		var onMorePeers = _.bind(function(hosts) {
+			this.savePeers(hosts);
+			if (queue) {
+				_.each(hosts, function(host) {
+					queue.push({ host: host });
+				})
+			}
 		}, this);
-		async.until(test, iteratee, done);
+		var onGoodClient = _.bind(function(client) {
+			var host = client.getHost();
+			this.clients.push(client);
+			this.savePeer(host);
+			this.removeBadPeer(host);
+			this.toggleCmdQueueState();
+			client.cmd('server.peers.subscribe', [], function(error, results) {
+				try {
+					if (!error && results) {
+						var newHosts = _.chain(results).filter(function(result) {
+							return !!result[2] && !!result[2][2];
+						}, this).map(function(result) {
+							var ipAddress = result[0];
+							if (!result[2] || !result[2][2]) return;
+							var tcpPort = result[2][2].substr(1);
+							return [ipAddress, tcpPort].join(':');
+						}).value();
+						if (newHosts.length > 0) {
+							onMorePeers(newHosts);
+						}
+					}
+				} catch (error) {
+					log('ElectrumService:', 'Error while parsing peers from server response', error);
+				}
+			});
+		}, this);
+		_.each(this.getUnconnectedPeers(), function(host) {
+			queue.push({ host: host });
+		}, this);
+		async.until(_.bind(function(next) {
+			next(null, queue.length() === 0 || this.getConnectedClients().length >= this.options.targetConnectedClients);
+		}, this), function(next) {
+			_.delay(next, 50);
+		}, function(error) {
+			queue.kill();
+			queue = null;
+			if (error) return done(error);
+			done();
+		});
+		queue.resume();
 	};
 
 	ElectrumService.prototype.connect = function(host, done) {
