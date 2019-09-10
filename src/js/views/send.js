@@ -128,18 +128,26 @@ app.views.Send = (function() {
 				'fetchUnspentTxOutputs',
 				'updateFeeRate',
 				'updateUnspentTxOutputs',
+				'updateScoreboard',
 				'toggleFlags'
 			);
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
 			this.model = new Backbone.Model;
 			this.model.set('payment', app.cache.get('payment'));
+			this.model.set('scoreboard', app.cache.get('scoreboard'));
 			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
 			this.listenTo(this.model, 'change:amount', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
+			this.listenTo(this.model, 'change:scoreboard', this.updateScoreboard);
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
+			async.forever(_.bind(function(next) {
+				this.checkConfirmationStatusScoreboardTransactions(function() {
+					_.delay(next, 1 * 60 * 1000);
+				});
+			}, this), _.noop);
 		},
 		onRender: function() {
 			this.$inputs = {
@@ -153,10 +161,12 @@ app.views.Send = (function() {
 				reset: this.$('.button.reset'),
 			};
 			this.$utxo = this.$('.utxo');
+			this.$scoreboard = this.$('.scoreboard');
 			this.toggleFlags();
 			this.updateAddress();
 			this.updateAmount();
 			this.updateFeeRate();
+			this.updateScoreboard();
 			if (this.paymentWasSent()) {
 				this.updateFieldsWithDoubleSpendInfo();
 			}
@@ -178,6 +188,24 @@ app.views.Send = (function() {
 			};
 			var html = template(data);
 			this.$utxo.html(html);
+		},
+		updateScoreboard: function() {
+			if (!this.$scoreboard) return;
+			var templateHtml = $('#template-send-scoreboard').html();
+			var template = Handlebars.compile(templateHtml);
+			var scoreboard = this.getScoreboard();
+			var data = {
+				payments: {
+					accepted: this.getScoreboardCount('payments', 'accepted'),
+					confirmed: this.getScoreboardCount('payments', 'confirmed'),
+				},
+				doubleSpends: {
+					accepted: this.getScoreboardCount('doubleSpends', 'accepted'),
+					confirmed: this.getScoreboardCount('doubleSpends', 'confirmed'),
+				},
+			};
+			var html = template(data);
+			this.$scoreboard.html(html);
 		},
 		updateFeeRate: function() {
 			if (!this.$inputs) return;
@@ -282,6 +310,7 @@ app.views.Send = (function() {
 				fee: fee,
 				sequence: sequence,
 			});
+			var txid = Buffer.from(tx.getHash()).reverse().toString('hex');
 			return {
 				address: address,
 				amount: amount,
@@ -290,6 +319,7 @@ app.views.Send = (function() {
 				inputs: tx.ins,
 				rawTx: tx.toHex(),
 				sequence: sequence,
+				txid: txid,
 				utxo: utxo,
 			};
 		},
@@ -343,6 +373,7 @@ app.views.Send = (function() {
 				sequence: sequence,
 				inputs: inputs,
 			});
+			var txid = Buffer.from(tx.getHash()).reverse().toString('hex');
 			// Recalculate the amount by summing the values of all outputs.
 			amount = _.reduce(tx.outs, function(memo, out) {
 				return memo + out.value;
@@ -353,8 +384,10 @@ app.views.Send = (function() {
 				fee: fee,
 				feeRate: feeRate,
 				inputs: tx.ins,
+				payment: _.pick(payment, 'txid'),
 				rawTx: tx.toHex(),
 				sequence: sequence,
+				txid: txid,
 				utxo: utxo,
 			};
 		},
@@ -372,7 +405,7 @@ app.views.Send = (function() {
 					symbol: app.wallet.getNetworkConfig().symbol,
 				});
 				if (confirm(message)) {
-					var model = this.model;
+					var savePayment = _.bind(this.savePayment, this);
 					// Confirmed - send the payment tx.
 					app.busy(true);
 					app.wallet.broadcastRawTx(payment.rawTx, function(error) {
@@ -381,8 +414,7 @@ app.views.Send = (function() {
 							app.log(error);
 							app.mainView.showMessage(error);
 						} else {
-							app.cache.set('payment', payment);
-							model.set('payment', payment);
+							savePayment(payment);
 						}
 					});
 				} else {
@@ -395,6 +427,7 @@ app.views.Send = (function() {
 		},
 		doubleSpend: function() {
 			var createDoubleSpend = _.bind(this.createDoubleSpend, this);
+			var saveDoubleSpend = _.bind(this.saveDoubleSpend, this);
 			var resetForm = _.bind(this.resetForm, this);
 			var model = this.model;
 			var sent = false;
@@ -436,12 +469,12 @@ app.views.Send = (function() {
 											// Canceled.
 											canceled = true;
 										}
-										// Error: insufficient fee, rejecting replacement TXID; new feerate 0.00001000 BTC/kB <= old feerate 0.00001000 BTC/kB
 									} else {
 										return next(error);
 									}
 								} else {
 									sent = true;
+									saveDoubleSpend(doubleSpend);
 								}
 							} catch (error) {
 								return next(error);
@@ -463,6 +496,88 @@ app.views.Send = (function() {
 					resetForm();
 				}
 			});
+		},
+		savePayment: function(payment) {
+			app.cache.set('payment', payment);
+			this.model.set('payment', payment);
+			this.updateEntryScoreboard('payments', payment.txid, { status: 'accepted' });
+		},
+		saveDoubleSpend: function(doubleSpend) {
+			console.log('saveDoubleSpend', doubleSpend);
+			var payment = doubleSpend.payment || null;
+			this.updateEntryScoreboard('doubleSpends', doubleSpend.txid, {
+				status: 'accepted',
+				payment: {
+					txid: payment && payment.txid,
+				},
+			});
+		},
+		getScoreboardCount: function(type, status) {
+			var scoreboard = this.getScoreboard();
+			return _.where(scoreboard[type], { status: status }).length;
+		},
+		updateEntryScoreboard: function(type, txid, data) {
+			var scoreboard = this.getScoreboard();
+			scoreboard[type][txid] = data;
+			this.model.set('scoreboard', scoreboard);
+			app.cache.set('scoreboard', scoreboard);
+		},
+		getScoreboard: function() {
+			var scoreboard = _.defaults(app.cache.get('scoreboard') || {}, {
+				payments: {},
+				doubleSpends: {},
+			});
+			return scoreboard;
+		},
+		checkConfirmationStatusScoreboardTransactions: function(done) {
+			var updateEntryScoreboard = _.bind(this.updateEntryScoreboard, this);
+			var getScoreboardEntries = _.bind(this.getScoreboardEntries, this);
+			var skip = {};
+			async.series([
+				function checkDoubleSpends(next) {
+					var doubleSpends = getScoreboardEntries('doubleSpends');
+					async.eachSeries(doubleSpends, function(doubleSpend, nextTx) {
+						if (doubleSpend.status === 'confirmed') {
+							skip[doubleSpend.payment.txid] = true;
+							return nextTx();
+						}
+						app.wallet.getTx(doubleSpend.txid, function(error, tx) {
+							if (error) {
+								app.log(error)
+							} else if (!!tx.blockhash && tx.confirmations && tx.confirmations > 0) {
+								var data = _.omit(doubleSpend, 'txid');
+								data.status = 'confirmed';
+								skip[doubleSpend.payment.txid] = true;
+								updateEntryScoreboard('doubleSpends', doubleSpend.txid, data);
+							}
+							nextTx();
+						});
+					}, next);
+				},
+				function checkPayments(next) {
+					var payments = getScoreboardEntries('payments');
+					async.eachSeries(payments, function(payment, nextTx) {
+						if (payment.status === 'confirmed') return nextTx();
+						if (skip[payment.txid]) return nextTx();
+						app.wallet.getTx(payment.txid, function(error, tx) {
+							if (error) {
+								app.log(error)
+							} else if (!!tx.blockhash && tx.confirmations && tx.confirmations > 0) {
+								var data = _.omit(payment, 'txid');
+								data.status = 'confirmed';
+								updateEntryScoreboard('payments', payment.txid, data);
+							}
+							nextTx();
+						});
+					}, next);
+				},
+			], done);
+		},
+		getScoreboardEntries: function(type) {
+			var scoreboard = this.getScoreboard();
+			return _.chain(scoreboard.doubleSpends).map(function(data, txid) {
+				return _.extend({}, data, { txid: txid });
+			}).value();
 		},
 		reset: function() {
 			if (confirm(app.i18n.t('send.reset-confirm'))) {

@@ -175,6 +175,12 @@ app.wallet = (function() {
 			});
 		},
 
+		getTx: function(txHash, cb) {
+			var electrumService = _.result(this, 'electrumService');
+			if (!electrumService) return cb(new Error('Electrum service unavailable'));
+			electrumService.cmd('blockchain.transaction.get', [txHash, true], cb);
+		},
+
 		buildTx: function(value, receivingAddress, utxo, options) {
 
 			options = _.defaults(options || {}, {

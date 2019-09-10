@@ -75,31 +75,8 @@
 		</div>
 	</script>
 
-	<script type="text/html" id="template-send-utxo">
-		{{#if utxo}}
-		<table>
-			<thead>
-				<tr>
-					<th>tx</th>
-					<th>amount</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{#each utxo}}
-				<tr>
-					<td><a href="{{url}}">{{txid}}</a></td>
-					<td>{{amount}}</td>
-				</tr>
-				{{/each}}
-			</tbody>
-		</table>
-		{{else}}
-		<p class="utxo-empty">{{i18n "send.no-utxo"}}</p>
-		{{/if}}
-		<a class="button refresh-utxo"></a>
-	</script>
-
 	<script type="text/html" id="template-send">
+		<div class="scoreboard"></div>
 		<div class="utxo"></div>
 		<div class="form">
 			<form>
@@ -113,6 +90,55 @@
 			<a class="secondary-control button double-spend disabled"></a>
 			<a class="secondary-control button reset disabled">{{i18n "send.reset"}}</a>
 		</div>
+	</script>
+
+	<script type="text/html" id="template-send-scoreboard">
+		<table>
+			<thead>
+				<tr>
+					<th class="scoreboard-1st payments" colspan="2">{{i18n "send.scoreboard.payments"}}</th>
+					<th class="scoreboard-1st double-spends" colspan="2">{{i18n "send.scoreboard.double-spends"}}</th>
+				</tr>
+				<tr>
+					<th class="scoreboard-2nd payments accepted">{{i18n "send.scoreboard.accepted"}}</th>
+					<th class="scoreboard-2nd payments confirmed">{{i18n "send.scoreboard.confirmed"}}</th>
+					<th class="scoreboard-2nd double-spends accepted">{{i18n "send.scoreboard.accepted"}}</th>
+					<th class="scoreboard-2nd double-spends confirmed">{{i18n "send.scoreboard.confirmed"}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="scoreboard-3rd payments accepted">{{payments.accepted}}</td>
+					<td class="scoreboard-3rd payments confirmed">{{payments.confirmed}}</td>
+					<td class="scoreboard-3rd double-spends accepted">{{doubleSpends.accepted}}</td>
+					<td class="scoreboard-3rd double-spends confirmed">{{doubleSpends.confirmed}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</script>
+
+	<script type="text/html" id="template-send-utxo">
+		{{#if utxo}}
+		<table>
+			<thead>
+				<tr>
+					<th>{{i18n "send.utxo.txid"}}</th>
+					<th>{{i18n "send.utxo.amount"}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each utxo}}
+				<tr>
+					<td><a href="{{url}}">{{txid}}</a></td>
+					<td>{{amount}}</td>
+				</tr>
+				{{/each}}
+			</tbody>
+		</table>
+		{{else}}
+		<p class="utxo-empty">{{i18n "send.utxo.empty"}}</p>
+		{{/if}}
+		<a class="button refresh-utxo"></a>
 	</script>
 
 	<script type="text/html" id="template-form-field">

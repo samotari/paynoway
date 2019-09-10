@@ -1,10 +1,16 @@
+.view.send {
+	padding: 0;
+}
 .view.send input[name="address"] {
 	font-family: 'Courier';
 	letter-spacing: .1rem;
 }
+.view.send .utxo,
+.view.send .scoreboard {
+	margin-bottom: 1.2rem;
+}
 .view.send .utxo {
 	font-size: .85rem;
-	margin-bottom: 1.5rem;
 }
 .view.send .utxo table {
 	width: 100%;
@@ -48,6 +54,56 @@
 	padding: .8rem 1.1rem;
 	margin-top: .6rem;
 }
+.view.send .button.refresh-utxo {
+	display: none;
+}
+.view.send .scoreboard table {
+	width: 100%;
+	text-align: center;
+	border-spacing: .1rem;
+}
+.view.send .scoreboard th,
+.view.send .scoreboard td {
+	padding: .2rem;
+}
+.view.send .scoreboard .scoreboard-1st {
+	font-size: 1.1rem;
+}
+.view.send .scoreboard .scoreboard-2nd {
+	font-weight: 100;
+	font-size: .9rem;
+	background: #333;
+}
+.view.send .scoreboard .scoreboard-3rd {
+	font-size: 1.6rem;
+}
+.view.send .scoreboard .scoreboard-1st.payments {
+	background: rgba(52,112,247,0.4);
+}
+.view.send .scoreboard .scoreboard-2nd.confirmed,
+.view.send .scoreboard .scoreboard-3rd.confirmed {
+	font-weight: 700;
+}
+.view.send .scoreboard .scoreboard-2nd.payments.confirmed,
+.view.send .scoreboard .scoreboard-3rd.payments.confirmed {
+	color: rgba(52,112,247,1);
+}
+.view.send .scoreboard .scoreboard-1st.double-spends {
+	background: rgba(255,0,0,0.4);
+}
+.view.send .scoreboard .scoreboard-2nd.double-spends.confirmed,
+.view.send .scoreboard .scoreboard-3rd.double-spends.confirmed {
+	color: rgba(255,0,0,1);
+}
+.view.send .scoreboard .scoreboard-2nd.accepted {
+	color: #aaa;
+}
+.view.send .scoreboard .scoreboard-3rd.accepted {
+	color: #666;
+}
+.view.send .form {
+	padding: 0 1rem;
+}
 .view.send .button.secondary-control {
 	background-position: center center;
 	background-repeat: no-repeat;
@@ -55,7 +111,7 @@
 	background-repeat: no-repeat;
 }
 .view.send .button.secondary-control.payment {
-	background-color: rgba(0,0,255,0.8);
+	background-color: rgba(52,112,247,0.8);
 	background-image: url('../images/send-light.svg');
 }
 .view.send .button.secondary-control.double-spend {
