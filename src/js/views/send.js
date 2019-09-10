@@ -137,21 +137,15 @@ app.views.Send = (function() {
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
 			this.model = new Backbone.Model;
 			this.model.set('payment', app.cache.get('payment'));
-			this.model.set('scoreboard', app.cache.get('scoreboard'));
 			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
 			this.listenTo(this.model, 'change:amount', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
-			this.listenTo(this.model, 'change:scoreboard', this.updateScoreboard);
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
+			this.listenTo(app.cache, 'change:scoreboard', this.updateScoreboard);
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
-			async.forever(_.bind(function(next) {
-				this.checkConfirmationStatusScoreboardTransactions(function() {
-					_.delay(next, 1 * 60 * 1000);
-				});
-			}, this), _.noop);
 		},
 		onRender: function() {
 			this.$inputs = {
@@ -197,15 +191,14 @@ app.views.Send = (function() {
 			if (!this.$scoreboard) return;
 			var templateHtml = $('#template-send-scoreboard').html();
 			var template = Handlebars.compile(templateHtml);
-			var scoreboard = this.getScoreboard();
 			var data = {
 				payments: {
-					accepted: this.getScoreboardCount('payments', 'accepted'),
-					confirmed: this.getScoreboardCount('payments', 'confirmed'),
+					accepted: app.scoreboard.count('payments', 'accepted'),
+					confirmed: app.scoreboard.count('payments', 'confirmed'),
 				},
 				doubleSpends: {
-					accepted: this.getScoreboardCount('doubleSpends', 'accepted'),
-					confirmed: this.getScoreboardCount('doubleSpends', 'confirmed'),
+					accepted: app.scoreboard.count('doubleSpends', 'accepted'),
+					confirmed: app.scoreboard.count('doubleSpends', 'confirmed'),
 				},
 			};
 			var html = template(data);
@@ -505,84 +498,16 @@ app.views.Send = (function() {
 		savePayment: function(payment) {
 			app.cache.set('payment', payment);
 			this.model.set('payment', payment);
-			this.updateEntryScoreboard('payments', payment.txid, { status: 'accepted' });
+			app.scoreboard.updateEntry('payments', payment.txid, { status: 'accepted' });
 		},
 		saveDoubleSpend: function(doubleSpend) {
-			console.log('saveDoubleSpend', doubleSpend);
 			var payment = doubleSpend.payment || null;
-			this.updateEntryScoreboard('doubleSpends', doubleSpend.txid, {
+			app.scoreboard.updateEntry('doubleSpends', doubleSpend.txid, {
 				status: 'accepted',
 				payment: {
 					txid: payment && payment.txid,
 				},
 			});
-		},
-		getScoreboardCount: function(type, status) {
-			var scoreboard = this.getScoreboard();
-			return _.where(scoreboard[type], { status: status }).length;
-		},
-		updateEntryScoreboard: function(type, txid, data) {
-			var scoreboard = this.getScoreboard();
-			scoreboard[type][txid] = data;
-			this.model.set('scoreboard', scoreboard);
-			app.cache.set('scoreboard', scoreboard);
-		},
-		getScoreboard: function() {
-			var scoreboard = _.defaults(app.cache.get('scoreboard') || {}, {
-				payments: {},
-				doubleSpends: {},
-			});
-			return scoreboard;
-		},
-		checkConfirmationStatusScoreboardTransactions: function(done) {
-			var updateEntryScoreboard = _.bind(this.updateEntryScoreboard, this);
-			var getScoreboardEntries = _.bind(this.getScoreboardEntries, this);
-			var skip = {};
-			async.series([
-				function checkDoubleSpends(next) {
-					var doubleSpends = getScoreboardEntries('doubleSpends');
-					async.eachSeries(doubleSpends, function(doubleSpend, nextTx) {
-						if (doubleSpend.status === 'confirmed') {
-							skip[doubleSpend.payment.txid] = true;
-							return nextTx();
-						}
-						app.wallet.getTx(doubleSpend.txid, function(error, tx) {
-							if (error) {
-								app.log(error)
-							} else if (!!tx.blockhash && tx.confirmations && tx.confirmations > 0) {
-								var data = _.omit(doubleSpend, 'txid');
-								data.status = 'confirmed';
-								skip[doubleSpend.payment.txid] = true;
-								updateEntryScoreboard('doubleSpends', doubleSpend.txid, data);
-							}
-							nextTx();
-						});
-					}, next);
-				},
-				function checkPayments(next) {
-					var payments = getScoreboardEntries('payments');
-					async.eachSeries(payments, function(payment, nextTx) {
-						if (payment.status === 'confirmed') return nextTx();
-						if (skip[payment.txid]) return nextTx();
-						app.wallet.getTx(payment.txid, function(error, tx) {
-							if (error) {
-								app.log(error)
-							} else if (!!tx.blockhash && tx.confirmations && tx.confirmations > 0) {
-								var data = _.omit(payment, 'txid');
-								data.status = 'confirmed';
-								updateEntryScoreboard('payments', payment.txid, data);
-							}
-							nextTx();
-						});
-					}, next);
-				},
-			], done);
-		},
-		getScoreboardEntries: function(type) {
-			var scoreboard = this.getScoreboard();
-			return _.chain(scoreboard.doubleSpends).map(function(data, txid) {
-				return _.extend({}, data, { txid: txid });
-			}).value();
 		},
 		reset: function() {
 			if (confirm(app.i18n.t('send.reset-confirm'))) {

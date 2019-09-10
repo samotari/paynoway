@@ -382,7 +382,7 @@ app.abstracts.ElectrumService = (function() {
 		var onBadHost = _.bind(function(host) {
 			this.removePeer(host);
 			this.saveBadPeer(host);
-		});
+		}, this);
 		var onMorePeers = _.bind(function(hosts) {
 			this.savePeers(hosts);
 			if (queue) {
@@ -430,7 +430,7 @@ app.abstracts.ElectrumService = (function() {
 			if (error) return done(error);
 			done();
 		});
-		queue.resume();
+		queue && queue.resume();
 	};
 
 	ElectrumService.prototype.connect = function(host, done) {

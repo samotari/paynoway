@@ -265,6 +265,7 @@ $(JS)/config.js\
 $(JS)/cache.js\
 $(JS)/settings.js\
 $(JS)/wallet.js\
+$(JS)/scoreboard.js\
 $(JS)/i18n.js\
 $(JS)/router.js\
 $(JS)/init.js
