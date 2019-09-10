@@ -17,6 +17,7 @@
     <plugin name="phonegap-plugin-barcodescanner" spec="7.0.2" />
     <plugin name="cordova-plugin-whitelist" spec="1.3.3" />
     <plugin name="cordova-plugin-inappbrowser" spec="2.0.2" />
+    <plugin name="cordova-plugin-network-information" spec="2.0.2" />
     <plugin name="cordova-plugin-ionic-keyboard" spec="2.1.3" />
     <plugin name="cz.blocshop.socketsforcordova" spec="https://github.com/chill117/sockets-for-cordova.git" />
     <plugin name="cordova-android-support-gradle-release" spec="3.0.0">

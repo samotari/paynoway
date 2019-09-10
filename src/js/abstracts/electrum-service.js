@@ -62,7 +62,7 @@ app.abstracts.ElectrumService = (function() {
 			maxAge: 30 * 60 * 1000,
 		},
 		// Number of connected clients to maintain:
-		targetConnectedClients: 7,
+		targetConnectedClients: 3,
 		// Time between pings (milliseconds):
 		pingDelay: 30000,
 		cmd: {
@@ -87,7 +87,7 @@ app.abstracts.ElectrumService = (function() {
 			options = null;
 		}
 		options = options || {};
-		app.log('ElectrumService:', 'Queueing command', method, params, options);
+		this.log('ElectrumService:', 'Queueing command', method, params, options);
 		if (!_.isString(method)) {
 			throw new Error('Invalid argument ("method"): String expected');
 		}
@@ -109,19 +109,19 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.runCmdTask = function(task, next) {
-		app.log('ElectrumService:', 'Running command', task.method, task.params, task.options);
-		this.doCmd(task.method, task.params, task.options, function(error, result) {
+		this.log('ElectrumService:', 'Running command', task.method, task.params, task.options);
+		this.doCmd(task.method, task.params, task.options, _.bind(function(error, result) {
 			try {
 				task.done.call(undefined, error, result);
 			} catch (error) {
-				app.log(error);
+				this.log(error);
 			}
 			next();
-		});
+		}, this));
 	};
 
 	ElectrumService.prototype.doCmd = function(method, params, options, done) {
-		app.log('ElectrumService:', 'Sending command', method, params, options);
+		this.log('ElectrumService:', 'Sending command', method, params, options);
 		var clients = this.getConnectedClients();
 		options = _.defaults(options || {}, this.options.cmd);
 		var numResponded = 0;
@@ -161,14 +161,17 @@ app.abstracts.ElectrumService = (function() {
 				});
 			};
 		});
-		async[options.asyncMethod](tasks, function(error, results) {
+		async[options.asyncMethod](tasks, _.bind(function(error, results) {
 			if (error) {
-				app.log('ElectrumService:', 'Command failed', method, params, options, error);
+				this.log('ElectrumService:', 'Command failed', method, params, options, error);
 				return done(error);
 			}
-			app.log('ElectrumService:', 'Command completed', method, params, options, results);
+			if (options.asyncMethod === 'race' && results.error) {
+				return done(new Error(results.error));
+			}
+			this.log('ElectrumService:', 'Command completed', method, params, options, results);
 			done(null, results);
-		});
+		}, this));
 	};
 
 	ElectrumService.prototype.onClientClose = function() {
@@ -274,7 +277,7 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.cleanBadPeers = function() {
-		app.log('ElectrumService:', 'Cleaning bad peers');
+		this.log('ElectrumService:', 'Cleaning bad peers');
 		var now = Date.now();
 		var maxAge = this.options.cleanBadPeers.maxAge;
 		var badPeers = _.chain(this.getBadPeers()).map(function(timestamp, host) {
@@ -317,7 +320,7 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.ping = function(done) {
-		app.log('ElectrumService:', 'Pinging connected clients');
+		this.log('ElectrumService:', 'Pinging connected clients');
 		this.cmd('server.ping', [], { asyncMethod: 'parallel' }, _.noop);
 	};
 
@@ -329,9 +332,9 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.initialize = function(done) {
-		app.log('ElectrumService:', 'Initializing');
+		this.log('ElectrumService:', 'Initializing');
 		this.connectClients(_.bind(function() {
-			app.log('ElectrumService:', 'Initialized!');
+			this.log('ElectrumService:', 'Initialized!');
 			this.initialized = true;
 			this.trigger('initialized');
 			done.apply(undefined, arguments);
@@ -392,7 +395,7 @@ app.abstracts.ElectrumService = (function() {
 							}
 						}
 					} catch (error) {
-						app.log('ElectrumService:', 'Error while parsing peers from server response', error);
+						this.log('ElectrumService:', 'Error while parsing peers from server response', error);
 					}
 					next();
 				}, this));
@@ -402,14 +405,14 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.connect = function(host, done) {
-		app.log('ElectrumService: Connecting to server at ' + host);
+		this.log('ElectrumService: Connecting to server at ' + host);
 		var client = this.createClient(host);
 		client.open(_.bind(function(error) {
 			if (error) {
-				app.log('ElectrumService: Failed to connect to server at ' + host, error);
+				this.log('ElectrumService: Failed to connect to server at ' + host, error);
 				return done(error);
 			}
-			app.log('ElectrumService: Successfully connected to server at ' + host);
+			this.log('ElectrumService: Successfully connected to server at ' + host);
 			done(null, client);
 		}, this));
 		client.on('close', this.onClientClose);
@@ -431,7 +434,7 @@ app.abstracts.ElectrumService = (function() {
 	};
 
 	ElectrumService.prototype.startLoop = function(name, fn, options) {
-		app.log('ElectrumService:', 'Starting loop', name, options);
+		this.log('ElectrumService:', 'Starting loop', name, options);
 		options = _.defaults(options || {}, {
 			delay: 30000,// Delay between execution of fn (milliseconds)
 			immediate: false,// Whether or not to immediately execute fn
@@ -450,6 +453,12 @@ app.abstracts.ElectrumService = (function() {
 
 	ElectrumService.prototype.getCacheKey = function(key) {
 		return this.options.cachePrefix + key;
+	};
+
+	ElectrumService.prototype.log = function() {
+		if (this.options.debug) {
+			console.log.apply(console, arguments);
+		}
 	};
 
 	_.extend(ElectrumService.prototype, Backbone.Events);

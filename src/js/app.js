@@ -4,15 +4,19 @@ var app = app || {};
 
 	'use strict';
 
-	app.initializeElectrumServices = function() {
+	app.initializeElectrumServices = function(options) {
+		options = _.defaults(options || {}, {
+			force: false,
+		});
 		app.services = app.services || {};
 		app.services.electrum = app.services.electrum || {};
 		var network = app.settings.get('network');
-		if (!app.services.electrum[network]) {
+		if (!app.services.electrum[network] || options.force) {
 			var networkConfig = app.wallet.getNetworkConfig(network);
 			var options = {
 				servers: networkConfig.electrum.servers,
 				defaultPorts: networkConfig.electrum.defaultPorts,
+				debug: app.debugging(),
 			};
 			var service = app.services.electrum[network] = new app.abstracts.ElectrumService(network, options);
 			service.initialize(function(error) {
@@ -55,6 +59,35 @@ var app = app || {};
 
 	app.isTest = function() {
 		return typeof mocha !== 'undefined';
+	};
+
+	app.isOnline = function() {
+		return app.getConnectionState() === 'online';
+	};
+
+	app.isOffline = function() {
+		return app.getConnectionState() === 'offline';
+	};
+
+	app.getConnectionState = function() {
+		switch (app.getConnectionType()) {
+			case '2g':
+			case '3g':
+			case '4g':
+			case 'cellular':
+			case 'ethernet':
+			case 'wifi':
+			case 'unknown':
+				return 'online';
+			case 'none':
+				return 'offline';
+			default:
+				return null;
+		}
+	};
+
+	app.getConnectionType = function() {
+		return navigator && navigator.connection && navigator.connection.type || null;
 	};
 
 	app.debugging = function() {
