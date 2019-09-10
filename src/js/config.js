@@ -268,7 +268,7 @@ app.config = (function() {
 		},
 		qrCodes: {
 			errorCorrectionLevel: 'M',
-			margin: 0,
+			margin: 1,
 		},
 		settings: [
 			{
@@ -415,13 +415,13 @@ app.config = (function() {
 		touch: {
 			quick: {
 				// Maximum time between touchstart and touchend; milliseconds.
-				maxTime: 300,
+				maxTime: 150,
 				// Maximum percent of screen traveled for emitting "click" event.
-				maxMovement: 2.5,
+				maxMovement: 5,
 			},
 			long: {
 				// Delay before emitting "longtouchstart" event; milliseconds.
-				delay: 450,
+				delay: 400,
 			},
 			swipe: {
 				minSpeed: 0.0025,// % of screen width / millisecond

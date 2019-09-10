@@ -121,11 +121,6 @@ html.theme-dark .screen-saver-accepted-here,
 html.theme-dark .screen-saver-hide-instructions {
 	color: #f7f7f7;
 }
-html.theme-dark .address-qrcode {
-    box-sizing: border-box;
-    background: #fff;
-	padding: .8rem;
-}
 html.theme-dark .button.secondary-control.disabled {
 	opacity: .4;
 }

@@ -5,12 +5,9 @@
 	font-family: 'Courier';
 	letter-spacing: .1rem;
 }
-.view.send .utxo,
-.view.send .scoreboard {
-	margin-bottom: 1.2rem;
-}
 .view.send .utxo {
 	font-size: .85rem;
+	margin-bottom: 1.6rem;
 }
 .view.send .utxo table {
 	width: 100%;
@@ -29,8 +26,10 @@
 }
 .view.send .utxo th,
 .view.send .utxo td {
+	height: 1.2rem;
+	line-height: 1.2rem;
 	border-bottom: .1rem solid #eee;
-	padding: .4rem;
+	padding: 0 .4rem;
 }
 .view.send .utxo tr:last-child td {
 	border-bottom: none;
@@ -56,6 +55,9 @@
 }
 .view.send .button.refresh-utxo {
 	display: none;
+}
+.view.send .scoreboard {
+	margin-bottom: .8rem;
 }
 .view.send .scoreboard table {
 	width: 100%;
@@ -127,8 +129,8 @@
 }
 .view.send .form-field-action.select-all {
 	width: 5rem;
-	line-height: 2rem;
-	height: 2rem;
+	height: 1.6rem;
+	line-height: 1.6rem;
 	text-align: center;
 	text-transform: lowercase;
 	padding: 0 .6rem;

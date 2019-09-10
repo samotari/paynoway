@@ -13,27 +13,27 @@
 }
 .form-label {
 	display: block;
-	font-size: 1rem;
-	margin-bottom: .5rem;
+	font-size: .9rem;
+	margin-bottom: .4rem;
 }
 .form-field {
 	position: relative;
-	font-size: 0.9rem;
+	font-size: .9rem;
 	padding-right: 0;
 }
 .form-field-description {
-	margin-bottom: 0.5rem;
+	margin-bottom: .4rem;
 }
 .form-field-buttons .button {
 	display: inline-block;
 	vertical-align: top;
-	padding: .5rem 1rem;
+	padding: .4rem 1rem;
 }
 .form-input {
 	width: 100%;
-	height: 2rem;
-	font-size: 0.9rem;
-	line-height: 2rem;
+	height: 1.6rem;
+	line-height: 1.6rem;
+	font-size: .9rem;
 	box-sizing: border-box;
 }
 
@@ -87,13 +87,13 @@
 .form-field-action {
 	display: inline-block;
 	vertical-align: top;
-	width: 1.5rem;
-	height: 1.5rem;
+	width: 1.6rem;
+	height: 1.6rem;
 	background-position: center center;
 	background-repeat: no-repeat;
-	background-size: 1.4rem;
+	background-size: 1.2rem;
 	box-sizing: border-box;
-	padding: .9rem 1.2rem;
+	padding: 0 1.2rem;
 }
 .form-field-action + .form-field-action {
 	margin-left: .3rem;
@@ -105,11 +105,11 @@
 	background-image: url('../images/camera.svg');
 }
 .form-field-action.cycle {
-	background-size: 1rem;
+	background-size: .8rem;
 	background-image: url('../images/cycle.svg');
 }
 .form-field-action.select-all {
-	background-size: 1rem;
+	background-size: .8rem;
 	background-image: url('../images/select-all.svg');
 }
 .form-description {
