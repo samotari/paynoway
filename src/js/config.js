@@ -424,9 +424,9 @@ app.config = (function() {
 				delay: 400,
 			},
 			swipe: {
-				minSpeed: 0.0025,// % of screen width / millisecond
-				minMovementX: 12,// % screen width
-				tolerance: 4,// % screen width
+				minSpeed: 0.005,// % of screen width / millisecond
+				minMovementX: 25,// % screen width
+				tolerance: 1,// % screen width
 			},
 		},
 	};

@@ -14,12 +14,12 @@ app.device = (function() {
 
 			if (app.isCordova()) {
 
-				window.addEventListener('keyboardWillShow', function() {
+				window.addEventListener('keyboardDidShow', function(evt) {
 					$('html').addClass('keyboard-visible');
-					device.trigger('keyboard:visible');
+					device.trigger('keyboard:visible', evt);
 				}, false);
 
-				window.addEventListener('keyboardWillHide', function() {
+				window.addEventListener('keyboardDidHide', function() {
 					$('html').removeClass('keyboard-visible');
 					device.trigger('keyboard:hidden');
 				}, false);

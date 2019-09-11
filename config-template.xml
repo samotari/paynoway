@@ -6,7 +6,6 @@
     <access origin="*" />
     <platform name="android">
         <preference name="android-minSdkVersion" value="21" />
-        <preference name="KeyboardResize" value="true" />
         <icon density="ldpi" src="src/images/favicon/favicon-android-ldpi.png" />
         <icon density="mdpi" src="src/images/favicon/favicon-android-mdpi.png" />
         <icon density="hdpi" src="src/images/favicon/favicon-android-hdpi.png" />
@@ -18,7 +17,7 @@
     <plugin name="cordova-plugin-whitelist" spec="1.3.3" />
     <plugin name="cordova-plugin-inappbrowser" spec="2.0.2" />
     <plugin name="cordova-plugin-network-information" spec="2.0.2" />
-    <plugin name="cordova-plugin-ionic-keyboard" spec="2.1.3" />
+    <plugin name="cordova-plugin-ionic-keyboard" spec="2.1.3"/>
     <plugin name="cz.blocshop.socketsforcordova" spec="https://github.com/chill117/sockets-for-cordova.git" />
     <plugin name="cordova-android-support-gradle-release" spec="3.0.0">
         <variable name="ANDROID_SUPPORT_VERSION" value="26.+" />

@@ -1,13 +1,71 @@
 .view.send {
+	overflow: hidden;
 	padding: 0;
 }
-.view.send input[name="address"] {
-	font-family: 'Courier';
-	letter-spacing: .1rem;
+.view.send .scoreboard {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 6rem;
+}
+.view.send .scoreboard table {
+	width: 100%;
+	text-align: center;
+	border-spacing: .1rem;
+}
+.view.send .scoreboard th,
+.view.send .scoreboard td {
+	padding: 0 .2rem;
+}
+.view.send .scoreboard .scoreboard-1st {
+	height: 2rem;
+	line-height: 2rem;
+	font-size: 1.1rem;
+}
+.view.send .scoreboard .scoreboard-2nd {
+	height: 1.6rem;
+	line-height: 1.6rem;
+	font-weight: 100;
+	font-size: .9rem;
+	background: #333;
+}
+.view.send .scoreboard .scoreboard-3rd {
+	height: 2.4rem;
+	line-height: 2.4rem;
+	font-size: 1.6rem;
+}
+.view.send .scoreboard .scoreboard-1st.payments {
+	background: rgba(52,112,247,0.4);
+}
+.view.send .scoreboard .scoreboard-2nd.confirmed,
+.view.send .scoreboard .scoreboard-3rd.confirmed {
+	font-weight: 700;
+}
+.view.send .scoreboard .scoreboard-2nd.payments.confirmed,
+.view.send .scoreboard .scoreboard-3rd.payments.confirmed {
+	color: rgba(52,112,247,1);
+}
+.view.send .scoreboard .scoreboard-1st.double-spends {
+	background: rgba(255,0,0,0.4);
+}
+.view.send .scoreboard .scoreboard-2nd.double-spends.confirmed,
+.view.send .scoreboard .scoreboard-3rd.double-spends.confirmed {
+	color: rgba(255,0,0,1);
+}
+.view.send .scoreboard .scoreboard-2nd.accepted {
+	color: #aaa;
+}
+.view.send .scoreboard .scoreboard-3rd.accepted {
+	color: #666;
 }
 .view.send .utxo {
+	position: absolute;
+	left: 0;
+	top: 6.8rem/* scoreboard height+margin */;
+	width: 100%;
+	height: 3.2rem;
 	font-size: .85rem;
-	margin-bottom: 1.6rem;
 }
 .view.send .utxo table {
 	width: 100%;
@@ -56,55 +114,20 @@
 .view.send .button.refresh-utxo {
 	display: none;
 }
-.view.send .scoreboard {
-	margin-bottom: .8rem;
-}
-.view.send .scoreboard table {
-	width: 100%;
-	text-align: center;
-	border-spacing: .1rem;
-}
-.view.send .scoreboard th,
-.view.send .scoreboard td {
-	padding: .2rem;
-}
-.view.send .scoreboard .scoreboard-1st {
-	font-size: 1.1rem;
-}
-.view.send .scoreboard .scoreboard-2nd {
-	font-weight: 100;
-	font-size: .9rem;
-	background: #333;
-}
-.view.send .scoreboard .scoreboard-3rd {
-	font-size: 1.6rem;
-}
-.view.send .scoreboard .scoreboard-1st.payments {
-	background: rgba(52,112,247,0.4);
-}
-.view.send .scoreboard .scoreboard-2nd.confirmed,
-.view.send .scoreboard .scoreboard-3rd.confirmed {
-	font-weight: 700;
-}
-.view.send .scoreboard .scoreboard-2nd.payments.confirmed,
-.view.send .scoreboard .scoreboard-3rd.payments.confirmed {
-	color: rgba(52,112,247,1);
-}
-.view.send .scoreboard .scoreboard-1st.double-spends {
-	background: rgba(255,0,0,0.4);
-}
-.view.send .scoreboard .scoreboard-2nd.double-spends.confirmed,
-.view.send .scoreboard .scoreboard-3rd.double-spends.confirmed {
-	color: rgba(255,0,0,1);
-}
-.view.send .scoreboard .scoreboard-2nd.accepted {
-	color: #aaa;
-}
-.view.send .scoreboard .scoreboard-3rd.accepted {
-	color: #666;
-}
 .view.send .form {
+	position: absolute;
+	left: 0;
+	top: 11.6rem/* scoreboard+utxo heights+margins */;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	box-sizing: border-box;
 	padding: 0 1rem;
+	padding-bottom: 7rem;
+}
+.view.send input[name="address"] {
+	font-family: 'Courier';
+	letter-spacing: .1rem;
 }
 .view.send .button.secondary-control {
 	background-position: center center;
