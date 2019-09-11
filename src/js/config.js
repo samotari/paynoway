@@ -315,7 +315,7 @@ app.config = (function() {
 				label: function() {
 					return app.i18n.t('configure.wif');
 				},
-				type: 'text',
+				type: 'password',
 				visible: true,
 				validate: function(value, data) {
 					if (value) {
@@ -327,6 +327,18 @@ app.config = (function() {
 					}
 				},
 				actions: [
+					{
+						name: 'visibility',
+						fn: function(value, cb) {
+							try {
+								var $input = $(':input[name="wif"]');
+								$input.attr('type', $input.attr('type') === 'text' ? 'password' : 'text');
+							} catch (error) {
+								app.log(error);
+							}
+							cb(null, value);
+						},
+					},
 					{
 						name: 'camera',
 						fn: function(value, cb) {

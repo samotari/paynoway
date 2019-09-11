@@ -112,6 +112,10 @@
 	background-size: .8rem;
 	background-image: url('../images/select-all.svg');
 }
+.form-field-action.visibility {
+	background-size: 1.5rem;
+	background-image: url('../images/visibility.svg');
+}
 .form-description {
 	font-size: .9rem;
 	margin-bottom: .5rem;
