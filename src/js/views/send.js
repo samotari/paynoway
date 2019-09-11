@@ -143,7 +143,8 @@ app.views.Send = (function() {
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
-			this.listenTo(app.cache, 'change:scoreboard', this.updateScoreboard);
+			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.updateScoreboard);
+			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshUnspentTxOutputs);
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
 		},
@@ -193,12 +194,14 @@ app.views.Send = (function() {
 			var template = Handlebars.compile(templateHtml);
 			var data = {
 				payments: {
-					accepted: app.scoreboard.count('payments', 'accepted'),
-					confirmed: app.scoreboard.count('payments', 'confirmed'),
+					pending: app.wallet.transactions.count('payment', 'pending'),
+					invalid: app.wallet.transactions.count('payment', 'invalid'),
+					confirmed: app.wallet.transactions.count('payment', 'confirmed'),
 				},
 				doubleSpends: {
-					accepted: app.scoreboard.count('doubleSpends', 'accepted'),
-					confirmed: app.scoreboard.count('doubleSpends', 'confirmed'),
+					pending: app.wallet.transactions.count('double-spend', 'pending'),
+					invalid: app.wallet.transactions.count('double-spend', 'invalid'),
+					confirmed: app.wallet.transactions.count('double-spend', 'confirmed'),
 				},
 			};
 			var html = template(data);
@@ -303,7 +306,7 @@ app.views.Send = (function() {
 			var virtualSize = sampleTx.virtualSize() / 1000;
 			// Use the size of the tx to calculate the fee.
 			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(virtualSize * feeRate);
+			var fee = Math.ceil(virtualSize * feeRate) + 1;
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 				sequence: sequence,
@@ -334,6 +337,10 @@ app.views.Send = (function() {
 				// Calculate the fee based on the size of the tx and a fee-rate.
 				var formData = this.getFormData();
 				var minRelayFeeRate = this.model.get('minRelayFeeRate') || 1000;// satoshis/kilobyte
+				// !! TODO !! Better solution?
+				// Double-spend tx is consistently rejected on first try because the fee is not
+				// high enough relative to the payment tx's fee.
+				minRelayFeeRate += 310;
 				var feeRate = Math.max(
 					// Convert to satoshis/kilobyte.
 					(new BigNumber(formData.feeRate || 0)).times(1000).toNumber(),
@@ -364,7 +371,7 @@ app.views.Send = (function() {
 				var virtualSize = sampleTx.virtualSize() / 1000;
 				// Use the size of the tx to calculate the fee.
 				// The fee rate is satoshis/kilobyte.
-				fee = Math.ceil(virtualSize * feeRate);
+				fee = Math.ceil(virtualSize * feeRate) + 1;
 			}
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
@@ -498,16 +505,16 @@ app.views.Send = (function() {
 		savePayment: function(payment) {
 			app.cache.set('payment', payment);
 			this.model.set('payment', payment);
-			app.scoreboard.updateEntry('payments', payment.txid, { status: 'accepted' });
+			var transaction = _.pick(payment, 'fee', 'rawTx', 'txid');
+			transaction.type = 'payment';
+			transaction.status = 'pending';
+			app.wallet.transactions.save(transaction);
 		},
 		saveDoubleSpend: function(doubleSpend) {
-			var payment = doubleSpend.payment || null;
-			app.scoreboard.updateEntry('doubleSpends', doubleSpend.txid, {
-				status: 'accepted',
-				payment: {
-					txid: payment && payment.txid,
-				},
-			});
+			var transaction = _.pick(doubleSpend, 'fee', 'rawTx', 'txid');
+			transaction.type = 'double-spend';
+			transaction.status = 'pending';
+			app.wallet.transactions.save(transaction);
 		},
 		reset: function() {
 			if (confirm(app.i18n.t('send.reset-confirm'))) {
@@ -557,7 +564,7 @@ app.views.Send = (function() {
 			var virtualSize = sampleTx.virtualSize() / 1000;
 			// Use the size of the tx to calculate the fee.
 			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(virtualSize * feeRate);
+			var fee = Math.ceil(virtualSize * feeRate) + 1;
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 			});

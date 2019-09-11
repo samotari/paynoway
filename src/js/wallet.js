@@ -138,6 +138,13 @@ app.wallet = (function() {
 			}
 		},
 
+		getBalance: function(cb) {
+			this.getUnspentTxOutputs(function(error, utxo) {
+				if (error) return cb(error);
+				debugger;
+			});
+		},
+
 		getMinRelayFeeRate: function(cb) {
 			var electrumService = _.result(this, 'electrumService');
 			if (!electrumService) return cb(new Error('Electrum service unavailable'));
@@ -300,8 +307,72 @@ app.wallet = (function() {
 			}
 			return true;
 		},
-
+		transactions: {
+			save: function(data) {
+				var model = this.collection.findWhere({ txid: data.txid });
+				if (model) {
+					model.set(data).save();
+				} else {
+					this.collection.create(data);
+				}
+			},
+			count: function(type, status) {
+				var filter = { type: type };
+				if (status) {
+					filter.status = status;
+				}
+				return this.collection.where(filter).length;
+			},
+			doStatusUpdates: function(done) {
+				var queue = async.queue(function(task, next) {
+					var transaction = task.transaction;
+					app.wallet.getTx(transaction.get('txid'), function(error, tx) {
+						if (error) {
+							if (/No such mempool or blockchain transaction/i.test(error.message)) {
+								var data = transaction.toJSON();
+								data.status = 'invalid';
+								wallet.transactions.save(data);
+							}
+						} else if (tx) {
+							var isConfirmed = !!tx.blockhash && tx.confirmations && tx.confirmations > 0;
+							if (isConfirmed) {
+								var data = transaction.toJSON();
+								data.status = 'confirmed';
+								wallet.transactions.save(data);
+							}
+						}
+					});
+				}, 3/* concurrency */);
+				var transactions = this.collection.where({ status: 'pending' });
+				_.each(transactions, function(transaction) {
+					queue.push({ transaction: transaction });
+				});
+				async.until(function(next) {
+					next(null, queue.length() === 0);
+				}, function(next) {
+					_.delay(next, 50);
+				}, done);
+			},
+		},
 	};
+
+	app.onStart(function(done) {
+		var collection = wallet.transactions.collection = new app.collections.Transactions();
+		collection.fetch({
+			success: function() {
+				done();
+			},
+			error: done,
+		});
+	});
+
+	app.onReady(function() {
+		async.forever(_.bind(function(next) {
+			wallet.transactions.doStatusUpdates(function() {
+				_.delay(next, 30 * 1000);
+			});
+		}, this), _.noop);
+	});
 
 	return wallet;
 

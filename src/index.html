@@ -94,21 +94,25 @@
 		<table>
 			<thead>
 				<tr>
-					<th class="scoreboard-1st payments" colspan="2">{{i18n "send.scoreboard.payments"}}</th>
-					<th class="scoreboard-1st double-spends" colspan="2">{{i18n "send.scoreboard.double-spends"}}</th>
+					<th class="scoreboard-1st payments" colspan="3">{{i18n "send.scoreboard.payments"}}</th>
+					<th class="scoreboard-1st double-spends" colspan="3">{{i18n "send.scoreboard.double-spends"}}</th>
 				</tr>
 				<tr>
-					<th class="scoreboard-2nd payments accepted">{{i18n "send.scoreboard.accepted"}}</th>
+					<th class="scoreboard-2nd payments pending">{{i18n "send.scoreboard.pending"}}</th>
+					<th class="scoreboard-2nd payments invalid">{{i18n "send.scoreboard.invalid"}}</th>
 					<th class="scoreboard-2nd payments confirmed">{{i18n "send.scoreboard.confirmed"}}</th>
-					<th class="scoreboard-2nd double-spends accepted">{{i18n "send.scoreboard.accepted"}}</th>
+					<th class="scoreboard-2nd double-spends pending">{{i18n "send.scoreboard.pending"}}</th>
+					<th class="scoreboard-2nd double-spends invalid">{{i18n "send.scoreboard.invalid"}}</th>
 					<th class="scoreboard-2nd double-spends confirmed">{{i18n "send.scoreboard.confirmed"}}</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td class="scoreboard-3rd payments accepted">{{payments.accepted}}</td>
+					<td class="scoreboard-3rd payments pending">{{payments.pending}}</td>
+					<td class="scoreboard-3rd payments invalid">{{payments.invalid}}</td>
 					<td class="scoreboard-3rd payments confirmed">{{payments.confirmed}}</td>
-					<td class="scoreboard-3rd double-spends accepted">{{doubleSpends.accepted}}</td>
+					<td class="scoreboard-3rd double-spends pending">{{doubleSpends.pending}}</td>
+					<td class="scoreboard-3rd double-spends invalid">{{doubleSpends.invalid}}</td>
 					<td class="scoreboard-3rd double-spends confirmed">{{doubleSpends.confirmed}}</td>
 				</tr>
 			</tbody>

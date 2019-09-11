@@ -53,11 +53,13 @@
 .view.send .scoreboard .scoreboard-3rd.double-spends.confirmed {
 	color: rgba(255,0,0,1);
 }
-.view.send .scoreboard .scoreboard-2nd.accepted {
-	color: #aaa;
-}
-.view.send .scoreboard .scoreboard-3rd.accepted {
+.view.send .scoreboard .scoreboard-3rd.invalid {
 	color: #666;
+}
+.view.send .scoreboard .scoreboard-2nd.invalid,
+.view.send .scoreboard .scoreboard-2nd.pending,
+.view.send .scoreboard .scoreboard-3rd.pending {
+	color: #aaa;
 }
 .view.send .utxo {
 	position: absolute;

@@ -7,7 +7,13 @@ app.models.Transaction = (function() {
 	'use strict';
 
 	return app.abstracts.BaseModel.extend({
-		idAttribute: 'tx_hash',
+		idAttribute: 'txid',
+		defaults: {
+			fee: null,
+			rawTx: null,
+			status: 'pending',
+			type: null,
+		},
 	});
 
 })();
