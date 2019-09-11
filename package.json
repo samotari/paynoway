@@ -40,7 +40,8 @@
         "ANDROID_SUPPORT_VERSION": "26.+"
       },
       "cordova-plugin-ionic-keyboard": {},
-      "cordova-plugin-network-information": {}
+      "cordova-plugin-network-information": {},
+      "cordova-clipboard": {}
     }
   },
   "dependencies": {
@@ -56,6 +57,7 @@
     "cordova": "git://github.com/apache/cordova-cli.git#1c8ca07f04b2f2a8b0477a0440904584fb01b76f",
     "cordova-android": "7.1.4",
     "cordova-android-support-gradle-release": "3.0.0",
+    "cordova-clipboard": "1.3.0",
     "cordova-plugin-inappbrowser": "2.0.2",
     "cordova-plugin-ionic-keyboard": "2.1.3",
     "cordova-plugin-network-information": "2.0.2",

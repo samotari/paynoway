@@ -28,6 +28,7 @@ app.lang['en'] = (function() {
 		'form.field-required': 'This field is required',
 
 		'receive.title': 'Receiving Address',
+		'receive.copy-to-clipboard.success': 'Copied to clipboard',
 
 		'send.address': 'Payment Address',
 		'send.invalid-address': 'Invalid payment address',

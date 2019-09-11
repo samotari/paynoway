@@ -9,6 +9,9 @@ app.views.Receive = (function() {
 	return app.abstracts.BaseView.extend({
 		template: '#template-receive',
 		className: 'receive',
+		events: {
+			'click .copy-to-clipboard': 'copyToClipboard',
+		},
 		initialize: function() {
 			this.address = this.generateAddress();
 		},
@@ -25,6 +28,14 @@ app.views.Receive = (function() {
 			this.$addressQRCode = this.$('.address-qrcode');
 			this.$addressText = this.$('.address-text');
 			this.$addressText.text(this.address);
+			this.$addressHiddenTextArea = $('<textarea>')
+				.css({
+					position: 'absolute',
+					left: '-99999rem',
+					top: 0,
+				})
+				.text(this.$addressText.text())
+				.appendTo(this.$el);
 			this.renderQRCode();
 		},
 		renderQRCode: function() {
@@ -37,6 +48,21 @@ app.views.Receive = (function() {
 		},
 		onResize: function() {
 			this.renderQRCode();
+		},
+		copyToClipboard: function() {
+			var text = this.$addressHiddenTextArea.text();
+			if (text) {
+				try {
+					cordova.plugins.clipboard.copy(text);
+					cordova.plugins.clipboard.paste(function(fromClipBoard) {
+						if (fromClipBoard === text) {
+							app.mainView.showMessage(app.i18n.t('receive.copy-to-clipboard.success'));
+						}
+					});
+				} catch (error) {
+					app.log(error);
+				}
+			}
 		},
 	});
 
