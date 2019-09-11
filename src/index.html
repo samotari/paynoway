@@ -75,7 +75,10 @@
 
 	<script type="text/html" id="template-send">
 		<div class="scoreboard"></div>
-		<div class="utxo"></div>
+		<div class="balance">
+			<div class="balance-value"></div>
+			<div class="balance-symbol"></div>
+		</div>
 		<div class="form">
 			<form>
 		{{#each inputs}}
@@ -117,30 +120,6 @@
 				</tr>
 			</tbody>
 		</table>
-	</script>
-
-	<script type="text/html" id="template-send-utxo">
-		{{#if utxo}}
-		<table>
-			<thead>
-				<tr>
-					<th>{{i18n "send.utxo.txid"}}</th>
-					<th>{{i18n "send.utxo.amount"}}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{#each utxo}}
-				<tr>
-					<td><a href="{{url}}">{{txid}}</a></td>
-					<td>{{amount}}</td>
-				</tr>
-				{{/each}}
-			</tbody>
-		</table>
-		{{else}}
-		<p class="utxo-empty">{{i18n "send.utxo.empty"}}</p>
-		{{/if}}
-		<a class="button refresh-utxo"></a>
 	</script>
 
 	<script type="text/html" id="template-form-field">

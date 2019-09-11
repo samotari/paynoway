@@ -141,7 +141,10 @@ app.wallet = (function() {
 		getBalance: function(cb) {
 			this.getUnspentTxOutputs(function(error, utxo) {
 				if (error) return cb(error);
-				debugger;
+				var balance = _.reduce(utxo, function(memo, output) {
+					return memo + parseInt(output.value);
+				}, 0);
+				cb(null, balance);
 			});
 		},
 

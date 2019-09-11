@@ -15,7 +15,6 @@ app.views.Send = (function() {
 			'change :input[name="feeRate"]': 'onChangeInputs',
 			'click .button.payment': 'pay',
 			'click .button.double-spend': 'doubleSpend',
-			'click .button.refresh-utxo': 'refreshUnspentTxOutputs',
 			'click .button.reset': 'reset',
 			'click .button.use-all-funds': 'useAllFunds',
 		},
@@ -128,15 +127,18 @@ app.views.Send = (function() {
 			_.bindAll(this,
 				'fetchUnspentTxOutputs',
 				'precalculateMaximumAmount',
+				'refreshBalance',
+				'toggleFlags',
 				'updateFeeRate',
-				'updateUnspentTxOutputs',
-				'updateScoreboard',
-				'toggleFlags'
+				'updateBalance',
+				'updateScoreboard'
 			);
-			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
+			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
+			this.refreshBalance = _.throttle(this.refreshBalance, 200);
 			this.model = new Backbone.Model;
 			this.model.set('payment', app.cache.get('payment'));
+			this.listenTo(this.model, 'change:balance', this.updateBalance);
 			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
 			this.listenTo(this.model, 'change:amount', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
@@ -145,7 +147,9 @@ app.views.Send = (function() {
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.updateScoreboard);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshUnspentTxOutputs);
+			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshBalance);
 			this.refreshUnspentTxOutputs();
+			this.refreshBalance();
 			this.fetchFeeRate();
 		},
 		onRender: function() {
@@ -159,7 +163,10 @@ app.views.Send = (function() {
 				doubleSpend: this.$('.button.double-spend'),
 				reset: this.$('.button.reset'),
 			};
-			this.$utxo = this.$('.utxo');
+			this.$balance = {
+				value: this.$('.balance-value'),
+				symbol: this.$('.balance-symbol'),
+			};
 			this.$scoreboard = this.$('.scoreboard');
 			this.toggleFlags();
 			this.updateAddress();
@@ -170,23 +177,24 @@ app.views.Send = (function() {
 				this.updateFieldsWithDoubleSpendInfo();
 			}
 		},
-		updateUnspentTxOutputs: function() {
-			if (!this.$utxo) return;
-			var templateHtml = $('#template-send-utxo').html();
-			var template = Handlebars.compile(templateHtml);
-			var utxo = _.map(this.model.get('utxo') || [], function(output) {
-				var txid = output.tx_hash;
-				return {
-					amount: app.wallet.fromBaseUnit(output.value),
-					txid: txid.substr(0, 20),
-					url: app.wallet.getBlockExplorerUrl('tx', { txid: txid }),
-				};
+		refreshBalance: function() {
+			var model = this.model;
+			app.wallet.getBalance(function(error, balance) {
+				if (error) {
+					app.log(error);
+				} else {
+					model.set('balance', balance);
+				}
 			});
-			var data = {
-				utxo: utxo,
-			};
-			var html = template(data);
-			this.$utxo.html(html);
+		},
+		updateBalance: function() {
+			if (!this.$balance) return;
+			var value = this.model.get('balance');
+			if (!_.isNumber(value)) return;
+			value = app.wallet.fromBaseUnit(value);
+			var symbol = app.wallet.getNetworkConfig().symbol;
+			this.$balance.value.text(value);
+			this.$balance.symbol.text(symbol);
 		},
 		updateScoreboard: function() {
 			if (!this.$scoreboard) return;
