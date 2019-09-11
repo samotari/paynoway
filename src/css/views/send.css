@@ -137,11 +137,11 @@
 }
 .view.send .button.secondary-control.payment {
 	background-color: rgba(52,112,247,0.8);
-	background-image: url('../images/send-light.svg');
+	background-image: url('../images/send.svg');
 }
 .view.send .button.secondary-control.double-spend {
 	background-color: rgba(255,0,0,0.8);
-	background-image: url('../images/wink-light.svg');
+	background-image: url('../images/wink.svg');
 }
 .view.send .button.secondary-control.reset {
 	background-image: none;
