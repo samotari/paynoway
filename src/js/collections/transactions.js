@@ -9,6 +9,9 @@ app.collections.Transactions = (function() {
 	return app.abstracts.BaseCollection.extend({
 		model: app.models.Transaction,
 		storeName: 'transactions',
+		comparator: function(model) {
+			return model.get('timestamp');
+		},
 	});
 
 })();

@@ -36,6 +36,7 @@
 	<div id="header">
 		<a class="header-button receive" href="#receive"></a>
 		<a class="header-button send" href="#send"></a>
+		<a class="header-button history" href="#history"></a>
 		<a class="header-button configure" href="#configure"></a>
 	</div>
 	<div id="view">
@@ -120,6 +121,25 @@
 				</tr>
 			</tbody>
 		</table>
+	</script>
+
+	<script type="text/html" id="template-history">
+		<table>
+			<thead>
+				<tr>
+					<th>txid</th>
+					<th>type</th>
+					<th>status</th>
+				</tr>
+			</thead>
+			<tbody class="history-items"></tbody>
+		</table>
+	</script>
+
+	<script type="text/html" id="template-history-item">
+		<td><a href="{{url}}">{{txidShort}}</a></td>
+		<td>{{type}}</td>
+		<td>{{status}}</td>
 	</script>
 
 	<script type="text/html" id="template-form-field">

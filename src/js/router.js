@@ -21,6 +21,7 @@ app.Router = (function() {
 		routes: {
 			'configure': 'configure',
 			'disclaimers': 'disclaimers',
+			'history': 'history',
 			'receive': 'receive',
 			'send': 'send',
 
@@ -59,6 +60,11 @@ app.Router = (function() {
 		disclaimers: function() {
 
 			app.mainView.renderView('Disclaimers');
+		},
+
+		history: function() {
+
+			app.mainView.renderView('History');
 		},
 
 		receive: function() {

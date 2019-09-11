@@ -32,15 +32,18 @@ html.loaded #header {
 .header-button.configure { background-image: url('../images/configure.svg'); }
 .header-button.receive { background-image: url('../images/receive.svg'); }
 .header-button.send { background-image: url('../images/send.svg'); }
+.header-button.history { background-image: url('../images/history.svg'); }
 .header-button.receive,
-.header-button.send {
+.header-button.send,
+.header-button.history {
 	/*
 		Hide these buttons by default.
 	*/
 	display: none;
 }
 html.configured .header-button.receive,
-html.configured .header-button.send {
+html.configured .header-button.send,
+html.configured .header-button.history {
 	/*
 		Show these buttons when the app is configured.
 	*/
@@ -52,6 +55,7 @@ html.configured .header-button.send {
 body.view-configure .header-button.configure { display: none; }
 body.view-receive .header-button.receive { display: none; }
 body.view-send .header-button.send { display: none; }
+body.view-history .header-button.history { display: none; }
 
 .header-button.configure {
 	float: right;

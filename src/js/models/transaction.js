@@ -8,11 +8,14 @@ app.models.Transaction = (function() {
 
 	return app.abstracts.BaseModel.extend({
 		idAttribute: 'txid',
-		defaults: {
-			fee: null,
-			rawTx: null,
-			status: 'pending',
-			type: null,
+		defaults: function() {
+			return {
+				timestamp: Date.now(),
+				fee: null,
+				rawTx: null,
+				status: 'pending',
+				type: null,
+			};
 		},
 	});
 

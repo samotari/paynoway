@@ -344,6 +344,7 @@ app.wallet = (function() {
 								wallet.transactions.save(data);
 							}
 						}
+						next();
 					});
 				}, 3/* concurrency */);
 				var transactions = this.collection.where({ status: 'pending' });
