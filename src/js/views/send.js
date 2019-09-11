@@ -410,15 +410,54 @@ app.views.Send = (function() {
 					symbol: app.wallet.getNetworkConfig().symbol,
 				});
 				if (confirm(message)) {
+					var createDoubleSpend = _.bind(this.createDoubleSpend, this);
+					var createPayment = _.bind(this.createPayment, this);
+					var model = this.model;
 					var savePayment = _.bind(this.savePayment, this);
 					// Confirmed - send the payment tx.
 					app.busy(true);
 					app.wallet.broadcastRawTx(payment.rawTx, function(error) {
-						app.busy(false);
 						if (error) {
-							app.log(error);
-							app.mainView.showMessage(error);
+							if (
+								/Missing inputs/i.test(error.message) ||
+								/rejecting replacement/i.test(error.message)
+							) {
+								// Fetch UTXO then retry broadcast
+								async.series([
+									function(next) {
+										app.wallet.getUnspentTxOutputs(function(error, utxo) {
+											if (error) return next(error);
+											if (utxo) {
+												model.set('utxo', utxo);
+											}
+											next();
+										});
+									},
+									function(next) {
+										try {
+											var payment = createPayment();
+											createDoubleSpend(payment);
+										} catch (error) {
+											return next(error);
+										}
+										app.wallet.broadcastRawTx(payment.rawTx, next);
+									},
+								], function(error) {
+									app.busy(false);
+									if (error) {
+										app.log(error);
+										app.mainView.showMessage(error);
+									} else {
+										savePayment(payment);
+									}
+								});
+							} else {
+								app.busy(false);
+								app.log(error);
+								app.mainView.showMessage(error);
+							}
 						} else {
+							app.busy(false);
 							savePayment(payment);
 						}
 					});
