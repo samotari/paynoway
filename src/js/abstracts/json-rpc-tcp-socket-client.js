@@ -45,6 +45,9 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 				times: 10,
 			},
 		},
+		cmd: {
+			timeout: 5000,
+		},
 	};
 
 	JsonRpcTcpSocketClient.prototype.supportsNativeSocket = function() {
@@ -205,7 +208,11 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 			}
 			done(null, result.result);
 		});
+		var timeout = _.delay(function() {
+			done(new Error('Timed-out while waiting for response'));
+		}, this.options.cmd.timeout);
 		var done = _.once(_.bind(function() {
+			clearTimeout(timeout);
 			this.off('data:' + data.id);
 			cb.apply(undefined, arguments);
 		}, this));
