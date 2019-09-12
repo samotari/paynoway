@@ -351,8 +351,8 @@ app.wallet = (function() {
 				_.each(transactions, function(transaction) {
 					queue.push({ transaction: transaction });
 				});
-				async.until(function(next) {
-					next(null, queue.length() === 0);
+				async.until(function() {
+					return queue.length() === 0;
 				}, function(next) {
 					_.delay(next, 50);
 				}, done);

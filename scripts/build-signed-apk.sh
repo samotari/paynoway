@@ -8,9 +8,9 @@ if [ -z "$KEYSTORE_FILENAME" ]; then
 fi;
 
 if [ -z "$KEY_ALIAS" ]; then
-	read -p "Key alias [cryptoterminal]: " KEY_ALIAS;
+	read -p "Key alias [paynoway]: " KEY_ALIAS;
 	if [ -z "$KEY_ALIAS" ]; then
-		KEY_ALIAS="cryptoterminal";
+		KEY_ALIAS="paynoway";
 	fi;
 fi;
 

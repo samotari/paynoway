@@ -144,15 +144,15 @@ app.abstracts.ElectrumService = (function() {
 				}
 			});
 		});
-		async.until(function(next) {
+		async.until(function() {
 			var haveAllResults = results.length === clients.length;
 			if (options.asyncMethod === 'parallel') {
-				next(null, haveAllResults);
+				return haveAllResults;
 			} else {
 				var haveAtLeastOneNonErrorResult = _.reject(results, function(result) {
 					return _.has(result.error);
 				}).length > 0;
-				next(null, haveAtLeastOneNonErrorResult || haveAllResults);
+				return haveAtLeastOneNonErrorResult || haveAllResults;
 			}
 		}, function(next) {
 			_.delay(next, 50);
@@ -399,8 +399,8 @@ app.abstracts.ElectrumService = (function() {
 		_.each(this.getUnconnectedPeers(), function(host) {
 			queue.push({ host: host });
 		}, this);
-		async.until(_.bind(function(next) {
-			next(null, queue.length() === 0 || this.getConnectedClients().length >= this.options.connect.minimum);
+		async.until(_.bind(function() {
+			return queue.length() === 0 || this.getConnectedClients().length >= this.options.connect.minimum;
 		}, this), function(next) {
 			_.delay(next, 50);
 		}, function(error) {
