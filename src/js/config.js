@@ -8,7 +8,7 @@ app.config = (function() {
 		cache: {
 			onAppStartClearOlderThan: 86400000,// milliseconds
 		},
-		debug: true,
+		debug: false,
 		defaultLocale: 'en',
 		jsonRpcTcpSocketClient: {
 			timeout: 10000,

@@ -91,7 +91,7 @@ var app = app || {};
 	};
 
 	app.debugging = function() {
-		return app.config.debug === true || app.settings && app.settings.get('debug') === true;
+		return app.config.debug === true;
 	};
 
 	app.log = function() {
