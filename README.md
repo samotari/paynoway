@@ -85,6 +85,30 @@ Install and run the app on the device: with the following command
 npm run android
 ```
 
+#### Create Signed APK
+
+Create your signing key:
+```bash
+npm run android-generate-signing-key
+```
+
+Build a production APK:
+```bash
+npm run build:prod && npm run build:apk
+```
+If successful, it should have created a new `.apk` file at the following path:
+```
+./platforms/android/app/build/outputs/apk/release/app-release.apk
+```
+
+To install the newly created APK onto an Android device:
+```bash
+adb install ./platforms/android/app/build/outputs/apk/release/app-release.apk
+```
+* You may need to run `adb devices` before the above command.
+* And if the app is already installed on the device, you will need to use the `-r` flag to reinstall it.
+
+
 
 ## License
 
