@@ -1,6 +1,8 @@
-# Pay No Way
+# PayNoWay
 
 A mobile app for testing payment systems against double-spend attacks.
+
+Double-spending is no longer a theoretical possibility but a practical reality. Most of the end-user applications used widely today leave their users vulnerable to being defrauded via double-spend attacks. PayNoWay is a tool that you can use to test the applications that you, or your business, depend on to accept on-chain cryptocurrency payments. If you would like to learn more about how double-spending works: [Double-Spending Made Easy](https://degreesofzero.com/talks/double-spending-made-easy/).
 
 * [Disclaimers](#disclaimers)
 * [Requirements](#requirements)
