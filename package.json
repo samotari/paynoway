@@ -69,7 +69,7 @@
     "core-js": "2.6.4",
     "cssnano": "4.1.7",
     "cz.blocshop.socketsforcordova": "https://github.com/chill117/sockets-for-cordova.git",
-    "handlebars": "4.1.2",
+    "handlebars": "4.3.0",
     "jquery": "3.4.1",
     "moment": "2.23.0",
     "open-sans-fontface": "https://github.com/samotari/open-sans/archive/1.4.2.tar.gz",
