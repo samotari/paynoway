@@ -100,6 +100,19 @@
 	font-weight: 100;
 	padding-left: .25rem;
 }
+.view.send .balance-refresh {
+	display: inline-block;
+	vertical-align: middle;
+	left: .4rem;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: .6rem;
+	opacity: .7;
+	background-image: url(../images/cycle.svg);
+	background-size: .9rem;
+	background-repeat: no-repeat;
+	background-position: 50%;
+}
 .view.send .form {
 	position: absolute;
 	left: 0;

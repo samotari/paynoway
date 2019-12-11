@@ -17,6 +17,7 @@ app.views.Send = (function() {
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.reset': 'reset',
 			'click .button.use-all-funds': 'useAllFunds',
+			'click .button.balance-refresh': 'refreshUnspentTxOutputs',
 		},
 		inputs: [
 			{
