@@ -6,15 +6,18 @@
   "main": "index.js",
   "scripts": {
     "android": "./node_modules/.bin/cordova run android --device",
+    "android:install": "adb install -r ./platforms/android/app/build/outputs/apk/debug/app-debug.apk",
     "android-vm": "./node_modules/.bin/cordova run android",
     "android-export-signing-certificate": "keytool -keystore android.keystore -alias paynoway -exportcert -rfc -file paynoway.crt",
     "android-export-public-signing-key": "rm -rf paynoway.crt; npm run android-export-signing-certificate | openssl x509 -pubkey -noout -in paynoway.crt",
     "android-generate-signing-key": "keytool -keystore android.keystore -genkey -v -alias paynoway -keyalg RSA -keysize 2048 -validity 10000",
     "build": "npm run build:prod",
     "build:apk": "./scripts/build-signed-apk.sh",
+    "build:apk:debug": "./node_modules/.bin/cordova build android",
     "build:dev": "NODE_ENV=dev make clean-light dev",
     "build:prod": "NODE_ENV=prod make clean-light prod",
     "build:test": "NODE_ENV=test make clean-light prod",
+    "dev:android": "npm run build && npm run build:apk:debug && npm run android:install",
     "prepare:android": "./node_modules/.bin/cordova platform add android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
