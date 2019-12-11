@@ -236,9 +236,8 @@ app.views.Send = (function() {
 			this.$scoreboard.html(html);
 		},
 		calculateTxSum: function(type) {
-			var statuses = ['pending', 'confirmed'];
 			var models = app.wallet.transactions.collection.models.filter(function(model) {
-				return model.get('type') === type && _.contains(statuses, model.get('status'));
+				return model.get('type') === type && model.get('status') !== 'invalid';
 			});
 			var sum = _.reduce(models, function(memo, model) {
 				var amount = model.get('amount') || 0;
