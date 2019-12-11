@@ -138,16 +138,6 @@ app.wallet = (function() {
 			}
 		},
 
-		getBalance: function(cb) {
-			this.getUnspentTxOutputs(function(error, utxo) {
-				if (error) return cb(error);
-				var balance = _.reduce(utxo, function(memo, output) {
-					return memo + parseInt(output.value);
-				}, 0);
-				cb(null, balance);
-			});
-		},
-
 		getMinRelayFeeRate: function(cb) {
 			var electrumService = _.result(this, 'electrumService');
 			if (!electrumService) return cb(new Error('Electrum service unavailable'));

@@ -127,7 +127,6 @@ app.views.Send = (function() {
 			_.bindAll(this,
 				'fetchUnspentTxOutputs',
 				'precalculateMaximumAmount',
-				'refreshBalance',
 				'toggleFlags',
 				'updateFeeRate',
 				'updateBalance',
@@ -135,10 +134,8 @@ app.views.Send = (function() {
 			);
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
 			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
-			this.refreshBalance = _.throttle(this.refreshBalance, 200);
 			this.model = new Backbone.Model;
-			this.model.set('payment', app.cache.get('payment'));
-			this.listenTo(this.model, 'change:balance', this.updateBalance);
+			this.listenTo(this.model, 'change:utxo', this.updateBalance);
 			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
 			this.listenTo(this.model, 'change:amount', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
@@ -147,10 +144,14 @@ app.views.Send = (function() {
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.updateScoreboard);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshUnspentTxOutputs);
-			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshBalance);
 			this.refreshUnspentTxOutputs();
-			this.refreshBalance();
 			this.fetchFeeRate();
+		},
+		pullFromCache: function() {
+			_.each(['feeRate', 'minRelayFeeRate', 'payment', 'utxo'], function(field) {
+				var value = app.cache.get(field);
+				this.model.set(field, value);
+			}, this);
 		},
 		onRender: function() {
 			this.$inputs = {
@@ -168,6 +169,7 @@ app.views.Send = (function() {
 				symbol: this.$('.balance-symbol'),
 			};
 			this.$scoreboard = this.$('.scoreboard');
+			this.pullFromCache();
 			this.toggleFlags();
 			this.updateAddress();
 			this.updateAmount();
@@ -177,19 +179,15 @@ app.views.Send = (function() {
 				this.updateFieldsWithDoubleSpendInfo();
 			}
 		},
-		refreshBalance: function() {
-			var model = this.model;
-			app.wallet.getBalance(function(error, balance) {
-				if (error) {
-					app.log(error);
-				} else {
-					model.set('balance', balance);
-				}
-			});
+		getBalance: function() {
+			var utxo = this.model.get('utxo') || [];
+			return _.reduce(utxo, function(memo, output) {
+				return memo + parseInt(output.value);
+			}, 0);
 		},
 		updateBalance: function() {
 			if (!this.$balance) return;
-			var value = this.model.get('balance');
+			var value = this.getBalance();
 			if (!_.isNumber(value)) return;
 			value = app.wallet.fromBaseUnit(value);
 			var symbol = app.wallet.getNetworkConfig().symbol;
@@ -259,6 +257,7 @@ app.views.Send = (function() {
 					app.mainView.showMessage(error);
 				} else if (utxo) {
 					model.set('utxo', utxo);
+					app.cache.set('utxo', utxo);
 				}
 			});
 		},
@@ -275,6 +274,7 @@ app.views.Send = (function() {
 					_.each(['feeRate', 'minRelayFeeRate'], function(field) {
 						if (!model.get(field)) {
 							model.set(field, results[field]);
+							app.cache.set(field, results[field]);
 						}
 					});
 				}
