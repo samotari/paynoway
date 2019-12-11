@@ -10,7 +10,7 @@ app.collections.Transactions = (function() {
 		model: app.models.Transaction,
 		storeName: 'transactions',
 		comparator: function(model) {
-			return model.get('timestamp');
+			return -1 * model.get('timestamp');
 		},
 	});
 
