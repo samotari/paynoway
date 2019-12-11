@@ -320,11 +320,47 @@ app.wallet = (function() {
 				}
 			},
 			count: function(type, status) {
+				return this.get(type, status).length;
+			},
+			sum: function(type, status) {
+				var models = this.get(type, status);
+				return _.reduce(models, function(memo, model) {
+					var amount = model.get('amount') || 0;
+					return memo + amount;
+				}, 0);
+			},
+			get: function(type, status) {
 				var filter = { type: type };
 				if (status) {
 					filter.status = status;
 				}
-				return this.collection.where(filter).length;
+				return this.collection.where(filter);
+			},
+			fixup: function() {
+				_.each(this.collection.models, function(model) {
+					var updates = {};
+					if (!model.has('network')) {
+						updates.network = app.wallet.getNetwork();
+					}
+					var type = model.get('type');
+					if (type === 'double-spend') {
+						if (!model.has('paymentTxid')) {
+							var payment = model.findDoubleSpentPayment();
+							if (payment) {
+								var paymentTxid = payment.get('txid');
+								updates.paymentTxid = paymentTxid;
+								model.set('paymentTxid', paymentTxid);
+							}
+						}
+					}
+					if (!model.has('amount')) {
+						updates.amount = model.calculateAmount();
+					}
+					if (!_.isEmpty(updates)) {
+						model.set(updates);
+						wallet.transactions.save(model.toJSON());
+					}
+				});
 			},
 			doStatusUpdates: function(done) {
 				var queue = async.queue(function(task, next) {
@@ -376,6 +412,10 @@ app.wallet = (function() {
 				_.delay(next, 30 * 1000);
 			});
 		}, this), _.noop);
+	});
+
+	app.onReady(function() {
+		wallet.transactions.fixup();
 	});
 
 	return wallet;

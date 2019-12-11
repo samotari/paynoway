@@ -16,55 +16,74 @@
 }
 .view.send .scoreboard th,
 .view.send .scoreboard td {
-	padding: 0 .2rem;
-}
-.view.send .scoreboard .scoreboard-1st {
 	height: 2rem;
 	line-height: 2rem;
+	padding: 0 .2rem;
+}
+.view.send .scoreboard .scoreboard-1st,
+.view.send .scoreboard .scoreboard-4th {
+	width: 50%;
+}
+.view.send .scoreboard .scoreboard-1st {
 	font-size: 1.1rem;
 }
-.view.send .scoreboard .scoreboard-2nd {
+.view.send .scoreboard .scoreboard-4th {
 	height: 1.6rem;
-	line-height: 1.6rem;
-	font-weight: 100;
-	font-size: .9rem;
-	background: #333;
+    line-height: 1.6rem;
 }
+.view.send .scoreboard .scoreboard-2nd,
 .view.send .scoreboard .scoreboard-3rd {
-	height: 2.4rem;
-	line-height: 2.4rem;
-	font-size: 1.6rem;
+	width: 16.666666%;
 }
-.view.send .scoreboard .scoreboard-1st.payments {
-	background: rgba(52,112,247,0.4);
+.view.send .scoreboard .scoreboard-2nd {
+	background-color: #222;
+	background-size: 1.4rem;
+	background-position: center;
+	background-repeat: no-repeat;
 }
-.view.send .scoreboard .scoreboard-2nd.confirmed,
-.view.send .scoreboard .scoreboard-3rd.confirmed {
+.view.send .scoreboard .scoreboard-2nd.pending { background-image: url('../images/pending.svg') }
+.view.send .scoreboard .scoreboard-2nd.invalid { background-image: url('../images/invalid.svg') }
+.view.send .scoreboard .scoreboard-2nd.confirmed { background-image: url('../images/confirmed.svg') }
+.view.send .scoreboard .scoreboard-3rd {
+	width: 16.666666%;
+	height: 2.3rem;
+	line-height: 2.3rem;
+	font-family: 'Courier New';
+	font-size: 1.5rem;
 	font-weight: 700;
 }
-.view.send .scoreboard .scoreboard-2nd.payments.confirmed,
-.view.send .scoreboard .scoreboard-3rd.payments.confirmed {
-	color: rgba(52,112,247,1);
+.view.send .scoreboard .scoreboard-1st.payments {
+	background-color: rgba(52,112,247,0.4);
+}
+.view.send .scoreboard .scoreboard-4th.payments {
+	color: rgba(52,112,247,0.7);
 }
 .view.send .scoreboard .scoreboard-1st.double-spends {
-	background: rgba(255,0,0,0.4);
+	background-color: rgba(255,0,0,0.4);
 }
-.view.send .scoreboard .scoreboard-2nd.double-spends.confirmed,
-.view.send .scoreboard .scoreboard-3rd.double-spends.confirmed {
-	color: rgba(255,0,0,1);
+.view.send .scoreboard .scoreboard-4th.double-spends {
+	color: rgba(255,0,0,0.7);
 }
 .view.send .scoreboard .scoreboard-3rd.invalid {
-	color: #666;
+	color: rgba(255,0,0,.6);
 }
-.view.send .scoreboard .scoreboard-2nd.invalid,
-.view.send .scoreboard .scoreboard-2nd.pending,
 .view.send .scoreboard .scoreboard-3rd.pending {
-	color: #aaa;
+	color: rgba(255,255,255,.6);
+}
+.view.send .scoreboard .scoreboard-3rd.confirmed {
+	color: rgba(0,128,0,.75);
+}
+.view.send .scoreboard .sum {
+	font-weight: 700;
+}
+.view.send .scoreboard .symbol {
+	font-weight: 100;
+	padding-left: .5rem;
 }
 .view.send .balance {
 	position: absolute;
 	left: 0;
-	top: 7.6rem/* scoreboard height+margin */;
+	top: 9rem/* scoreboard height+margin */;
 	width: 100%;
 	height: 2.4rem;
 	line-height: 2.4rem;
@@ -84,7 +103,7 @@
 .view.send .form {
 	position: absolute;
 	left: 0;
-	top: 11.6rem/* scoreboard+utxo heights+margins */;
+	top: 12.6rem/* scoreboard+balance heights+margins */;
 	width: 100%;
 	height: 100%;
 	overflow: auto;

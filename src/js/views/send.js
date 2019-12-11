@@ -202,15 +202,30 @@ app.views.Send = (function() {
 			var template = Handlebars.compile(templateHtml);
 			var data = {
 				payments: {
-					pending: app.wallet.transactions.count('payment', 'pending'),
-					invalid: app.wallet.transactions.count('payment', 'invalid'),
-					confirmed: app.wallet.transactions.count('payment', 'confirmed'),
+					pending: {
+						count: app.wallet.transactions.count('payment', 'pending'),
+					},
+					invalid: {
+						count: app.wallet.transactions.count('payment', 'invalid'),
+					},
+					confirmed: {
+						count: app.wallet.transactions.count('payment', 'confirmed'),
+						sum: app.wallet.fromBaseUnit(app.wallet.transactions.sum('payment', 'confirmed')),
+					},
 				},
 				doubleSpends: {
-					pending: app.wallet.transactions.count('double-spend', 'pending'),
-					invalid: app.wallet.transactions.count('double-spend', 'invalid'),
-					confirmed: app.wallet.transactions.count('double-spend', 'confirmed'),
+					pending: {
+						count: app.wallet.transactions.count('double-spend', 'pending'),
+					},
+					invalid: {
+						count: app.wallet.transactions.count('double-spend', 'invalid'),
+					},
+					confirmed: {
+						count: app.wallet.transactions.count('double-spend', 'confirmed'),
+						sum: app.wallet.fromBaseUnit(app.wallet.transactions.sum('double-spend', 'confirmed')),
+					},
 				},
+				symbol: app.wallet.getNetworkConfig().symbol,
 			};
 			var html = template(data);
 			this.$scoreboard.html(html);
@@ -559,8 +574,10 @@ app.views.Send = (function() {
 		},
 		saveDoubleSpend: function(doubleSpend) {
 			var transaction = _.pick(doubleSpend, 'fee', 'rawTx', 'txid');
+			var payment = doubleSpend.payment || null;
 			transaction.type = 'double-spend';
 			transaction.status = 'pending';
+			transaction.paymentTxid = payment && payment.txid || null;
 			app.wallet.transactions.save(transaction);
 		},
 		reset: function() {
