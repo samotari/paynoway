@@ -214,7 +214,7 @@ app.views.Send = (function() {
 					},
 					confirmed: {
 						count: app.wallet.transactions.count('payment', 'confirmed'),
-						sum: app.wallet.fromBaseUnit(app.wallet.transactions.sum('payment', 'confirmed')),
+						sum: this.calculateTxSum('payment'),
 					},
 				},
 				doubleSpends: {
@@ -226,13 +226,24 @@ app.views.Send = (function() {
 					},
 					confirmed: {
 						count: app.wallet.transactions.count('double-spend', 'confirmed'),
-						sum: app.wallet.fromBaseUnit(app.wallet.transactions.sum('double-spend', 'confirmed')),
+						sum: this.calculateTxSum('double-spend'),
 					},
 				},
 				symbol: app.wallet.getNetworkConfig().symbol,
 			};
 			var html = template(data);
 			this.$scoreboard.html(html);
+		},
+		calculateTxSum: function(type) {
+			var statuses = ['pending', 'confirmed'];
+			var models = app.wallet.transactions.collection.models.filter(function(model) {
+				return model.get('type') === type && _.contains(statuses, model.get('status'));
+			});
+			var sum = _.reduce(models, function(memo, model) {
+				var amount = model.get('amount') || 0;
+				return memo + amount;
+			}, 0);
+			return app.wallet.fromBaseUnit(sum);
 		},
 		updateFeeRate: function() {
 			if (!this.$inputs) return;

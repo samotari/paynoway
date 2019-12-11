@@ -310,21 +310,11 @@ app.wallet = (function() {
 				}
 			},
 			count: function(type, status) {
-				return this.get(type, status).length;
-			},
-			sum: function(type, status) {
-				var models = this.get(type, status);
-				return _.reduce(models, function(memo, model) {
-					var amount = model.get('amount') || 0;
-					return memo + amount;
-				}, 0);
-			},
-			get: function(type, status) {
 				var filter = { type: type };
 				if (status) {
 					filter.status = status;
 				}
-				return this.collection.where(filter);
+				return this.collection.where(filter).length;
 			},
 			fixup: function() {
 				_.each(this.collection.models, function(model) {
