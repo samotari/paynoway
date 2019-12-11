@@ -34,19 +34,19 @@ app.abstracts.JsonRpcTcpSocketClient = (function() {
 		version: '2.0',
 		open: {
 			retry: {
-				interval: 5000,
+				interval: 3000,
 				times: 10,
 			},
 		},
 		autoReconnect: true,
 		reconnect: {
 			retry: {
-				interval: 5000,
+				interval: 3000,
 				times: 10,
 			},
 		},
 		cmd: {
-			timeout: 5000,
+			timeout: 3000,
 		},
 	};
 

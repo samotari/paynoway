@@ -67,8 +67,8 @@ app.abstracts.ElectrumService = (function() {
 		},
 		saveBadPeers: true,
 		cleanBadPeers: {
-			frequency: 5 * 60 * 1000,
-			maxAge: 30 * 60 * 1000,
+			frequency: 20 * 1000,
+			maxAge: 3 * 60 * 1000,
 		},
 		fetchPeers: {
 			frequency: 10 * 60 * 1000,
@@ -217,7 +217,7 @@ app.abstracts.ElectrumService = (function() {
 		var peers = this.getPeers();
 		peers = _.union(hosts, peers);
 		var cacheKey = this.getCacheKey('peers');
-		app.cache.set(cacheKey, peers, { expires: false });
+		this.setCache(cacheKey, peers);
 	};
 
 	ElectrumService.prototype.removePeer = function(host) {
@@ -228,12 +228,23 @@ app.abstracts.ElectrumService = (function() {
 		var peers = this.getPeers();
 		peers = _.without.apply(_, [peers].concat(hosts));
 		var cacheKey = this.getCacheKey('peers');
-		app.cache.set(cacheKey, peers, { expires: false });
+		this.setCache(cacheKey, peers);
 	};
 
 	ElectrumService.prototype.getPeers = function() {
 		var cacheKey = this.getCacheKey('peers');
-		return app.cache.get(cacheKey) || [];
+		return this.getCache(cacheKey) || [];
+	};
+
+	ElectrumService.prototype.getCache = function(key) {
+		var value = localStorage.getItem(key);
+		if (!_.isNull(value)) {
+			return JSON.parse(value);
+		}
+	};
+
+	ElectrumService.prototype.setCache = function(key, value) {
+		localStorage.setItem(key, JSON.stringify(value));
 	};
 
 	ElectrumService.prototype.getElectrumServers = function(options) {
@@ -285,7 +296,7 @@ app.abstracts.ElectrumService = (function() {
 			return [host, timestamp];
 		}).compact().object().value();
 		var cacheKey = this.getCacheKey('badPeers');
-		app.cache.set(cacheKey, badPeers, { expires: false });
+		this.setCache(cacheKey, badPeers);
 	};
 
 	ElectrumService.prototype.removeBadPeer = function(host) {
@@ -294,7 +305,7 @@ app.abstracts.ElectrumService = (function() {
 			badPeers[host] = null;
 		}
 		var cacheKey = this.getCacheKey('badPeers');
-		app.cache.set(cacheKey, badPeers, { expires: false });
+		this.setCache(cacheKey, badPeers);
 	};
 
 	ElectrumService.prototype.saveBadPeer = function(host) {
@@ -302,13 +313,13 @@ app.abstracts.ElectrumService = (function() {
 			var badPeers = this.getBadPeers();
 			badPeers[host] = Date.now();
 			var cacheKey = this.getCacheKey('badPeers');
-			app.cache.set(cacheKey, badPeers, { expires: false });
+			this.setCache(cacheKey, badPeers);
 		}
 	};
 
 	ElectrumService.prototype.getBadPeers = function() {
 		var cacheKey = this.getCacheKey('badPeers');
-		return app.cache.get(cacheKey) || {};
+		return this.getCache(cacheKey) || {};
 	};
 
 	ElectrumService.prototype.startPinging = function() {
