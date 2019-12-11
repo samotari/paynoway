@@ -15,7 +15,7 @@ app.views.utility.ListItem = (function() {
 			// Must go before event bindings.
 			app.abstracts.BaseView.prototype.constructor.apply(this, arguments);
 
-			if (this.collection) {
+			if (this.model) {
 				this.listenTo(this.model, 'all', this.render);
 			}
 		},

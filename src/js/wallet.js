@@ -343,35 +343,39 @@ app.wallet = (function() {
 				});
 			},
 			doStatusUpdates: function(done) {
+				var refreshTx = _.bind(this.refreshTx, this);
 				var queue = async.queue(function(task, next) {
-					var transaction = task.transaction;
-					app.wallet.getTx(transaction.get('txid'), function(error, tx) {
-						if (error) {
-							if (/No such mempool or blockchain transaction/i.test(error.message)) {
-								var data = transaction.toJSON();
-								data.status = 'invalid';
-								wallet.transactions.save(data);
-							}
-						} else if (tx) {
-							var isConfirmed = !!tx.blockhash && tx.confirmations && tx.confirmations > 0;
-							if (isConfirmed) {
-								var data = transaction.toJSON();
-								data.status = 'confirmed';
-								wallet.transactions.save(data);
-							}
-						}
-						next();
-					});
+					refreshTx(task.model, next);
 				}, 3/* concurrency */);
-				var transactions = this.collection.where({ status: 'pending' });
-				_.each(transactions, function(transaction) {
-					queue.push({ transaction: transaction });
+				var models = this.collection.where({ status: 'pending' });
+				_.each(models, function(model) {
+					queue.push({ model: model });
 				});
 				async.until(function() {
 					return queue.length() === 0;
 				}, function(next) {
 					_.delay(next, 50);
 				}, done);
+			},
+			refreshTx: function(model, done) {
+				var txid = model.get('txid');
+				done = done || _.noop;
+				app.wallet.getTx(txid, function(error, tx) {
+					var updates = {};
+					if (error) {
+						if (/No such mempool or blockchain transaction/i.test(error.message)) {
+							updates.status = 'invalid';
+						}
+					} else if (tx) {
+						var isConfirmed = !!tx.blockhash && tx.confirmations && tx.confirmations > 0;
+						updates.status = isConfirmed ? 'confirmed' : 'pending';
+					}
+					if (!_.isEmpty(updates)) {
+						model.set(updates);
+						wallet.transactions.save(model.toJSON());
+					}
+					done();
+				});
 			},
 		},
 	};

@@ -26,3 +26,15 @@
 .view.history td:last-child {
 	text-align: right;
 }
+.view.history .refresh {
+	display: inline-block;
+	vertical-align: middle;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: .6rem;
+	opacity: .7;
+	background-image: url(../images/cycle.svg);
+	background-size: .9rem;
+	background-repeat: no-repeat;
+	background-position: 50%;
+}
