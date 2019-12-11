@@ -28,8 +28,14 @@ app.views.Send = (function() {
 				visible: true,
 				required: true,
 				validate: function(value) {
+					if (value && value.indexOf(':') !== -1) {
+						value = value.split(':')[1];
+					}
 					if (!app.wallet.isValidAddress(value)) {
 						throw new Error(app.i18n.t('send.invalid-address'));
+					}
+					if (this.$inputs && this.$inputs.address) {
+						this.$inputs.address.val(value);
 					}
 				},
 				actions: [
