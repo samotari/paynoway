@@ -62,32 +62,11 @@ var app = app || {};
 	};
 
 	app.isOnline = function() {
-		return app.getConnectionState() === 'online';
+		return app.device.offline !== true;
 	};
 
 	app.isOffline = function() {
-		return app.getConnectionState() === 'offline';
-	};
-
-	app.getConnectionState = function() {
-		switch (app.getConnectionType()) {
-			case '2g':
-			case '3g':
-			case '4g':
-			case 'cellular':
-			case 'ethernet':
-			case 'wifi':
-			case 'unknown':
-				return 'online';
-			case 'none':
-				return 'offline';
-			default:
-				return null;
-		}
-	};
-
-	app.getConnectionType = function() {
-		return navigator && navigator.connection && navigator.connection.type || null;
+		return app.device.offline === true;
 	};
 
 	app.debugging = function() {

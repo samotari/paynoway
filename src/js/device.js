@@ -6,6 +6,8 @@ app.device = (function() {
 
 	var device = _.extend({}, {
 
+		offline: true,
+
 		initialize: function() {
 
 			_.bindAll(this,
@@ -94,6 +96,14 @@ app.device = (function() {
 		},
 
 	}, Backbone.Events);
+
+	document.addEventListener('offline', function() {
+		device.offline = true;
+	}, false);
+
+	document.addEventListener('online', function() {
+		device.offline = false;
+	}, false);
 
 	return device;
 

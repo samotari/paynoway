@@ -411,8 +411,15 @@ app.abstracts.ElectrumService = (function() {
 			queue.push({ host: host });
 		}, this);
 		async.until(_.bind(function() {
-			return queue.length() === 0 || this.getConnectedClients().length >= this.options.connect.minimum;
+			return (queue && queue.length() === 0) || this.getConnectedClients().length >= this.options.connect.minimum;
 		}, this), function(next) {
+			if (queue) {
+				if (queue.paused && app.isOnline()) {
+					queue.resume();
+				} else if (!queue.paused && app.isOffline()) {
+					queue.pause();
+				}
+			}
 			_.delay(next, 50);
 		}, function(error) {
 			queue.kill();
@@ -420,7 +427,6 @@ app.abstracts.ElectrumService = (function() {
 			if (error) return done(error);
 			done();
 		});
-		queue && queue.resume();
 	};
 
 	ElectrumService.prototype.startFetchingPeers = function() {
