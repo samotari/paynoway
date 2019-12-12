@@ -56,6 +56,7 @@ html.theme-dark .number-pad-key {
 	border-color: #444;
 }
 html.theme-dark .button.touchstart,
+html.theme-dark .header-button.active,
 html.theme-dark .header-button.touchstart,
 html.theme-dark .view.getting-started .getting-started-choose-payment-methods .form-group.configurableCryptoCurrencies input[type=checkbox]:checked + .button.payment-method,
 html.theme-dark .view.admin .form-group.configurableCryptoCurrencies input[type=checkbox]:checked + .button.payment-method,

@@ -26,6 +26,7 @@ html.loaded #header {
 	box-sizing: border-box;
 	cursor: pointer;
 }
+.header-button.active,
 .header-button.touchstart {
 	background-color: #e6e6e6;
 }
@@ -49,13 +50,6 @@ html.configured .header-button.history {
 	*/
 	display: block;
 }
-/*
-	Hide buttons when viewing their own screen.
-*/
-body.view-configure .header-button.configure { display: none; }
-body.view-receive .header-button.receive { display: none; }
-body.view-send .header-button.send { display: none; }
-body.view-history .header-button.history { display: none; }
 
 .header-button.configure {
 	float: right;

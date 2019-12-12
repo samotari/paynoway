@@ -73,8 +73,10 @@ app.views.Main = (function() {
 			this.currentView = view;
 			this.renderViewArguments = arguments;
 
+			$('.header-button').removeClass('active');
 			if (view.className) {
 				$('body').addClass('view-' + view.className);
+				$('.header-button.' + view.className).addClass('active');
 			}
 		},
 
