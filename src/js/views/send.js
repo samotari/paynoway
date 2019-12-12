@@ -154,9 +154,32 @@ app.views.Send = (function() {
 			this.refreshUnspentTxOutputs();
 			this.fetchFeeRate();
 		},
+		getCacheKey: function(field) {
+			switch (field) {
+				case 'feeRate':
+				case 'minRelayFeeRate':
+					return field + ':' + app.wallet.getNetwork();
+				case 'utxo':
+					return field + ':' + app.wallet.getAddress();
+				default:
+					return field;
+			}
+		},
+		getCache: function(field) {
+			var cacheKey = this.getCacheKey(field);
+			return app.cache.get(cacheKey);
+		},
+		setCache: function(field, value) {
+			var cacheKey = this.getCacheKey(field);
+			return app.cache.set(cacheKey, value);
+		},
+		clearCache: function(field) {
+			var cacheKey = this.getCacheKey(field);
+			app.cache.clear(cacheKey);
+		},
 		pullFromCache: function() {
 			_.each(['feeRate', 'minRelayFeeRate', 'payment', 'utxo'], function(field) {
-				var value = app.cache.get(field);
+				var value = this.getCache(field);
 				this.model.set(field, value);
 			}, this);
 		},
@@ -268,18 +291,20 @@ app.views.Send = (function() {
 		},
 		fetchUnspentTxOutputs: function() {
 			var model = this.model;
+			var setCache = _.bind(this.setCache, this);
 			app.wallet.getUnspentTxOutputs(function(error, utxo) {
 				if (error) {
 					app.log(error);
 					app.mainView.showMessage(error);
 				} else if (utxo) {
 					model.set('utxo', utxo);
-					app.cache.set('utxo', utxo);
+					setCache('utxo', utxo);
 				}
 			});
 		},
 		fetchFeeRate: function() {
 			var model = this.model;
+			var setCache = _.bind(this.setCache, this);
 			async.parallel({
 				feeRate: _.bind(app.wallet.getFeeRate, app.wallet),
 				minRelayFeeRate: _.bind(app.wallet.getMinRelayFeeRate, app.wallet),
@@ -291,7 +316,7 @@ app.views.Send = (function() {
 					_.each(['feeRate', 'minRelayFeeRate'], function(field) {
 						if (!model.get(field)) {
 							model.set(field, results[field]);
-							app.cache.set(field, results[field]);
+							setCache(field, results[field]);
 						}
 					});
 				}
@@ -582,7 +607,7 @@ app.views.Send = (function() {
 			});
 		},
 		savePayment: function(payment) {
-			app.cache.set('payment', payment);
+			this.setCache('payment', payment);
 			this.model.set('payment', payment);
 			var transaction = _.pick(payment, 'fee', 'rawTx', 'txid');
 			transaction.type = 'payment';
@@ -608,7 +633,7 @@ app.views.Send = (function() {
 				this.$inputs.amount.val(0).trigger('change');
 				this.$inputs.feeRate.val(1);
 			}
-			app.cache.clear('payment');
+			this.clearCache('payment');
 			this.model.set('payment', null);
 		},
 		toggleFlags: function() {

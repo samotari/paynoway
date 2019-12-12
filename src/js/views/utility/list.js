@@ -126,7 +126,7 @@ app.views.utility.List = (function() {
 			_.each(this.itemViews, function(itemView) {
 				var hasModel = modelsIdHash[itemView.model.cid];
 				if (!hasModel) {
-					this.removeItem(model);
+					this.removeItem(itemView.model);
 				}
 			}, this);
 		},

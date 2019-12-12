@@ -45,7 +45,10 @@ app.onDeviceReady(function() {
 	});
 
 	app.onReady(function() {
-		app.settings.on('change:network', _.debounce(app.initializeElectrumServices, 50));
+		var initializeElectrumServices = _.debounce(app.initializeElectrumServices, 50);
+		app.settings.on('change:network', function() {
+			initializeElectrumServices();
+		});
 	});
 
 	app.queues.onStart.resume();

@@ -310,7 +310,9 @@ app.wallet = (function() {
 				}
 			},
 			count: function(type, status) {
-				var filter = { type: type };
+				var filter = {
+					type: type,
+				};
 				if (status) {
 					filter.status = status;
 				}
@@ -377,16 +379,32 @@ app.wallet = (function() {
 					done();
 				});
 			},
+			load: function(network) {
+				network = network || wallet.getNetwork();
+				app.log('Loading wallet transactions ("' + network + '")');
+				var collection = this.collection;
+				collection.fetch({
+					reset: true,
+					success: function() {
+						var models = collection.where({ network: network });
+						collection.reset(models);
+						app.log('Wallet transactions loaded ("' + network + '")');
+					},
+					error: function(error) {
+						app.log('Failed to load wallet transactions ("' + network + '"): ' + error.message);
+					},
+				});
+			},
 		},
 	};
 
-	app.onStart(function(done) {
-		var collection = wallet.transactions.collection = new app.collections.Transactions();
-		collection.fetch({
-			success: function() {
-				done();
-			},
-			error: done,
+	wallet.transactions.load = _.debounce(wallet.transactions.load, 100);
+
+	app.onReady(function() {
+		wallet.transactions.collection = new app.collections.Transactions();
+		wallet.transactions.load();
+		app.settings.on('change:network', function(network) {
+			wallet.transactions.load(network);
 		});
 	});
 
