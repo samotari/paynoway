@@ -654,8 +654,8 @@ app.views.Send = (function() {
 		},
 		calculateMaximumAmount: function() {
 			// Need the unspent transaction outputs that will be used as inputs for this tx.
-			var utxo = this.model.get('utxo');
-			if (!utxo) return null;
+			var utxo = this.model.get('utxo') || [];
+			if (!utxo || !(utxo.length > 0)) return 0;
 			var formData = this.getFormData();
 			var address = formData.address || app.wallet.getAddress();
 			// Convert to satoshis/kilobyte.
