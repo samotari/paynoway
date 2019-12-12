@@ -379,10 +379,19 @@ app.config = (function() {
 				visible: true,
 				validate: function(value, data) {
 					if (value) {
+						var keyPair;
 						try {
-							app.wallet.getKeyPair(data.network, value);
+							keyPair = app.wallet.getKeyPair(data.network, value);
 						} catch (error) {
 							throw new Error(app.i18n.t('configure.wif.invalid'));
+						}
+						switch (data.addressType) {
+							case 'p2wpkh-p2sh':
+							case 'p2wpkh':
+								if (!keyPair.compressed) {
+									throw new Error(app.i18n.t('configure.wif.segwit-uncompressed-invalid'));
+								}
+								break;
 						}
 					}
 				},

@@ -16,6 +16,7 @@ app.lang['en'] = (function() {
 		'configure.block-explorer': 'Block Explorer',
 		'configure.wif': 'Private Key (WIF)',
 		'configure.wif.invalid': 'Invalid private key',
+		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
 
 		'device.camera.not-available': 'The device\'s camera is not available',
