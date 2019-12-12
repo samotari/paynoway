@@ -85,10 +85,27 @@
 	left: 0;
 	top: 9rem/* scoreboard height+margin */;
 	width: 100%;
-	height: 2.4rem;
-	line-height: 2.4rem;
-	font-size: 1.2rem;
+}
+.view.send .balance-pending,
+.view.send .balance-total {
+	width: 100%;
 	text-align: center;
+}
+.view.send .balance-total {
+	height: 2rem;
+	line-height: 2rem;
+	font-size: 1.2rem;
+}
+.view.send .balance-pending {
+	display: none;
+	height: 1.4rem;
+	line-height: 1.4rem;
+	font-size: 1rem;
+	font-weight: 100;
+	opacity: .6;
+}
+.view.send .balance-pending.non-zero {
+	display: block;
 }
 .view.send .balance-value {
 	display: inline;
@@ -113,10 +130,26 @@
 	background-repeat: no-repeat;
 	background-position: 50%;
 }
+.view.send .balance-pending:after {
+	position: relative;
+	left: .25rem;
+	display: inline-block;
+	vertical-align: middle;
+	content: ' ';
+	width: 1rem;
+	height: 1rem;
+	background: transparent url('../images/pending.svg') 0 0 no-repeat;
+	background-size: 1rem;
+}
+.view.send .balance-pending .balance-value {
+	font-style: italic;
+	font-weight: 100;
+	padding-right: 0;
+}
 .view.send .form {
 	position: absolute;
 	left: 0;
-	top: 12.6rem/* scoreboard+balance heights+margins */;
+	top: 13.2rem/* scoreboard+balance heights+margins */;
 	width: 100%;
 	height: 100%;
 	overflow: auto;

@@ -195,7 +195,8 @@ app.views.Send = (function() {
 				reset: this.$('.button.reset'),
 			};
 			this.$balance = {
-				value: this.$('.balance-value'),
+				total: this.$('.balance-total .balance-value'),
+				pending: this.$('.balance-pending .balance-value'),
 				symbol: this.$('.balance-symbol'),
 			};
 			this.$scoreboard = this.$('.scoreboard');
@@ -211,18 +212,27 @@ app.views.Send = (function() {
 		},
 		getBalance: function() {
 			var utxo = this.model.get('utxo') || [];
-			return _.reduce(utxo, function(memo, output) {
-				return memo + parseInt(output.value);
-			}, 0);
+			var pending = 0;
+			var total = 0;
+			_.each(utxo, function(output) {
+				if (output.height === 0) {
+					pending += output.value;
+				}
+				total += output.value;
+			});
+			return {
+				pending: app.wallet.fromBaseUnit(pending),
+				total: app.wallet.fromBaseUnit(total),
+			};
 		},
 		updateBalance: function() {
 			if (!this.$balance) return;
-			var value = this.getBalance();
-			if (!_.isNumber(value)) return;
-			value = app.wallet.fromBaseUnit(value);
+			var balance = this.getBalance();
 			var symbol = app.wallet.getNetworkConfig().symbol;
-			this.$balance.value.text(value);
+			this.$balance.pending.text(balance.pending);
+			this.$balance.total.text(balance.total);
 			this.$balance.symbol.text(symbol);
+			this.$('.balance-pending').toggleClass('non-zero', balance.pending > 0);
 		},
 		updateScoreboard: function() {
 			if (!this.$scoreboard) return;
