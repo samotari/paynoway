@@ -56,7 +56,14 @@ app.views.utility.List = (function() {
 			app.log('List.onRender');
 			this.$items = this.getItemContainer();
 			this.$items.on('scroll', this.onScroll);
+			this.$el.toggleClass('has-items', this.hasItems());
 			this.renderItems();
+		},
+
+		hasItems: function() {
+
+			var collection = _.result(this, 'collection');
+			return collection.length > 0;
 		},
 
 		renderItems: function() {

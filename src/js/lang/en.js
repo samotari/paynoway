@@ -27,6 +27,8 @@ app.lang['en'] = (function() {
 
 		'form.field-required': 'This field is required',
 
+		'history.empty': 'No transactions yet for this network.',
+
 		'receive.title': 'Receiving Address',
 		'receive.copy-to-clipboard.success': 'Copied to clipboard',
 
