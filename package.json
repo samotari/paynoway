@@ -17,7 +17,7 @@
     "build:dev": "NODE_ENV=dev make clean-light dev",
     "build:prod": "NODE_ENV=prod make clean-light prod",
     "build:test": "NODE_ENV=test make clean-light prod",
-    "dev:android": "npm run build && npm run build:apk:debug && npm run android:install",
+    "dev:android": "npm run build:dev && npm run build:apk:debug && npm run android:install",
     "prepare:android": "./node_modules/.bin/cordova platform add android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
