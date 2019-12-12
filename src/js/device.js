@@ -6,7 +6,7 @@ app.device = (function() {
 
 	var device = _.extend({}, {
 
-		offline: true,
+		offline: false,
 
 		initialize: function() {
 
@@ -104,6 +104,12 @@ app.device = (function() {
 	document.addEventListener('online', function() {
 		device.offline = false;
 	}, false);
+
+	app.onDeviceReady(function() {
+		// Detect initial offline state.
+		var state = navigator && navigator.connection && navigator.connection.type || null;
+		device.offline = !state || state === Connection.UNKNOWN || state === Connection.NONE;
+	});
 
 	return device;
 
