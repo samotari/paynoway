@@ -15,6 +15,7 @@ app.views.utility.Form = (function() {
 		events: {
 			'change :input': 'process',
 			'submit form': 'process',
+			'change :input[type=checkbox]': 'onChangeCheckbox',
 			'click .form-field-action': 'onFormFieldAction',
 		},
 
@@ -66,6 +67,13 @@ app.views.utility.Form = (function() {
 			var data = app.abstracts.BaseView.prototype.serializeData.apply(this, arguments);
 			data.inputs = this.inputs;
 			return data;
+		},
+
+		onChangeCheckbox: function(evt) {
+
+			var $target = $(evt.target);
+			var $parentRow = $target.parents('.form-row');
+			$parentRow.toggleClass('checked', $target.is(':checked'));
 		},
 
 		onFormFieldAction: function(evt) {

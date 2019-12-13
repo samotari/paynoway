@@ -37,6 +37,10 @@ html.theme-dark .form-input {
 	padding-left: .5rem;
 	padding-right: .5rem;
 }
+html.theme-dark select.form-input {
+	padding-left: .2rem;
+	padding-right: .2rem;
+}
 html.theme-dark .form-switch-slider:before {
 	background-color: #666;
 }

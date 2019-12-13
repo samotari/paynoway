@@ -13,6 +13,9 @@ app.views.Send = (function() {
 			'change :input[name="address"]': 'onChangeInputs',
 			'change :input[name="amount"]': 'onChangeInputs',
 			'change :input[name="feeRate"]': 'onChangeInputs',
+			'change :input[name="autoBroadcastDoubleSpend"]': 'saveOption',
+			'change :input[name="autoBroadcastDoubleSpendDelay"]': 'saveOption',
+			'change :input[name="paymentOutput"]': 'saveOption',
 			'click .button.payment': 'pay',
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.reset': 'reset',
@@ -128,6 +131,47 @@ app.views.Send = (function() {
 					}
 				},
 			},
+			{
+				name: 'autoBroadcastDoubleSpend',
+				label: function() {
+					return app.i18n.t('send.auto-broadcast-double-spend');
+				},
+				type: 'checkbox',
+				default: 0,
+				visible: true,
+			},
+			{
+				name: 'autoBroadcastDoubleSpendDelay',
+				label: function() {
+					return app.i18n.t('send.auto-broadcast-double-spend.delay');
+				},
+				type: 'number',
+				default: 3,
+				min: 0,
+				step: 1,
+				visible: true,
+			},
+			{
+				name: 'paymentOutput',
+				label: function() {
+					return app.i18n.t('send.payment-output');
+				},
+				visible: true,
+				type: 'select',
+				options: function() {
+					return [
+						{
+							key: 'dropIt',
+							label: app.i18n.t('send.payment-output.drop-it'),
+						},
+						{
+							key: 'replaceWithDust',
+							label: app.i18n.t('send.payment-output.replace-with-dust'),
+						},
+					];
+				},
+				default: 'dropIt',
+			},
 		],
 		initialize: function() {
 			app.views.utility.Form.prototype.initialize.apply(this, arguments);
@@ -158,6 +202,9 @@ app.views.Send = (function() {
 			switch (field) {
 				case 'feeRate':
 				case 'minRelayFeeRate':
+				case 'autoBroadcastDoubleSpend':
+				case 'autoBroadcastDoubleSpendDelay':
+				case 'paymentOutput':
 					return field + ':' + app.wallet.getNetwork();
 				case 'utxo':
 					return field + ':' + app.wallet.getAddress();
@@ -209,6 +256,16 @@ app.views.Send = (function() {
 			if (this.paymentWasSent()) {
 				this.updateFieldsWithDoubleSpendInfo();
 			}
+			this.loadAdvancedOptions();
+			this.toggleAutoDoubleSpendDelay();
+		},
+		toggleAutoDoubleSpendDelay: function() {
+			var $checkbox = this.$(':input[name=autoBroadcastDoubleSpend]');
+			var $delay = this.$(':input[name=autoBroadcastDoubleSpendDelay]');
+			var isChecked = $checkbox.is(':checked');
+			$delay.attr('disabled', !isChecked);
+			$checkbox.parents('.form-row').toggleClass('checked', isChecked);
+			$delay.parents('.form-row').toggleClass('disabled', !isChecked);
 		},
 		getBalance: function() {
 			var utxo = this.model.get('utxo') || [];
@@ -273,7 +330,17 @@ app.views.Send = (function() {
 				return model.get('type') === type && model.get('status') !== 'invalid';
 			});
 			var sum = _.reduce(models, function(memo, model) {
-				var amount = model.get('amount') || 0;
+				var amount;
+				switch (type) {
+					case 'double-spend':
+						var paymentTxid = model.get('paymentTxid');
+						var payment = app.wallet.transactions.collection.findWhere({ txid: paymentTxid });
+						amount = payment && payment.get('amount') || 0;
+						break;
+					default:
+						amount = model.get('amount') || 0;
+						break;
+				}
 				return memo + amount;
 			}, 0);
 			return app.wallet.fromBaseUnit(sum);
@@ -335,6 +402,36 @@ app.views.Send = (function() {
 		onChangeInputs: function() {
 			this.toggleFlags();
 			this.precalculateMaximumAmount();
+		},
+		saveOption: function(evt) {
+			var $target = $(evt.target);
+			var name = $target.attr('name');
+			if ($target.attr('type') === 'checkbox') {
+				this.setCache(name, $target.is(':checked') ? 1 : 0);
+			} else {
+				this.setCache(name, $target.val());
+			}
+			this.toggleAutoDoubleSpendDelay();
+		},
+		loadAdvancedOptions: function() {
+			var options = this.getAdvancedOptions();
+			this.$(':input[name=autoBroadcastDoubleSpend]').prop('checked', options.autoBroadcastDoubleSpend === 1);
+			this.$(':input[name=autoBroadcastDoubleSpendDelay]').val(options.autoBroadcastDoubleSpendDelay);
+			this.$(':input[name=paymentOutput]').val(options.paymentOutput);
+		},
+		getAdvancedOptions: function() {
+			return _.chain(['autoBroadcastDoubleSpend', 'autoBroadcastDoubleSpendDelay', 'paymentOutput']).map(function(name) {
+				var $input = this.$(':input[name="' + name + '"]');
+				var value = this.getCache(name);
+				if (_.isNull(value)) {
+					if ($input.attr('type') === 'checkbox') {
+						value = $input.is(':checked') ? 1 : 0;
+					} else {
+						value = $input.val();
+					}
+				}
+				return [name, value];
+			}, this).object().value();
 		},
 		onPaymentChange: function() {
 			this.toggleFlags();
@@ -400,6 +497,8 @@ app.views.Send = (function() {
 			};
 		},
 		createDoubleSpend: function(payment, options) {
+			// Check the "paymentOutput" option (dropIt vs. replaceWithDust).
+			var advOptions = this.getAdvancedOptions();
 			payment = payment || this.model.get('payment');
 			options = _.defaults(options || {}, {
 				fee: null,
@@ -435,11 +534,19 @@ app.views.Send = (function() {
 			var inputs = payment.inputs;
 			// A zero amount here will send all the funds (less fees) as change to the given address.
 			var amount = 0;
+			var extraOutputs = [];
+			if (advOptions.paymentOutput === 'replaceWithDust') {
+				extraOutputs.push({
+					address: payment.address,
+					value: 1,
+				});
+			}
 			// Build a sample tx so that we can calculate the fee.
 			var sampleTx = app.wallet.buildTx(amount, address, utxo, {
 				fee: !_.isUndefined(fee) ? fee : 0,
 				sequence: sequence,
 				inputs: inputs,
+				extraOutputs: extraOutputs,
 			});
 			if (_.isUndefined(fee)) {
 				// Calculate the size of the sample tx (in kilobytes).
@@ -452,6 +559,7 @@ app.views.Send = (function() {
 				fee: fee,
 				sequence: sequence,
 				inputs: inputs,
+				extraOutputs: extraOutputs,
 			});
 			var txid = Buffer.from(tx.getHash()).reverse().toString('hex');
 			// Recalculate the amount by summing the values of all outputs.
@@ -487,6 +595,7 @@ app.views.Send = (function() {
 				if (confirm(message)) {
 					var createDoubleSpend = _.bind(this.createDoubleSpend, this);
 					var createPayment = _.bind(this.createPayment, this);
+					var handleAutoDoubleSpend = _.bind(this.handleAutoDoubleSpend, this);
 					var model = this.model;
 					var savePayment = _.bind(this.savePayment, this);
 					// Confirmed - send the payment tx.
@@ -524,6 +633,7 @@ app.views.Send = (function() {
 										app.mainView.showMessage(error);
 									} else {
 										savePayment(payment);
+										handleAutoDoubleSpend();
 									}
 								});
 							} else {
@@ -534,6 +644,7 @@ app.views.Send = (function() {
 						} else {
 							app.busy(false);
 							savePayment(payment);
+							handleAutoDoubleSpend();
 						}
 					});
 				} else {
@@ -544,7 +655,22 @@ app.views.Send = (function() {
 				app.mainView.showMessage(error);
 			}
 		},
-		doubleSpend: function() {
+		handleAutoDoubleSpend: function() {
+			var advOptions = this.getAdvancedOptions();
+			var autoBroadcastDoubleSpend = advOptions.autoBroadcastDoubleSpend;
+			if (autoBroadcastDoubleSpend) {
+				var delay = parseInt(advOptions.autoBroadcastDoubleSpendDelay) * 1000;
+				var doubleSpend = _.bind(this.doubleSpend, this, {
+					skipConfirmation: true,
+				});
+				this.autoDoubleSpendTimer = _.delay(doubleSpend, delay);
+			}
+		},
+		doubleSpend: function(options) {
+			clearTimeout(this.autoDoubleSpendTimer);
+			options = _.defaults(options || {}, {
+				skipConfirmation: false,
+			});
 			var createDoubleSpend = _.bind(this.createDoubleSpend, this);
 			var saveDoubleSpend = _.bind(this.saveDoubleSpend, this);
 			var resetForm = _.bind(this.resetForm, this);
@@ -563,7 +689,7 @@ app.views.Send = (function() {
 						fee: app.wallet.fromBaseUnit(doubleSpend.fee),
 						symbol: app.wallet.getNetworkConfig().symbol,
 					});
-					if (confirm(message)) {
+					if (options.skipConfirmation || confirm(message)) {
 						// Confirmed - send double-spend transaction.
 						app.busy(true);
 						app.wallet.broadcastRawTx(doubleSpend.rawTx, function(error) {

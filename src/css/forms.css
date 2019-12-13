@@ -1,6 +1,7 @@
 .form {
 }
 .form-row {
+	position: relative;
 	display: inline-block;
 	vertical-align: top;
 	width: 100%;
@@ -34,7 +35,15 @@
 	height: 1.6rem;
 	line-height: 1.6rem;
 	font-size: .9rem;
+	transition: opacity .4s ease-in-out;
 	box-sizing: border-box;
+}
+.form-label {
+	transition: opacity .4s ease-in-out;
+}
+.form-input[disabled],
+.form-row.disabled .form-label {
+	opacity: .4;
 }
 
 /* Text input */

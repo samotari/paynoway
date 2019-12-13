@@ -190,6 +190,8 @@ app.wallet = (function() {
 				sequence: null,
 				// Require specific utxo to be used as inputs:
 				inputs: null,
+				// Extra outputs:
+				extraOutputs: null,
 			});
 
 			var keyPair = this.getKeyPair();
@@ -258,6 +260,12 @@ app.wallet = (function() {
 			} else {
 				txb.addOutput(receivingAddress, value);
 				txb.addOutput(changeAddress, changeValue);
+			}
+
+			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
+				_.each(options.extraOutputs, function(extraOutput) {
+					txb.addOutput(extraOutput.address, extraOutput.value);
+				});
 			}
 
 			// Sign each input.

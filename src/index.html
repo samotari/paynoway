@@ -75,15 +75,17 @@
 	</script>
 
 	<script type="text/html" id="template-send">
-		<div class="scoreboard"></div>
-		<div class="balance">
-			<div class="balance-total">
-				<div class="balance-value"></div>
-				<div class="balance-symbol"></div>
-				<a class="button balance-refresh"></a>
-			</div>
-			<div class="balance-pending">
-				<span class="balance-value"></span>
+		<div class="scoreboard-and-balance">
+			<div class="scoreboard"></div>
+			<div class="balance">
+				<div class="balance-total">
+					<div class="balance-value"></div>
+					<div class="balance-symbol"></div>
+					<a class="button balance-refresh"></a>
+				</div>
+				<div class="balance-pending">
+					<span class="balance-value"></span>
+				</div>
 			</div>
 		</div>
 		<div class="form">
@@ -202,7 +204,7 @@
 
 	<script type="text/html" id="template-form-field-row">
 	{{#if visible}}
-		<div class="form-row form-row--{{name}} form-row-key--{{key}}">
+		<div class="form-row form-row--{{name}} form-row-key--{{key}} form-row-type--{{type}}">
 			<div class="form-label">
 				<label for="{{id}}">{{label}}</label>
 			</div>{{#if description}}

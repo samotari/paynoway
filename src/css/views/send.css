@@ -7,7 +7,9 @@
 	left: 0;
 	top: 0;
 	width: 100%;
-	height: 6rem;
+	height: 7.5rem;
+	z-index: 50;
+	background: #111;
 }
 .view.send .scoreboard table {
 	width: 100%;
@@ -16,8 +18,8 @@
 }
 .view.send .scoreboard th,
 .view.send .scoreboard td {
-	height: 2rem;
-	line-height: 2rem;
+	height: 1.6rem;
+	line-height: 1.6rem;
 	padding: 0 .2rem;
 }
 .view.send .scoreboard .scoreboard-1st,
@@ -28,8 +30,8 @@
 	font-size: 1.1rem;
 }
 .view.send .scoreboard .scoreboard-4th {
-	height: 1.6rem;
-    line-height: 1.6rem;
+	height: 1.4rem;
+    line-height: 1.4rem;
 }
 .view.send .scoreboard .scoreboard-2nd,
 .view.send .scoreboard .scoreboard-3rd {
@@ -37,7 +39,7 @@
 }
 .view.send .scoreboard .scoreboard-2nd {
 	background-color: #222;
-	background-size: 1.4rem;
+	background-size: 1.2rem;
 	background-position: center;
 	background-repeat: no-repeat;
 }
@@ -46,10 +48,10 @@
 .view.send .scoreboard .scoreboard-2nd.confirmed { background-image: url('../images/confirmed.svg') }
 .view.send .scoreboard .scoreboard-3rd {
 	width: 16.666666%;
-	height: 2.3rem;
-	line-height: 2.3rem;
+	height: 2rem;
+	line-height: 2rem;
 	font-family: 'Courier New';
-	font-size: 1.5rem;
+	font-size: 1.4rem;
 	font-weight: 700;
 }
 .view.send .scoreboard .scoreboard-1st.payments {
@@ -83,8 +85,11 @@
 .view.send .balance {
 	position: absolute;
 	left: 0;
-	top: 9rem/* scoreboard height+margin */;
+	top: 7.8rem/* scoreboard height+margin */;
+	height: 3.5rem;
 	width: 100%;
+	z-index: 50;
+	background: #111;
 }
 .view.send .balance-pending,
 .view.send .balance-total {
@@ -146,16 +151,36 @@
 	font-weight: 100;
 	padding-right: 0;
 }
+.view.send .scoreboard-and-balance {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 40;
+	width: 100%;
+	height: 11.5rem;
+	background: #111;
+}
 .view.send .form {
 	position: absolute;
 	left: 0;
-	top: 13.2rem/* scoreboard+balance heights+margins */;
+	top: 0;
 	width: 100%;
 	height: 100%;
 	overflow: auto;
 	box-sizing: border-box;
-	padding: 0 1rem;
-	padding-bottom: 7rem;
+	padding: 11.5rem 1rem 9rem 1rem;
+}
+.view.send .form-field,
+.view.send .form-label {
+	box-sizing: border-box;
+}
+.view.send .form-input[type="text"],
+.view.send .form-input[type="password"],
+.view.send .form-input[type="number"] {
+	height: 1.4rem;
+	line-height: 1.4rem;
+	border-top: .1rem solid #222;
+	padding: .2rem .4rem;
 }
 .view.send input[name="address"] {
 	font-family: 'Courier';
@@ -169,27 +194,86 @@
 }
 .view.send .button.secondary-control.payment {
 	background-color: rgba(52,112,247,0.8);
-	background-image: url('../images/send.svg');
+	background-image: url('../images/send-dark.svg');
 }
 .view.send .button.secondary-control.double-spend {
 	background-color: rgba(255,0,0,0.8);
-	background-image: url('../images/wink.svg');
+	background-image: url('../images/wink-dark.svg');
 }
 .view.send .button.secondary-control.reset {
 	background-image: none;
 	text-transform: lowercase;
 }
 .view.send .form-row--amount .form-field.has-1-actions {
-	padding-right: 5.6rem;
+	padding-right: 4.6rem;
 }
 .view.send .form-field-action.select-all {
-	width: 5rem;
+	width: 4rem;
 	height: 1.6rem;
 	line-height: 1.6rem;
 	text-align: center;
 	text-transform: lowercase;
-	padding: 0 .6rem;
+	padding: 0;
 	box-sizing: border-box;
 	background-size: initial;
 	background-image: none;
+}
+.view.send .form-switch {
+	width: 2rem;
+	height: 1.2rem;
+}
+.view.send .form-switch-slider {
+	border-radius: 1rem;
+}
+.view.send .form-switch-slider:before {
+	width: .8rem;
+	height: .8rem;
+	left: .2rem;
+	top: .2rem;
+}
+.view.send input:checked + .form-switch-slider:before {
+	-webkit-transform: translateX(.8rem);
+	transform: translateX(.8rem);
+}
+.view.send .form-row-type--checkbox {
+	padding-bottom: .2rem;
+}
+.view.send .form-row-type--checkbox .form-label {
+	width: 100%;
+	height: 1.2rem;
+	opacity: .4;
+	transition: opacity .4s ease-in-out;
+	padding-left: 2.7rem;
+	margin: 0;
+}
+.view.send .form-row-type--checkbox.checked .form-label {
+	opacity: 1;
+}
+.view.send .form-row-type--checkbox .form-field {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 2rem;
+	height: 1.2rem;
+	line-height: 1.2rem;
+	margin: 0;
+}
+.view.send .form-row--replacementStyle .form-label {
+	display: none;
+}
+.view.send .form-row--feeRate .form-field,
+.view.send .form-row--autoBroadcastDoubleSpendDelay .form-field {
+	float: left;
+	width: 14%;
+}
+.view.send .form-row--feeRate .form-label,
+.view.send .form-row--autoBroadcastDoubleSpendDelay .form-label {
+	float: right;
+	width: 86%;
+	text-align: left;
+	line-height: 1.5rem;
+	padding-left: .6rem;
+}
+.view.send .form-row + .form-row {
+	margin-top: .8rem;
 }

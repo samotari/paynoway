@@ -4,12 +4,12 @@
 	bottom: 0;
 	z-index: 5;
 	width: 100%;
-	height: 6rem;
-	line-height: 4rem;
+	height: 4.4rem;
+	line-height: 3.2rem;
 	background: #fff;
 	box-shadow: 0 2rem 2rem 2rem #fff;
 	box-sizing: border-box;
-	padding: 1rem;
+	padding: .6rem;
 }
 .secondary-control {
 	float: left;
@@ -24,7 +24,7 @@
 }
 .secondary-control + .secondary-control {
 	border-left: none;
-	margin-left: 2%;
+	margin-left: 2.75%;
 }
 /* one item */
 .secondary-control:first-child:nth-last-child(1) {
