@@ -619,17 +619,17 @@ app.views.Send = (function() {
 		savePayment: function(payment) {
 			this.setCache('payment', payment);
 			this.model.set('payment', payment);
-			var transaction = _.pick(payment, 'fee', 'rawTx', 'txid');
-			transaction.type = 'payment';
-			transaction.status = 'pending';
-			app.wallet.transactions.save(transaction);
+			this.saveTransaction(payment, 'payment');
 		},
 		saveDoubleSpend: function(doubleSpend) {
-			var transaction = _.pick(doubleSpend, 'fee', 'rawTx', 'txid');
-			var payment = doubleSpend.payment || null;
-			transaction.type = 'double-spend';
+			this.saveTransaction(doubleSpend, 'double-spend');
+		},
+		saveTransaction: function(data, type) {
+			var transaction = _.pick(data, 'amount', 'fee', 'rawTx', 'txid');
 			transaction.status = 'pending';
-			transaction.paymentTxid = payment && payment.txid || null;
+			transaction.type = type;
+			transaction.network = app.wallet.getNetwork();
+			transaction.paymentTxid = data.payment && data.payment.txid || null;
 			app.wallet.transactions.save(transaction);
 		},
 		reset: function() {

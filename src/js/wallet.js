@@ -386,7 +386,9 @@ app.wallet = (function() {
 				collection.fetch({
 					reset: true,
 					success: function() {
-						var models = collection.where({ network: network });
+						var models = collection.models.filter(function(model) {
+							return !model.has('network') || model.get('network') === network;
+						});
 						collection.reset(models);
 						app.log('Wallet transactions loaded ("' + network + '")');
 					},
@@ -409,15 +411,15 @@ app.wallet = (function() {
 	});
 
 	app.onReady(function() {
+		wallet.transactions.fixup();
+	});
+
+	app.onReady(function() {
 		async.forever(_.bind(function(next) {
 			wallet.transactions.doStatusUpdates(function() {
 				_.delay(next, 30 * 1000);
 			});
 		}, this), _.noop);
-	});
-
-	app.onReady(function() {
-		wallet.transactions.fixup();
 	});
 
 	return wallet;
