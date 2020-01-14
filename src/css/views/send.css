@@ -201,8 +201,8 @@
 	background-image: url('../images/wink-dark.svg');
 }
 .view.send .button.secondary-control.reset {
-	background-image: none;
-	text-transform: lowercase;
+	background-color: #333;
+	background-image: url('../images/reset-dark.svg');
 }
 .view.send .form-row--amount .form-field.has-1-actions {
 	padding-right: 4.6rem;
@@ -276,4 +276,14 @@
 }
 .view.send .form-row + .form-row {
 	margin-top: .8rem;
+}
+.view.send .auto-double-spend-timer {
+	position: absolute;
+	right: .9rem;
+	top: 0;
+	height: 3.2rem;
+	line-height: 3.2rem;
+	font-weight: 700;
+	font-size: 1.2rem;
+	color: rgba(255,255,255,.5);
 }

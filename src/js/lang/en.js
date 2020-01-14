@@ -58,7 +58,6 @@ app.lang['en'] = (function() {
 		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee of {{fee}} {{symbol}}?',
 		'send.error-missing-inputs': 'TRANSACTION REJECTED:\nMissing inputs. It is possible that the payment transaction was already confirmed :(',
 		'send.reset-confirm': 'Are you sure you want to reset? (The last double-spend tx will be lost)',
-		'send.reset': 'Reset',
 
 		'services.electrum.failed-request.no-connected-servers': 'Unable to complete request - no connected Electrum servers',
 
