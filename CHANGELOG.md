@@ -1,6 +1,9 @@
 # Changelog
 
 * v1.1.0:
+  * Advanced double-spend options:
+    * Automatically broadcast double-spend tx (with delay)
+    * What to do with payment output (drop or replace with dust)
   * Added refresh button next to:
     * balance in pay screen
     * each tx in history screen

@@ -1,6 +1,6 @@
 {
   "name": "pay-no-way",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A mobile app for testing payment systems against double-spend attacks.",
   "private": true,
   "main": "index.js",
