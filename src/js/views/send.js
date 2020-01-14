@@ -137,7 +137,7 @@ app.views.Send = (function() {
 					return app.i18n.t('send.auto-broadcast-double-spend');
 				},
 				type: 'checkbox',
-				default: 0,
+				default: 1,
 				visible: true,
 			},
 			{
