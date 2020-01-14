@@ -106,9 +106,11 @@ app.device = (function() {
 	}, false);
 
 	app.onDeviceReady(function() {
-		// Detect initial offline state.
-		var state = navigator && navigator.connection && navigator.connection.type || null;
-		device.offline = !state || state === Connection.UNKNOWN || state === Connection.NONE;
+		if (app.isCordova()) {
+			// Detect initial offline state.
+			var state = navigator && navigator.connection && navigator.connection.type || null;
+			device.offline = !state || state === Connection.UNKNOWN || state === Connection.NONE;
+		}
 	});
 
 	return device;

@@ -13,11 +13,11 @@ var app = app || {};
 		var network = app.settings.get('network');
 		if (!app.services.electrum[network] || options.force) {
 			var networkConfig = app.wallet.getNetworkConfig(network);
-			var options = {
+			options = _.extend({}, options, {
 				servers: networkConfig.electrum.servers,
 				defaultPorts: networkConfig.electrum.defaultPorts,
 				debug: app.debugging(),
-			};
+			});
 			var service = app.services.electrum[network] = new app.abstracts.ElectrumService(network, options);
 			service.initialize(function(error) {
 				if (error) {

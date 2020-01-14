@@ -253,7 +253,6 @@ app.abstracts.ElectrumService = (function() {
 			// For now only use "tcp" because the cordova sockets plugin doesn't support secure sockets.
 			protocol: 'tcp',// 'ssl' or 'tcp'
 		});
-		var servers = this.options.servers;
 		var defaultPorts = this.options.defaultPorts;
 		return _.chain(this.options.servers).map(function(server) {
 			var parts = server.split(' ');
@@ -450,7 +449,6 @@ app.abstracts.ElectrumService = (function() {
 		var savePeers = _.bind(this.savePeers, this);
 		client.cmd('server.peers.subscribe', [], function(error, results) {
 			if (error) return done(error);
-			var newHosts;
 			if (results) {
 				try {
 					var newHosts = _.chain(results).filter(function(result) {

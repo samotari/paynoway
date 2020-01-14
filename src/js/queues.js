@@ -42,7 +42,7 @@ app.queues = (function() {
 	// This prevents execution of queued items until queue.resume() is called.
 	_.invoke(queues, 'pause');
 
-	queues.onStart.drain =function() {
+	queues.onStart.drain = function() {
 		// All on-start callbacks have been executed.
 		// Resume the on-ready queue.
 		queues.onReady.resume();
