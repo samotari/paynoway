@@ -175,7 +175,7 @@ $(BUILD_DEPS)/js/QRCode.min.js: $(BUILD_DEPS)/js/QRCode.js
 $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
 	$(BIN)/uglifyjs $^ -o $@
 
-DEPS_JS_FILES=node_modules/core-js/client/shim.js\
+DEPS_JS_FILES=node_modules/core-js-bundle/index.js\
 node_modules/async/dist/async.js\
 node_modules/bignumber.js/bignumber.js\
 node_modules/jquery/dist/jquery.js\
@@ -195,7 +195,7 @@ $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 		echo "" >> $(BUILD_DEPS_JS); \
 	done
 
-DEPS_MIN_JS_FILES=node_modules/core-js/client/shim.min.js\
+DEPS_MIN_JS_FILES=node_modules/core-js-bundle/minified.js\
 node_modules/async/dist/async.min.js\
 node_modules/bignumber.js/bignumber.min.js\
 node_modules/jquery/dist/jquery.min.js\

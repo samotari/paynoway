@@ -361,8 +361,8 @@ app.wallet = (function() {
 				_.each(models, function(model) {
 					queue.push({ model: model });
 				});
-				async.until(function() {
-					return queue.length() === 0;
+				async.until(function(next) {
+					next(null, queue.length() === 0);
 				}, function(next) {
 					_.delay(next, 50);
 				}, done);
