@@ -4,6 +4,24 @@ app.config = (function() {
 
 	'use strict';
 
+	/*
+		When adding a new coin, you will need the following information for the new coin:
+			* Label / Name (e.g "Bitcoin")
+			* Symbol (e.g "BTC")
+			* bech32 prefix
+			* BIP32 public (e.g "xpub") and private (e.g "xprv") key prefixes as hex-encoded strings
+			* Pay-to-public-key-hash (p2pkh) prefix bytes hex-encoded string
+			* Pay-to-script-hash (p2sh) prefix bytes hex-encoded string
+			* Private key (WIF) prefix bytes hex-encoded string
+			* Seed list of peers
+
+		This information can be gathered from the ElectrumX project here:
+		https://github.com/spesmilo/electrumx/blob/master/electrumx/lib/coins.py
+
+		Note that the values there are hex-encoded, but bitcoinjs-lib requires integer values. Convert as follows:
+			parseInt('0488b21e', 16)
+	*/
+
 	var config = {
 		cache: {
 			onAppStartClearOlderThan: 86400000,// milliseconds
@@ -14,30 +32,24 @@ app.config = (function() {
 			timeout: 10000,
 		},
 		networks: {
-			// Convert from hex to int (for wif/p2sh/p2pkh bits):
-			// parseInt('0488b21e', 16)
-			// For list of electrumx supported coins, network info, and constants:
-			// https://github.com/kyuupichan/electrumx/blob/master/electrumx/lib/coins.py
 			bitcoin: {
 				label: 'Bitcoin (mainnet)',
 				symbol: 'BTC',
 				bech32: 'bc',
 				bip32: {
-					public: 76067358,
-					private: 76066276,
+					public: parseInt('0488b21e', 16),// xpub
+					private: parseInt('0488ade4', 16),// xprv
 				},
+				pubKeyHash: parseInt('00', 16),// p2pkh
+				scriptHash: parseInt('05', 16),// p2sh
+				wif: parseInt('80', 16),
 				messagePrefix: "\u0018Bitcoin Signed Message:\n",
-				pubKeyHash: 0,
-				scriptHash: 5,
-				wif: 128,
 				electrum: {
 					defaultPorts: {
 						tcp: 50001,
 						ssl: 50002,
 					},
 					servers: [
-						'electrumx.paralelnipolis.cz s t',
-						'E-X.not.fyi s t',
 						'electrum.vom-stausee.de s t',
 						'electrum.hsmiths.com s t',
 						'helicarrier.bauerj.eu s t',
@@ -52,59 +64,7 @@ app.config = (function() {
 						'currentlane.lovebitco.in s t',
 						'electrum.jochen-hoenicke.de s50005 t50003',
 						'vps5.hsmiths.com s',
-						'electrum6001717.livex.biz s50009',
-						'aspinall.io s50006',
-						'aspinall.io s50003',
-						'aspinall.io s50002',
-						'electrumx.alexridevski.net s50002',
-						'electrumx.kali.ir t50001',
-						'ecdsa.net s110',
-						'electrum.lightning.supplies s50002',
-						'electrum.hodlister.co s',
-						'electrum2.hodlister.co s50002',
-						'electrum3.hodlister.co s',
-						'electrum3.hodlister.co s50002',
-						'electrum4.hodlister.co s50002',
-						'electrum5.hodlister.co s50002',
-						'electrum6.hodlister.co s50002',
-						'e.myth.wtf s50002',
-						'173.87.33.161 s49999',
-						'b6.1209k.com s50002',
-						'bitcoin.grey.pw s50004',
-						'electrumx-core.1209k.com t50001',
-						'b6.1209k.com t50001',
-						'electrum.nute.net s50002',
-						'b.1209k.com t50001',
-						'btc.smsys.me s995',
-						'electrumx-core.1209k.com s50002',
-						'b.1209k.com s50002',
-						'xtrum.com s50002',
-						'vps4.hsmiths.com s50002',
-						'electrum.vom-stausee.de s50002',
-						'electrumx.reichster.de s50002',
-						'vps.hsmiths.com s50002',
-						'52.1.56.181 t50001 s50002',
-						'fortress.qtornado.com s50002',
-						'electrum.hsmiths.com s50002',
-						'e2.keff.org s t',
-						'e2.keff.org s50002',
-						'e3.keff.org s50002',
-						'e4.keff.org s50002',
-						'e5.keff.org s50002',
-						'e6.keff.org s50002',
-						'e7.keff.org s50002',
-						'e8.keff.org s50002',
-						'e9.keff.org s50002',
-						'kirsche.emzy.de t50001 s50002',
-						'2azzarita.hopto.org s50006',
-						'dxm.no-ip.biz s50002',
-						'btc.usebsv.com s50006',
-						'btc.outoftime.co s50002',
-						'electrum.be s50002',
-						'88.198.39.205 s50002',
-						'btc.jochen-hoenicke.de t50001 s50002',
-						'dedi.jochen-hoenicke.de t50001 s50002',
-						'electrum.coineuskal.com t50001 s50002',
+						'electrum.emzy.de s',
 					],
 				},
 				fees: {
@@ -167,20 +127,19 @@ app.config = (function() {
 				symbol: 'BTC',
 				bech32: 'tb',
 				bip32: {
-					public: 70617039,
-					private: 70615956,
+					public: parseInt('043587cf', 16),// xpub
+					private: parseInt('04358394', 16),// xprv
 				},
+				pubKeyHash: parseInt('6f', 16),// p2pkh
+				scriptHash: parseInt('c4', 16),// p2sh
+				wif: parseInt('ef', 16),
 				messagePrefix: "\u0018Bitcoin Signed Message:\n",
-				pubKeyHash: 111,
-				scriptHash: 196,
-				wif: 239,
 				electrum: {
 					defaultPorts: {
 						tcp: 51001,
 						ssl: 51002,
 					},
 					servers: [
-						'electrumx.paralelnipolis.cz t51001 s51002',
 						'testnet.hsmiths.com t53011 s53012',
 						'hsmithsxurybd7uh.onion t53011 s53012',
 						'testnet.qtornado.com s t',
@@ -233,20 +192,19 @@ app.config = (function() {
 				symbol: 'LTC',
 				bech32: 'ltc',
 				bip32: {
-					public: 70617039,
-					private: 70615956,
+					public: parseInt('0488b21e', 16),// xpub
+					private: parseInt('0488ade4', 16),// xprv
 				},
+				pubKeyHash: parseInt('30', 16),// p2pkh
+				scriptHash: parseInt('32', 16),// p2sh
+				wif: parseInt('b0', 16),
 				messagePrefix: "\u0018Litecoin Signed Message:\n",
-				pubKeyHash: 48,
-				scriptHash: 50,
-				wif: 176,
 				electrum: {
 					defaultPorts: {
 						tcp: 50001,
 						ssl: 50002,
 					},
 					servers: [
-						'electrumx.paralelnipolis.cz t50101 s50102',
 						'ex.lug.gs s444',
 						'electrum-ltc.bysh.me s t',
 						'electrum-ltc.ddns.net s t',
