@@ -256,6 +256,7 @@ $(JS)/util.js\
 $(JS)/device.js\
 $(JS)/lang/*.js\
 $(JS)/abstracts/*.js\
+$(JS)/services/*.js\
 $(JS)/models/*.js\
 $(JS)/collections/*.js\
 $(JS)/views/utility/*.js\

@@ -37,6 +37,10 @@ var app = app || {};
 		app.settings.set('hasReadDisclaimers', true);
 	};
 
+	app.unsetHasReadDisclaimersFlag = function() {
+		app.settings.set('hasReadDisclaimers', false);
+	};
+
 	app.exit = function() {
 		navigator.app.exitApp();
 	};
@@ -55,6 +59,14 @@ var app = app || {};
 
 	app.isConfigured = function() {
 		return app.wallet.isSetup();
+	};
+
+	app.isDeveloperMode = function() {
+		return app.settings.get('developer') === true;
+	};
+
+	app.setDeveloperMode = function(enabled) {
+		app.settings.set('developer', enabled === true);
 	};
 
 	app.isTest = function() {
