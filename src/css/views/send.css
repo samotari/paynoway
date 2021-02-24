@@ -219,43 +219,45 @@
 	background-image: none;
 }
 .view.send .form-switch {
-	width: 2rem;
+	width: 2.2rem;
 	height: 1.2rem;
 }
 .view.send .form-switch-slider {
 	border-radius: 1rem;
 }
 .view.send .form-switch-slider:before {
-	width: .8rem;
-	height: .8rem;
+	width: 1rem;
+	height: 1rem;
 	left: .2rem;
-	top: .2rem;
+	top: .1rem;
 }
 .view.send input:checked + .form-switch-slider:before {
 	-webkit-transform: translateX(.8rem);
 	transform: translateX(.8rem);
 }
 .view.send .form-row-type--checkbox {
+	min-height: 1.5rem;
 	padding-bottom: .2rem;
 }
 .view.send .form-row-type--checkbox .form-label {
-	width: 100%;
+	float: right;
+	width: 78%;
 	height: 1.2rem;
 	opacity: .4;
+	text-align: left;
+	padding-left: .8rem;
 	transition: opacity .4s ease-in-out;
-	padding-left: 2.7rem;
 	margin: 0;
 }
 .view.send .form-row-type--checkbox.checked .form-label {
 	opacity: 1;
 }
 .view.send .form-row-type--checkbox .form-field {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 2rem;
+	float: left;
+	width: 22%;
 	height: 1.2rem;
 	line-height: 1.2rem;
+	text-align: right;
 	margin: 0;
 }
 .view.send .form-row--replacementStyle .form-label {
@@ -264,15 +266,15 @@
 .view.send .form-row--feeRate .form-field,
 .view.send .form-row--autoBroadcastDoubleSpendDelay .form-field {
 	float: left;
-	width: 14%;
+	width: 22%;
 }
 .view.send .form-row--feeRate .form-label,
 .view.send .form-row--autoBroadcastDoubleSpendDelay .form-label {
 	float: right;
-	width: 86%;
+	width: 78%;
 	text-align: left;
 	line-height: 1.5rem;
-	padding-left: .6rem;
+	padding-left: .8rem;
 }
 .view.send .form-row + .form-row {
 	margin-top: .8rem;

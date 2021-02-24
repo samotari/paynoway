@@ -45,7 +45,7 @@ html.theme-dark .form-switch-slider:before {
 	background-color: #666;
 }
 html.theme-dark input:checked + .form-switch-slider {
-	background-color: #888;
+	background-color: rgba(52,112,247,.8);
 }
 html.theme-dark input:checked + .form-switch-slider:before {
 	background-color: #eee;
