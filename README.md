@@ -12,6 +12,8 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
   * [Android](#android)
     * [Running on Android (VM)](#running-on-android-vm)
     * [Running on Android (Device)](#running-on-android-device)
+* [Tests](#tests)
+* [Changelog](#changelog)
 * [License](#license)
 
 
@@ -112,6 +114,18 @@ adb install ./platforms/android/app/build/outputs/apk/release/app-release.apk
 * You may need to run `adb devices` before the above command.
 * And if the app is already installed on the device, you will need to use the `-r` flag to reinstall it.
 
+
+## Tests
+
+This project includes automated tests. To run them:
+```bash
+npm test
+```
+
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/samotari/pay-no-way/blob/master/CHANGELOG.md)
 
 
 ## License
