@@ -21,11 +21,7 @@ app.abstracts.BaseCollection = (function() {
 				throw new Error('"storeName" is missing');
 			}
 
-			if (app.sqlite) {
-				this.sqliteStore = new app.sqlite.Store(storeName);
-			} else {
-				this.localStorage = new Backbone.LocalStorage(storeName);
-			}
+			this.localStorage = new Backbone.LocalStorage(storeName);
 		},
 
 	});
