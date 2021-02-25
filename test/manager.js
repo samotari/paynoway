@@ -1,13 +1,13 @@
-var _ = require('underscore');
-var async = require('async');
-var express = require('express');
-var mkdirp = require('mkdirp');
-var path = require('path');
-var puppeteer = require('puppeteer');
-var serveStatic = require('serve-static');
-var WebSocket = require('ws');
+const _ = require('underscore');
+const async = require('async');
+const express = require('express');
+const mkdirp = require('mkdirp');
+const path = require('path');
+const puppeteer = require('puppeteer');
+const serveStatic = require('serve-static');
+const WebSocket = require('ws');
 
-var manager = module.exports = {
+let manager = module.exports = {
 
 	browser: null,
 	page: null,
@@ -15,7 +15,7 @@ var manager = module.exports = {
 	prepareStaticWebServer: function() {
 		return new Promise(function(resolve, reject) {
 			try {
-				var app = express();
+				let app = express();
 				app.use(serveStatic('www'));
 				app.server = app.listen(3000, function(error) {
 					if (error) return reject(error);
@@ -46,10 +46,10 @@ var manager = module.exports = {
 		if (!manager.page) {
 			return Promise.reject(new Error('Must load a page before navigating.'));
 		}
-		var host = process.env.HTTP_SERVER_HOST || 'localhost';
-		var port = parseInt(process.env.HTTP_SERVER_PORT || 3000);
-		var baseUrl = 'http://' + host + ':' + port;
-		var pageUrl = baseUrl + uri;
+		const host = process.env.HTTP_SERVER_HOST || 'localhost';
+		const port = parseInt(process.env.HTTP_SERVER_PORT || 3000);
+		const baseUrl = 'http://' + host + ':' + port;
+		const pageUrl = baseUrl + uri;
 		return manager.page.goto(pageUrl);
 	},
 
@@ -82,25 +82,26 @@ var manager = module.exports = {
 		if (!manager.page) {
 			throw new Error('No page is loaded.');
 		}
-		var pageUrl = manager.page.url();
-		var parts = pageUrl.indexOf('#') !== -1 ? pageUrl.split('#') : [];
+		const pageUrl = manager.page.url();
+		const parts = pageUrl.indexOf('#') !== -1 ? pageUrl.split('#') : [];
 		return parts[1] || '';
 	},
 
 	electrumServer: function(port) {
-		var wss = new WebSocket.Server({
+		let wss = new WebSocket.Server({
 			port: port,
 		});
-		var sockets = [];
+		let sockets = [];
 		wss.on('connection', function(socket) {
 			sockets.push(socket);
-			var send = socket.send;
+			const send = socket.send;
 			socket.send = function(message) {
 				send.apply(socket, arguments);
 			};
 			socket.on('message', function(message) {
+				let data;
 				try {
-					var data = JSON.parse(message);
+					data = JSON.parse(message);
 				} catch (error) {
 					console.log(error);
 				}
@@ -126,11 +127,11 @@ var manager = module.exports = {
 			});
 		});
 		return {
-			wss: wss,
-			sockets: sockets,
+			wss,
+			sockets,
 			waitForClient: function() {
 				return new Promise(function(resolve, reject) {
-					var socket;
+					let socket;
 					async.until(function() {
 						socket = _.last(sockets);
 						return !!socket;
@@ -178,10 +179,10 @@ var manager = module.exports = {
 	},
 
 	screenshot: function(name) {
-		var extension = '.png';
-		var dir = path.join(__dirname, '..', 'build', 'screenshots');
-		var fileName = name + extension;
-		var filePath = path.join(dir, fileName);
+		const extension = '.png';
+		const dir = path.join(__dirname, '..', 'build', 'screenshots');
+		const fileName = name + extension;
+		const filePath = path.join(dir, fileName);
 		return mkdirp(dir).then(function() {
 			return manager.page.screenshot({
 				path: filePath,
@@ -191,6 +192,7 @@ var manager = module.exports = {
 
 	// Execute a function in the context of the current browser page.
 	evaluateFn: function(options) {
+		// Note that we use ES5 syntax when running JavaScript in the context of the browser.
 		return manager.page.evaluate(function(evaluateOptions) {
 			return new Promise(function(resolve, reject) {
 				try {
@@ -215,7 +217,7 @@ var manager = module.exports = {
 						}
 						evaluateOptions.isAsync = evaluateOptions.isAsync === true;
 						// Find the test function in the context of the page.
-						var fn = (function() {
+						var testFn = (function() {
 							var parts = evaluateOptions.fn.split('.');
 							var parent = window;
 							while (parts.length > 1) {
@@ -248,12 +250,12 @@ var manager = module.exports = {
 								resolve(args);
 							};
 							var args = evaluateOptions.args.concat(done);
-							fn.apply(undefined, args);
+							testFn.apply(undefined, args);
 						} else {
 							// Synchronous execution.
 							var thrownError;
 							try {
-								var result = fn.apply(undefined, evaluateOptions.args);
+								var result = testFn.apply(undefined, evaluateOptions.args);
 							} catch (error) {
 								return resolve([error.message]);
 							}

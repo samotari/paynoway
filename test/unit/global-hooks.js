@@ -1,6 +1,4 @@
-'use strict';
-
-var manager = require('../manager');
+const manager = require('../manager');
 require('../global-hooks');
 
 before(function() {

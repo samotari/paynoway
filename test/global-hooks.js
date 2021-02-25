@@ -1,10 +1,10 @@
-var manager = require('./manager');
+const manager = require('./manager');
 
 before(function() {
 	return manager.prepareBrowser();
 });
 
-var staticWeb;
+let staticWeb;
 before(function() {
 	return manager.prepareStaticWebServer().then(function(app) {
 		staticWeb = app;
@@ -33,7 +33,7 @@ after(function() {
 
 process.on('SIGINT', function() {
 	if (manager.browser) {
-		var child = manager.browser.process();
+		const child = manager.browser.process();
 		child.kill();
 	}
 });

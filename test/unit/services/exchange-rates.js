@@ -1,13 +1,11 @@
-'use strict';
-
-var _ = require('underscore');
-var expect = require('chai').expect;
-var manager = require('../../manager');
+const _ = require('underscore');
+const { expect } = require('chai');
+const manager = require('../../manager');
 require('../global-hooks');
 
 describe('services.exchangeRates', function() {
 
-	var tests = [
+	const tests = [
 		{
 			provider: 'binance',
 			currencies: { from: 'BTC', to: 'USD' },
@@ -45,21 +43,18 @@ describe('services.exchangeRates', function() {
 	describe('providers', function() {
 		_.each(tests, function(test) {
 			it(test.provider, function() {
-				var fn = 'app.services.exchangeRates.get';
-				var isAsync = true;
-				var evaluateOptions = {
-					fn: fn,
-					isAsync: isAsync,
+				return manager.evaluateFn({
+					fn: 'app.services.exchangeRates.get',
+					isAsync: true,
 					args: [{
 						cache: false,
 						currencies: test.currencies,
 						provider: test.provider,
 					}],
-				};
-				return manager.evaluateFn(evaluateOptions).then(function(result) {
+				}).then(function(result) {
 					expect(result).to.not.be.null;
 					expect(result).to.be.a('string');
-					var asNumber = parseFloat(result);
+					const asNumber = parseFloat(result);
 					expect(asNumber).to.be.a('number');
 					expect(asNumber > 0).to.equal(true);
 				});

@@ -1,12 +1,9 @@
-'use strict';
-
-var expect = require('chai').expect;
-var manager = require('../../manager');
+const manager = require('../../manager');
 require('../global-hooks');
 
 describe('#configure', function() {
 
-	var selectors = {
+	const selectors = {
 		form: '.view.configure form',
 	};
 

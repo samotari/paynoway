@@ -1,7 +1,5 @@
-'use strict';
-
-var _ = require('underscore');
-var manager = require('../manager');
+const _ = require('underscore');
+const manager = require('../manager');
 require('../global-hooks');
 
 beforeEach(function() {
