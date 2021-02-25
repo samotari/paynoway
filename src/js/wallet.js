@@ -48,6 +48,10 @@ app.wallet = (function() {
 			return _.pick(networkConfig, 'bech32', 'bip32', 'messagePrefix', 'pubKeyHash', 'scriptHash', 'wif');
 		},
 
+		getCoinSymbol: function(network) {
+			return this.getNetworkConfig(network).symbol;
+		},
+
 		electrumService: function() {
 			var network = this.getNetwork();
 			return app.services && app.services.electrum && network && app.services.electrum[network] || null;
@@ -78,6 +82,19 @@ app.wallet = (function() {
 			if (!blockExplorer) return '';
 			var template = Handlebars.compile(blockExplorer.url[type]);
 			return template(data);
+		},
+
+		getExchangeRate: function(done) {
+			var exchangeRateProvider = app.settings.get('exchangeRateProvider');
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var networkConfig = this.getNetworkConfig();
+			app.services.exchangeRates.get({
+				currencies: {
+					from: networkConfig.symbol,
+					to: fiatCurrency,
+				},
+				provider: exchangeRateProvider,
+			}, done);
 		},
 
 		getOutputScriptHash: function(address, constants) {
@@ -308,6 +325,7 @@ app.wallet = (function() {
 			}
 			return true;
 		},
+
 		transactions: {
 			save: function(data) {
 				var model = this.collection.findWhere({ txid: data.txid });

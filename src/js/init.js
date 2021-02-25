@@ -51,5 +51,19 @@ app.onDeviceReady(function() {
 		});
 	});
 
+	app.onReady(function() {
+		// Fetches and caches the exchange rate.
+		app.wallet.getExchangeRate(_.noop);
+		app.settings.on('change:fiatCurrency', function() {
+			app.wallet.getExchangeRate(_.noop);
+			var displayCurrency = app.settings.get('displayCurrency');
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var coinSymbol = app.wallet.getCoinSymbol();
+			if (displayCurrency !== coinSymbol) {
+				app.settings.set('displayCurrency', fiatCurrency);
+			}
+		});
+	});
+
 	app.queues.onStart.resume();
 });

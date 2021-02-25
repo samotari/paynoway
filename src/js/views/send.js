@@ -19,8 +19,9 @@ app.views.Send = (function() {
 			'click .button.payment': 'pay',
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.reset': 'reset',
-			'click .button.use-all-funds': 'useAllFunds',
-			'click .button.balance-refresh': 'refreshUnspentTxOutputs',
+			'click .button.balance-refresh': 'refreshBalance',
+			'click .currency-value': 'toggleDisplayCurrency',
+			'click .currency-symbol': 'toggleDisplayCurrency',
 		},
 		inputs: [
 			{
@@ -71,10 +72,8 @@ app.views.Send = (function() {
 				label: function() {
 					return app.i18n.t('send.amount');
 				},
-				type: 'number',
+				type: 'text',
 				default: 0,
-				min: 0.00000500,
-				step: 0.001,
 				visible: true,
 				required: true,
 				validate: function(value) {
@@ -100,6 +99,12 @@ app.views.Send = (function() {
 						fn: function(value, cb) {
 							try {
 								var maxAmount = this.model.get('maxAmount') || this.calculateMaximumAmount();
+								var fiatCurrency = app.settings.get('fiatCurrency');
+								var displayCurrency = app.settings.get('displayCurrency');
+								if (displayCurrency === fiatCurrency) {
+									// Convert the coin amount to fiat.
+									maxAmount = this.convertToFiatAmount(maxAmount);
+								}
 							} catch (error) {
 								return cb(error);
 							}
@@ -181,22 +186,40 @@ app.views.Send = (function() {
 				'toggleFlags',
 				'updateFeeRate',
 				'updateBalance',
-				'updateScoreboard'
+				'updateScoreboard',
+				'toggleDisplayCurrency'
 			);
 			this.refreshUnspentTxOutputs = _.throttle(this.fetchUnspentTxOutputs, 200);
 			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
+			this.toggleDisplayCurrency = _.debounce(this.toggleDisplayCurrency, 100);
 			this.model = new Backbone.Model;
-			this.listenTo(this.model, 'change:utxo', this.updateBalance);
-			this.listenTo(this.model, 'change:utxo', this.updateUnspentTxOutputs);
-			this.listenTo(this.model, 'change:amount', this.updateAmount);
+			this.listenTo(this.model, 'change:utxo change:exchangeRate', this.updateBalance);
+			this.listenTo(this.model, 'change:amount change:exchangeRate', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
 			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
+			this.listenTo(this.model, 'change:exchangeRate', this.updateScoreboard);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.updateScoreboard);
 			this.listenTo(app.wallet.transactions.collection, 'add reset change', this.refreshUnspentTxOutputs);
-			this.refreshUnspentTxOutputs();
+			this.listenTo(app.settings, 'change:displayCurrency change:fiatCurrency', this.updateBalance);
+			this.listenTo(app.settings, 'change:displayCurrency change:fiatCurrency', this.updateAmount);
+			this.listenTo(app.settings, 'change:displayCurrency change:fiatCurrency', this.updateScoreboard);
+			this.refreshBalance();
 			this.fetchFeeRate();
+		},
+		refreshBalance: function() {
+			this.refreshUnspentTxOutputs();
+			this.refreshExchangeRate();
+		},
+		refreshExchangeRate: function() {
+			app.wallet.getExchangeRate(_.bind(function(error, rate) {
+				if (error) {
+					app.log(error);
+				} else {
+					this.model.set('exchangeRate', rate).trigger('change:exchangeRate');
+				}
+			}, this));
 		},
 		getCacheKey: function(field) {
 			switch (field) {
@@ -248,8 +271,11 @@ app.views.Send = (function() {
 			};
 			this.$scoreboard = this.$('.scoreboard');
 			this.$autoDoubleSpendTimer = this.$('.auto-double-spend-timer');
+			this.$inputAmountSymbol = $('<span/>').addClass('currency-symbol');
+			this.$inputs.amount.after(this.$inputAmountSymbol);
 			this.pullFromCache();
 			this.toggleFlags();
+			this.updateBalance();
 			this.updateAddress();
 			this.updateAmount();
 			this.updateFeeRate();
@@ -286,16 +312,42 @@ app.views.Send = (function() {
 		updateBalance: function() {
 			if (!this.$balance) return;
 			var balance = this.getBalance();
-			var symbol = app.wallet.getNetworkConfig().symbol;
-			this.$balance.pending.text(balance.pending);
-			this.$balance.total.text(balance.total);
-			this.$balance.symbol.text(symbol);
+			var total = balance.total;
+			var pending = balance.pending;
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var displayCurrency = app.settings.get('displayCurrency');
+			if (displayCurrency === fiatCurrency) {
+				// Convert the coin amounts to fiat.
+				total = this.convertToFiatAmount(total);
+				pending = this.convertToFiatAmount(pending);
+			}
+			this.$balance.pending.text(pending);
+			this.$balance.total.text(total);
+			this.$balance.symbol.text(displayCurrency);
 			this.$('.balance-pending').toggleClass('non-zero', balance.pending > 0);
+		},
+		toggleDisplayCurrency: function() {
+			var coinSymbol = app.wallet.getCoinSymbol();
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var newDisplayCurrency = app.settings.get('displayCurrency') !== coinSymbol ? coinSymbol : fiatCurrency;
+			app.settings.set('displayCurrency', newDisplayCurrency);
 		},
 		updateScoreboard: function() {
 			if (!this.$scoreboard) return;
 			var templateHtml = $('#template-send-scoreboard').html();
 			var template = Handlebars.compile(templateHtml);
+			var sums = {
+				payment: this.calculateTxSum('payment'),
+				doubleSpend: this.calculateTxSum('double-spend'),
+			};
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var displayCurrency = app.settings.get('displayCurrency');
+			if (displayCurrency === fiatCurrency) {
+				// Convert the coin amounts to fiat.
+				_.each(sums, function(sum, key) {
+					sums[key] = this.convertToFiatAmount(sum);
+				}, this);
+			}
 			var data = {
 				payments: {
 					pending: {
@@ -306,7 +358,7 @@ app.views.Send = (function() {
 					},
 					confirmed: {
 						count: app.wallet.transactions.count('payment', 'confirmed'),
-						sum: this.calculateTxSum('payment'),
+						sum: sums.payment,
 					},
 				},
 				doubleSpends: {
@@ -318,10 +370,10 @@ app.views.Send = (function() {
 					},
 					confirmed: {
 						count: app.wallet.transactions.count('double-spend', 'confirmed'),
-						sum: this.calculateTxSum('double-spend'),
+						sum: sums.doubleSpend,
 					},
 				},
-				symbol: app.wallet.getNetworkConfig().symbol,
+				symbol: displayCurrency,
 			};
 			var html = template(data);
 			this.$scoreboard.html(html);
@@ -346,6 +398,16 @@ app.views.Send = (function() {
 			}, 0);
 			return app.wallet.fromBaseUnit(sum);
 		},
+		convertToFiatAmount: function(amount) {
+			var rate = this.model.get('exchangeRate');
+			var format = app.settings.get('fiatCurrency');
+			return app.util.formatNumber((new BigNumber(amount)).times(rate).toString(), format);
+		},
+		convertToCoinAmount: function(amount) {
+			var rate = this.model.get('exchangeRate');
+			var format = app.wallet.getCoinSymbol();
+			return app.util.formatNumber((new BigNumber(amount)).dividedBy(rate).toString(), format);
+		},
 		updateFeeRate: function() {
 			if (!this.$inputs) return;
 			var feeRate = this.model.get('feeRate') || 1000;// satoshis/kilobyte
@@ -362,23 +424,43 @@ app.views.Send = (function() {
 		updateAmount: function() {
 			if (!this.$inputs) return;
 			var amount = this.model.get('amount');
-			if (!amount) return;
-			// Convert to whole BTC for the UI.
-			amount = app.wallet.fromBaseUnit(amount);
-			this.$inputs.amount.val(amount);
+			var displayCurrency = app.settings.get('displayCurrency');
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			this.$inputAmountSymbol.text(displayCurrency);
+			if (amount) {
+				// Use the amount found in the model - which is always the base-unit coin amount.
+				// Convert to whole coins for the UI.
+				amount = app.wallet.fromBaseUnit(amount);
+				if (displayCurrency === fiatCurrency) {
+					amount = this.convertToFiatAmount(amount);
+				}
+			} else {
+				// Use the amount already in the input field.
+				amount = this.$inputs.amount.val();
+				var displayedCurrency = this.$inputs.amount.attr('data-displayedCurrency');
+				if (displayedCurrency !== displayCurrency) {
+					if (displayCurrency === fiatCurrency) {
+						amount = this.convertToFiatAmount(amount);
+					} else {
+						amount = this.convertToCoinAmount(amount);
+					}
+					this.$inputs.amount.attr('data-displayedCurrency', displayCurrency);
+				}
+			}
+			if (amount) {
+				this.$inputs.amount.val(amount);
+			}
 		},
 		fetchUnspentTxOutputs: function() {
-			var model = this.model;
-			var setCache = _.bind(this.setCache, this);
-			app.wallet.getUnspentTxOutputs(function(error, utxo) {
+			app.wallet.getUnspentTxOutputs(_.bind(function(error, utxo) {
 				if (error) {
 					app.log(error);
 					app.mainView.showMessage(error);
 				} else if (utxo) {
-					model.set('utxo', utxo);
-					setCache('utxo', utxo);
+					this.model.set('utxo', utxo).trigger('change:utxo');
+					this.setCache('utxo', utxo);
 				}
-			});
+			}, this));
 		},
 		fetchFeeRate: function() {
 			var model = this.model;
@@ -461,7 +543,11 @@ app.views.Send = (function() {
 		},
 		createPayment: function() {
 			var formData = this.getFormData();
-			var amount = app.wallet.toBaseUnit(formData.amount);
+			var displayAmount = formData.amount;
+			var displayCurrency = app.settings.get('displayCurrency');
+			var coinSymbol = app.wallet.getCoinSymbol();
+			var coinAmount = displayCurrency === coinSymbol ? displayAmount : this.convertToCoinAmount(displayAmount);
+			var amount = app.wallet.toBaseUnit(coinAmount);
 			var address = formData.address;
 			// Convert to satoshis/kilobyte.
 			var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
@@ -591,7 +677,7 @@ app.views.Send = (function() {
 					address: payment.address,
 					amount: app.wallet.fromBaseUnit(payment.amount),
 					fee: app.wallet.fromBaseUnit(payment.fee),
-					symbol: app.wallet.getNetworkConfig().symbol,
+					symbol: app.wallet.getCoinSymbol(),
 				});
 				if (confirm(message)) {
 					var createDoubleSpend = _.bind(this.createDoubleSpend, this);
@@ -715,7 +801,7 @@ app.views.Send = (function() {
 						address: doubleSpend.address,
 						amount: app.wallet.fromBaseUnit(doubleSpend.amount),
 						fee: app.wallet.fromBaseUnit(doubleSpend.fee),
-						symbol: app.wallet.getNetworkConfig().symbol,
+						symbol: app.wallet.getCoinSymbol(),
 					});
 					if (options.skipConfirmation || confirm(message)) {
 						// Confirmed - send double-spend transaction.
@@ -733,7 +819,7 @@ app.views.Send = (function() {
 										var suggestedFee = payment.fee + minFeeBump;
 										var retryMessage = app.i18n.t('send.error-insufficient-fee-confirm-retry', {
 											fee: app.wallet.fromBaseUnit(suggestedFee),
-											symbol: app.wallet.getNetworkConfig().symbol,
+											symbol: app.wallet.getCoinSymbol(),
 										});
 										if (confirm(retryMessage)) {
 											// Try again with the higher fee.

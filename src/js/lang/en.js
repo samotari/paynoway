@@ -21,6 +21,8 @@ app.lang['en'] = (function() {
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
+		'configure.fiatCurrency': 'Fiat Currency',
+		'configure.exchangeRateProvider': 'Exchange Rate Provider',
 
 		'debug.title': 'Debug Info',
 		'debug.description': 'Please copy/paste the information shown here when reporting problems to the project\'s issue tracker.',
@@ -69,6 +71,7 @@ app.lang['en'] = (function() {
 		'send.reset-confirm': 'Are you sure you want to reset? (The last double-spend tx will be lost)',
 
 		'services.electrum.failed-request.no-connected-servers': 'Unable to complete request - no connected Electrum servers',
+		'services.exchange-rates.unsupported-currency-pair': 'Unsupported currency pair: "{{from}}:{{to}}"',
 
 		'wallet.insuffient-funds': 'Insufficient funds',
 	};

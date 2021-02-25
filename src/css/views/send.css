@@ -205,7 +205,17 @@
 	background-image: url('../images/reset-dark.svg');
 }
 .view.send .form-row--amount .form-field.has-1-actions {
-	padding-right: 4.6rem;
+	padding-right: 7.6rem;
+}
+.view.send .form-row--amount .currency-symbol {
+	position: absolute;
+	right: 4.6rem;
+	top: 0;
+	width: 3rem;
+	color: #888;
+	font-size: 1rem;
+	text-align: center;
+	line-height: 1.6rem;
 }
 .view.send .form-field-action.select-all {
 	width: 4rem;

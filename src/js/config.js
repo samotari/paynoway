@@ -273,6 +273,26 @@ app.config = (function() {
 				},
 				decimals: 2,
 			},
+			'BTC': {
+				BigNumber: {
+					FORMAT: {
+						decimalSeparator: '.',
+						groupSeparator: ',',
+						groupSize: 3,
+					},
+				},
+				decimals: 8,
+			},
+			'LTC': {
+				BigNumber: {
+					FORMAT: {
+						decimalSeparator: '.',
+						groupSeparator: ',',
+						groupSize: 3,
+					},
+				},
+				decimals: 8,
+			},
 			'CZK': {
 				BigNumber: {
 					FORMAT: {
@@ -293,6 +313,13 @@ app.config = (function() {
 				name: 'debug',
 				visible: false,
 				default: false,
+			},
+			{
+				name: 'displayCurrency',
+				visible: false,
+				default: function() {
+					return app.wallet.getNetworkConfig().symbol;
+				},
 			},
 			{
 				name: 'network',
@@ -449,6 +476,52 @@ app.config = (function() {
 				type: 'text',
 				visible: true,
 				readonly: true,
+			},
+			{
+				name: 'fiatCurrency',
+				label: function() {
+					return app.i18n.t('configure.fiatCurrency');
+				},
+				type: 'select',
+				default: 'EUR',
+				required: true,
+				options: function() {
+					return _.map(app.fiatCurrencies, function(name, symbol) {
+						return {
+							key: symbol,
+							label: symbol + ' - ' + name,
+						};
+					});
+				},
+			},
+			{
+				name: 'exchangeRateProvider',
+				label: function() {
+					return app.i18n.t('configure.exchangeRateProvider');
+				},
+				type: 'select',
+				required: true,
+				default: 'coinbase',
+				options: function() {
+					return _.map(app.services.exchangeRates.providers, function(provider, key) {
+						return {
+							key: key,
+							label: provider.label,
+						};
+					});
+				},
+				validateAsync: function(value, data, cb) {
+					var exchangeRateProvider = value;
+					var fiatCurrency = data.fiatCurrency || app.settings.get('fiatCurrency');
+					var network = data.network || app.settings.get('network');
+					app.services.exchangeRates.get({
+						currencies: {
+							from: app.wallet.getNetworkConfig(network).symbol,
+							to: fiatCurrency,
+						},
+						provider: exchangeRateProvider,
+					}, cb);
+				},
 			},
 		],
 		touch: {

@@ -261,6 +261,7 @@ $(JS)/models/*.js\
 $(JS)/collections/*.js\
 $(JS)/views/utility/*.js\
 $(JS)/views/*.js\
+$(JS)/fiat-currencies.js\
 $(JS)/config.js\
 $(JS)/cache.js\
 $(JS)/settings.js\

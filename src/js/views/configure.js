@@ -50,6 +50,9 @@ app.views.Configure = (function() {
 					return app.wallet.getAddress(network);
 				case 'network':
 					return network;
+				case 'exchangeRateProvider':
+				case 'fiatCurrency':
+					return app.settings.get(key);
 				default:
 					return app.wallet.getSetting(key, network) || this.getInputDefaultValue(key);
 			}
@@ -106,10 +109,18 @@ app.views.Configure = (function() {
 		},
 		save: function(data) {
 			var network = data.network;
-			data = _.chain(data).omit('network', 'address').map(function(value, key) {
-				var path = [network, key].join('.');
-				return [path, value];
-			}).object().value();
+			data = _.chain(data)
+				.omit('network', 'address')
+				.map(function(value, key) {
+					switch (key) {
+						case 'exchangeRateProvider':
+						case 'fiatCurrency':
+							return [ key, value ];
+						default:
+							var path = [network, key].join('.');
+							return [path, value];
+					}
+				}).object().value();
 			data.network = network;
 			app.settings.set(data);
 		},

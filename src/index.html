@@ -79,13 +79,14 @@
 		<div class="scoreboard-and-balance">
 			<div class="scoreboard"></div>
 			<div class="balance">
-				<div class="balance-total">
-					<div class="balance-value"></div>
-					<div class="balance-symbol"></div>
+				<div class="balance-total currency-amount">
+					<div class="balance-value currency-value"></div>
+					<div class="balance-symbol currency-symbol"></div>
 					<a class="button balance-refresh"></a>
 				</div>
 				<div class="balance-pending">
 					<span class="balance-value"></span>
+					<span class="balance-symbol currency-symbol"></span>
 				</div>
 			</div>
 		</div>
@@ -129,13 +130,13 @@
 					<td class="scoreboard-3rd double-spends confirmed">{{doubleSpends.confirmed.count}}</td>
 				</tr>
 				<tr>
-					<td class="scoreboard-4th payments confirmed" colspan="3">
-						<span class="sum">{{payments.confirmed.sum}}</span>
-						<span class="symbol">{{symbol}}</span>
+					<td class="scoreboard-4th payments confirmed currency-amount" colspan="3">
+						<span class="sum currency-value">{{payments.confirmed.sum}}</span>
+						<span class="symbol currency-symbol">{{symbol}}</span>
 					</td>
-					<td class="scoreboard-4th double-spends confirmed" colspan="3">
-						<span class="sum">{{doubleSpends.confirmed.sum}}</span>
-						<span class="symbol">{{symbol}}</span>
+					<td class="scoreboard-4th double-spends confirmed currency-amount" colspan="3">
+						<span class="sum currency-value">{{doubleSpends.confirmed.sum}}</span>
+						<span class="symbol currency-symbol">{{symbol}}</span>
 					</td>
 				</tr>
 			</tbody>
