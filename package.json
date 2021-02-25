@@ -34,6 +34,14 @@
     "email": "chill@degreesofzero.com"
   },
   "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samotari/pay-no-way.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samotari/pay-no-way/issues"
+  },
+  "homepage": "https://github.com/samotari/pay-no-way",
   "cordova": {
     "platforms": [
       "android"

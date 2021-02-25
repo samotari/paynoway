@@ -91,4 +91,11 @@ var app = app || {};
 		}
 	};
 
+	try {
+		app.info = JSON.parse($('#json-info').html());
+	} catch (error) {
+		app.log(error);
+		app.info = {};
+	}
+
 })();

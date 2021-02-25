@@ -7,6 +7,9 @@ app.lang['en'] = (function() {
 	return {
 		'self.label': 'English',
 
+		'copy-to-clipboard': 'Copy to clipboard',
+		'copy-to-clipboard.success': 'Copied to clipboard',
+
 		'configure.title': 'Configuration',
 		'configure.address': 'Address',
 		'configure.address-type': 'Address Type',
@@ -18,6 +21,13 @@ app.lang['en'] = (function() {
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
+
+		'debug.title': 'Debug Info',
+		'debug.description': 'Please copy/paste the information shown here when reporting problems to the project\'s issue tracker.',
+		'debug.app': 'App',
+		'debug.repository': 'Repository',
+		'debug.version': 'Version',
+		'debug.commit': 'Commit Hash',
 
 		'device.camera.not-available': 'The device\'s camera is not available',
 
@@ -31,7 +41,6 @@ app.lang['en'] = (function() {
 		'history.empty': 'No transactions yet for this network.',
 
 		'receive.title': 'Receiving Address',
-		'receive.copy-to-clipboard.success': 'Copied to clipboard',
 
 		'send.address': 'Payment Address',
 		'send.invalid-address': 'Invalid payment address',

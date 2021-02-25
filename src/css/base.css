@@ -23,6 +23,18 @@ body {
 	border: none;
 	box-sizing: border-box;
 }
+b, strong {
+	font-weight: 700;
+}
+i {
+	font-style: italic;
+}
+pre {
+	width: 100%;
+	overflow: auto;
+	font-family: 'Courier New';
+	line-height: 1.5rem;
+}
 .error {
 	color: red;
 	font-size: 0.9rem;
@@ -60,6 +72,7 @@ html.loaded #view {
 }
 .page-description {
 	text-align: center;
+	font-size: 1rem;
 	margin-bottom: 1rem;
 }
 .view ul {

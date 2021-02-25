@@ -56,7 +56,7 @@ app.views.Receive = (function() {
 					cordova.plugins.clipboard.copy(text);
 					cordova.plugins.clipboard.paste(function(fromClipBoard) {
 						if (fromClipBoard === text) {
-							app.mainView.showMessage(app.i18n.t('receive.copy-to-clipboard.success'));
+							app.mainView.showMessage(app.i18n.t('copy-to-clipboard.success'));
 						}
 					});
 				} catch (error) {

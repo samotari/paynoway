@@ -31,6 +31,10 @@ html.loaded #header {
 	background-color: #e6e6e6;
 }
 .header-button.configure { background-image: url('../images/configure.svg'); }
+.header-button.debug {
+	background-image: url('../images/question.svg');
+	background-size: 1.2rem;
+}
 .header-button.receive { background-image: url('../images/receive.svg'); }
 .header-button.send { background-image: url('../images/send.svg'); }
 .header-button.history { background-image: url('../images/history.svg'); }
@@ -51,6 +55,7 @@ html.configured .header-button.history {
 	display: block;
 }
 
-.header-button.configure {
+.header-button.configure,
+.header-button.debug {
 	float: right;
 }

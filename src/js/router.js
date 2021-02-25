@@ -8,6 +8,7 @@ app.Router = (function() {
 		// !! IMPORTANT !!
 		// These are router function names, not URI hashes.
 		'configure',
+		'debug',
 		'disclaimers',
 	];
 
@@ -20,6 +21,7 @@ app.Router = (function() {
 
 		routes: {
 			'configure': 'configure',
+			'debug': 'debug',
 			'disclaimers': 'disclaimers',
 			'history': 'history',
 			'receive': 'receive',
@@ -55,6 +57,11 @@ app.Router = (function() {
 		configure: function() {
 
 			app.mainView.renderView('Configure');
+		},
+
+		debug: function() {
+
+			app.mainView.renderView('Debug');
 		},
 
 		disclaimers: function() {
