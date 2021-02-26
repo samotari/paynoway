@@ -82,7 +82,7 @@ var app = app || {};
 	};
 
 	app.debugging = function() {
-		return app.config.debug === true || (app.settings && app.settings.get('debug'));
+		return app.config.debug === true || (app.settings && app.settings.collection && app.settings.get('debug'));
 	};
 
 	app.log = function() {
