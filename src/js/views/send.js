@@ -922,12 +922,10 @@ app.views.Send = (function() {
 			// Use the size of the tx to calculate the fee.
 			// The fee rate is satoshis/kilobyte.
 			var fee = Math.ceil(virtualSize * feeRate) + 1;
-			var tx = app.wallet.buildTx(amount, address, utxo, {
-				fee: fee,
-			});
-			var maxAmount = _.reduce(tx.outs, function(memo, out) {
-				return memo + out.value;
+			var sumOfUnspentOutputs = _.reduce(utxo, function(memo, output) {
+				return memo + output.value;
 			}, 0);
+			var maxAmount = sumOfUnspentOutputs - fee;
 			return app.wallet.fromBaseUnit(maxAmount);
 		},
 	});
