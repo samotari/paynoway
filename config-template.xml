@@ -5,7 +5,7 @@
     <icon src="src/images/favicon.png" />
     <access origin="*" />
     <platform name="android">
-        <preference name="android-minSdkVersion" value="21" />
+        <preference name="android-minSdkVersion" value="22" />
         <preference name="android-targetSdkVersion" value="28"/>
         <icon density="mdpi" src="src/images/favicon/favicon-android-mdpi.png" />
         <icon density="hdpi" src="src/images/favicon/favicon-android-hdpi.png" />
