@@ -20,15 +20,15 @@ describe('#disclaimers', function() {
 	});
 
 	it('disclaimer text exists', function() {
-		return manager.page.waitFor(selectors.text);
+		return manager.page.waitForSelector(selectors.text);
 	});
 
 	it('accept button exists', function() {
-		return manager.page.waitFor(selectors.acceptButton);
+		return manager.page.waitForSelector(selectors.acceptButton);
 	});
 
 	it('pressing accept button closes disclaimers and shows configure view', function() {
-		return manager.page.waitFor(selectors.acceptButton).then(() => {
+		return manager.page.waitForSelector(selectors.acceptButton).then(() => {
 			return manager.page.click(selectors.acceptButton).then(() => {
 				const hash = manager.getPageLocationHash();
 				expect(hash).to.equal('configure');

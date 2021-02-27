@@ -18,6 +18,6 @@ describe('#configure', function() {
 	});
 
 	it('configuration form exists', function() {
-		return manager.page.waitFor(selectors.form);
+		return manager.page.waitForSelector(selectors.form);
 	});
 });

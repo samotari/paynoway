@@ -72,7 +72,7 @@ let manager = module.exports = {
 
 	onAppLoaded: function() {
 		return manager.navigate('/').then(function() {
-			return manager.page.waitFor(function() {
+			return manager.page.waitForFunction(function() {
 				return !!app && !!app.mainView;
 			});
 		});
@@ -166,7 +166,7 @@ let manager = module.exports = {
 				force: true,
 			});
 		}, [name, servers]).then(function() {
-			return manager.page.waitFor(function(name) {
+			return manager.page.waitForFunction(function(name) {
 				return !!app.services.electrum[name];
 			}, {}/* options */, [name]).then(function() {
 				return manager.evaluateInPageContext(function(name) {
