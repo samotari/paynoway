@@ -127,7 +127,47 @@ app.abstracts.BaseView = (function() {
 			// Left empty intentionally.
 			// Override as needed.
 			return this;
-		}
+		},
+
+		startVisualTimer: function(options) {
+			options = _.defaults(options || {}, {
+				$timer: null,
+				fn: null,
+				delay: 5000,
+			});
+			if (!options.$timer || options.$timer.length === 0) {
+				throw new Error('Missing required option: "$timer"');
+			}
+			if (!(options.$timer instanceof jQuery)) {
+				throw new Error('Invalid option ("$timer"): jQuery object expected');
+			}
+			if (!options.fn) {
+				throw new Error('Missing required option: "fn"');
+			}
+			if (!_.isFunction(options.fn)) {
+				throw new Error('Invalid option ("fn"): Function expected');
+			}
+			if (!_.isNumber(options.delay)) {
+				throw new Error('Invalid option ("delay"): Number expected');
+			}
+			if (options.delay <= 0) {
+				throw new Error('Invalid option ("delay"): Must be greater than 0');
+			}
+			var startTime = Date.now();
+			(function updateTimer() {
+				var elapsedTime = Date.now() - startTime;
+				if (elapsedTime < options.delay) {
+					var timeRemaining = options.delay - elapsedTime;
+					var secondsRemaining = Math.round(timeRemaining / 1000);
+					options.$timer.text(secondsRemaining);
+					return _.delay(updateTimer, 50);
+				}
+				options.$timer.text('');
+				options.fn();
+				return null;
+			})();
+		},
+
 	}, {
 		extend: function(properties, classProperties) {
 			properties = properties || {};

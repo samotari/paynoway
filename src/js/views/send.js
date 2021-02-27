@@ -279,7 +279,6 @@ app.views.Send = (function() {
 				symbol: this.$('.balance-symbol'),
 			};
 			this.$scoreboard = this.$('.scoreboard');
-			this.$autoDoubleSpendTimer = this.$('.auto-double-spend-timer');
 			this.$inputAmountSymbol = $('<span/>').addClass('currency-symbol');
 			this.$inputs.amount.after(this.$inputAmountSymbol);
 			this.pullFromCache();
@@ -769,38 +768,24 @@ app.views.Send = (function() {
 			}
 		},
 		startAutoDoubleSpendTimer: function() {
-			this.clearedDoubleSpendTimer = false;
-			var delay = this.getAutoDoubleSpendDelay();
-			var endTime = Date.now() + delay;
-			this.autoDoubleSpendTimer = _.delay(_.bind(this.doubleSpend, this, {
-				skipConfirmation: true,
-			}), delay);
-			var updateAutoDoubleSpendTimer = _.bind(function() {
-				if (!this.clearedDoubleSpendTimer) {
-					var timeRemaining = Date.now() - endTime;
-					if (timeRemaining < 500) {
-						this.$autoDoubleSpendTimer.text(Math.abs(Math.round(timeRemaining / 1000)));
-						return _.delay(updateAutoDoubleSpendTimer, 50);
-					}
-				}
-				// Timer done or cleared.
-				this.$autoDoubleSpendTimer.text('');
-				return null;
-			}, this);
-			this.autoDoubleSpendUpdateTimer = updateAutoDoubleSpendTimer();
+			this.autoDoubleSpendVisualTimer = this.startVisualTimer({
+				$timer: this.$('.timer'),
+				delay: this.getAutoDoubleSpendDelay(),
+				fn: _.bind(this.doubleSpend, this, { skipConfirmation: true }),
+			});
 		},
 		getAutoDoubleSpendDelay: function() {
 			var advOptions = this.getAdvancedOptions();
 			return parseInt(advOptions.autoBroadcastDoubleSpendDelay) * 1000;
 		},
-		clearAutoDoubleSpendTimer: function() {
-			this.clearedDoubleSpendTimer = true;
-			this.$autoDoubleSpendTimer.text('');
-			clearTimeout(this.autoDoubleSpendTimer);
-			clearTimeout(this.autoDoubleSpendUpdateTimer);
+		cancelAutoDoubleSpendTimer: function() {
+			if (this.autoDoubleSpendVisualTimer) {
+				this.autoDoubleSpendVisualTimer.cancel();
+				this.autoDoubleSpendVisualTimer = null;
+			}
 		},
 		doubleSpend: function(options) {
-			this.clearAutoDoubleSpendTimer();
+			this.cancelAutoDoubleSpendTimer();
 			options = _.defaults(options || {}, {
 				skipConfirmation: false,
 			});
@@ -893,7 +878,7 @@ app.views.Send = (function() {
 		},
 		reset: function() {
 			if (confirm(app.i18n.t('send.reset-confirm'))) {
-				this.clearAutoDoubleSpendTimer();
+				this.cancelAutoDoubleSpendTimer();
 				this.resetForm();
 			}
 		},

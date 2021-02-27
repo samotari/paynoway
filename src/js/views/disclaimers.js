@@ -12,6 +12,17 @@ app.views.Disclaimers = (function() {
 		events: {
 			'click .accept': 'setHasReadDisclaimersFlag',
 		},
+		onRender: function() {
+			this.$acceptButton = this.$('.button.accept');
+			this.startVisualTimer({
+				$timer: this.$('.timer'),
+				delay: 5000,
+				fn: _.bind(this.enableAcceptButton, this),
+			});
+		},
+		enableAcceptButton: function() {
+			this.$acceptButton.removeClass('disabled');
+		},
 		setHasReadDisclaimersFlag: function() {
 			app.setHasReadDisclaimersFlag();
 			app.router.navigate('#', { trigger: true });

@@ -300,15 +300,9 @@
 	line-height: 1.5rem;
 	padding-left: .8rem;
 }
-.view.send .auto-double-spend-timer {
+.view.send .secondary-control.double-spend .timer {
 	position: absolute;
-	left: 1.3rem;
-	top: 0;
-	height: 3.2rem;
-	line-height: 3.2rem;
-	font-weight: 700;
-	font-size: 1.2rem;
-	color: rgba(255,255,255,.8);
+	left: 1.35rem;
 }
 .view.send .form-row-type--checkbox .form-field,
 .view.send .form-row--feeRate .form-field,

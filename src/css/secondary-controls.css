@@ -62,6 +62,9 @@
 	opacity: .5;
 	margin: 0;
 }
+.button.secondary-control.disabled:before {
+	opacity: .25;
+}
 .button.secondary-control.has-text:before {
 	margin-right: 1.2rem;
 }
@@ -116,4 +119,9 @@
 .button.secondary-control.cancel.touchstart,
 .button.secondary-control.reject.touchstart {
 	background-color: rgba(255,0,0,0.5);
+}
+.secondary-control .timer {
+	position: relative;
+	left: -2.25rem;
+	top: 0;
 }
