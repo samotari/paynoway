@@ -396,21 +396,28 @@ app.config = (function() {
 					{
 						name: 'camera',
 						fn: function(value, cb) {
-							var setAddressType = _.bind(this.setAddressType, this);
-							app.device.scanQRCodeWithCamera(function(error, data) {
-								if (error) return cb(error);
-								var wif;
-								if (data.indexOf(':') !== -1) {
-									var parts = data.split(':');
-									var addressType = parts[0];
-									wif = parts[1];
-									setAddressType(addressType);
-									data = parts[1];
-								} else {
-									wif = data;
-								}
-								cb(null, wif);
-							});
+							// If WIF not already set, then skip the confirm prompt.
+							if (!value || confirm(app.i18n.t('configure.wif.confirm-change'))) {
+								// Confirmed - change the WIF.
+								var setAddressType = _.bind(this.setAddressType, this);
+								app.device.scanQRCodeWithCamera(function(error, data) {
+									if (error) return cb(error);
+									var wif;
+									if (data.indexOf(':') !== -1) {
+										var parts = data.split(':');
+										var addressType = parts[0];
+										wif = parts[1];
+										setAddressType(addressType);
+										data = parts[1];
+									} else {
+										wif = data;
+									}
+									cb(null, wif);
+								});
+							} else {
+								// Canceled - keep the current WIF.
+								cb(null, app.wallet.getWIF());
+							}
 						},
 					},
 					{
