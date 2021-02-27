@@ -19,7 +19,7 @@
 		background-size: 2.1rem;
 	}
 	.header-button.debug {
-		background-size: 1rem;
+		background-size: 1.1rem;
 	}
 	#view {
 		padding-top: 3rem;
@@ -31,9 +31,13 @@
 		height: 3.6rem;
 		padding: .2rem;
 	}
-	.button.secondary-control,
-	.view.send .button.secondary-control {
-		background-size: 2.2rem;
+	.button.secondary-control:before,
+	.view.send .button.secondary-control:before {
+		width: 2rem;
+		background-size: 2rem;
+	}
+	.button.secondary-control.has-text:before {
+		margin-right: 1rem;
 	}
 	.view.receive,
 	.view.export-wif {
@@ -46,6 +50,9 @@
 	}
 	.view.receive .address-text {
 		bottom: 1rem;
+	}
+	.view.export-wif .wif-text {
+		bottom: -.5rem;
 	}
 	.view.send .scoreboard-and-balance {
 		height: 9.2rem;

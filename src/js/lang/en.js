@@ -8,6 +8,7 @@ app.lang['en'] = (function() {
 		'self.label': 'English',
 
 		'close': 'Close',
+		'copy': 'Copy',
 		'copy-to-clipboard': 'Copy to clipboard',
 		'copy-to-clipboard.success': 'Copied to clipboard',
 
@@ -72,6 +73,9 @@ app.lang['en'] = (function() {
 		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee of {{fee}} {{symbol}}?',
 		'send.error-missing-inputs': 'TRANSACTION REJECTED:\nMissing inputs. It is possible that the payment transaction was already confirmed :(',
 		'send.reset-confirm': 'Are you sure you want to reset? (The last double-spend tx will be lost)',
+		'send.pay': 'Pay',
+		'send.return': 'Return',
+		'send.reset': 'Reset',
 
 		'services.electrum.failed-request.no-connected-servers': 'Unable to complete request - no connected Electrum servers',
 		'services.exchange-rates.unsupported-currency-pair': 'Unsupported currency pair: "{{from}}:{{to}}"',

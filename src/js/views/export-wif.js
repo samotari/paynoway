@@ -11,7 +11,7 @@ app.views.ExportWIF = (function() {
 		className: 'export-wif',
 		events: {
 			'click .copy-to-clipboard': 'copyToClipboard',
-			'click .finished': 'finished',
+			'click .close': 'finished',
 		},
 		onRender: function() {
 			var text = app.wallet.getWIF();

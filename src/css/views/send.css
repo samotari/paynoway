@@ -201,17 +201,23 @@
 	background-size: 2.4rem;
 	background-repeat: no-repeat;
 }
+.view.send .button.secondary-control.payment:before {
+	background-image: url('../images/send.svg');
+}
+.view.send .button.secondary-control.double-spend:before {
+	background-image: url('../images/wink.svg');
+}
+.view.send .button.secondary-control.reset:before {
+	background-image: url('../images/cancel.svg');
+}
 .view.send .button.secondary-control.payment {
 	background-color: rgba(52,112,247,0.8);
-	background-image: url('../images/send-dark.svg');
 }
 .view.send .button.secondary-control.double-spend {
 	background-color: rgba(255,0,0,0.8);
-	background-image: url('../images/wink-dark.svg');
 }
 .view.send .button.secondary-control.reset {
 	background-color: #333;
-	background-image: url('../images/reset-dark.svg');
 }
 .view.send .form-row--amount .form-field.has-1-actions {
 	padding-right: 7.6rem;
@@ -296,13 +302,13 @@
 }
 .view.send .auto-double-spend-timer {
 	position: absolute;
-	right: .9rem;
+	left: 1.3rem;
 	top: 0;
 	height: 3.2rem;
 	line-height: 3.2rem;
 	font-weight: 700;
 	font-size: 1.2rem;
-	color: rgba(255,255,255,.5);
+	color: rgba(255,255,255,.8);
 }
 .view.send .form-row-type--checkbox .form-field,
 .view.send .form-row--feeRate .form-field,

@@ -46,27 +46,51 @@
 	width: 24.25%;
 }
 .button.secondary-control {
-	background-position: center center;
-	background-repeat: no-repeat;
+	position: relative;
+	background-color: rgba(180,180,180,.8);
+}
+.button.secondary-control:before {
+	content: ' ';
+	display: inline-block;
+	vertical-align: top;
+	width: 2.4rem;
+	height: 100%;
+	background-position: center;
 	background-size: 2.4rem;
 	background-repeat: no-repeat;
-	background-color: rgba(180,180,180,0.8);
+	background-color: transparent;
+	opacity: .5;
+	margin: 0;
+}
+.button.secondary-control.has-text:before {
+	margin-right: 1.2rem;
+}
+.secondary-control.has-text:first-child:nth-last-child(3):before,
+.secondary-control:first-child:nth-last-child(3) ~ .secondary-control.has-text:before {
+	margin-right: .5rem;
+}
+.secondary-control.has-text:first-child:nth-last-child(4):before,
+.secondary-control:first-child:nth-last-child(4) ~ .secondary-control.has-text:before {
+	margin-right: .4rem;
+}
+.button.secondary-control.continue:before {
+	background-image: url('../images/continue.svg');
+}
+.button.secondary-control.copy-to-clipboard:before {
+	background-image: url('../images/copy.svg');
+}
+.button.secondary-control.accept:before,
+.button.secondary-control.done:before,
+.button.secondary-control.submit:before {
+	background-image: url('../images/checkmark.svg');
+}
+.button.secondary-control.cancel:before,
+.button.secondary-control.close:before,
+.button.secondary-control.reject:before {
+	background-image: url('../images/cancel.svg');
 }
 .button.secondary-control.back.touchstart {
 	background-color: rgba(200,200,200,0.6);
-}
-.button.secondary-control.continue {
-	background-image: url('../images/continue.svg');
-}
-.button.secondary-control.accept,
-.button.secondary-control.done,
-.button.secondary-control.submit {
-	background-image: url('../images/checkmark.svg');
-}
-.button.secondary-control.cancel,
-.button.secondary-control.close,
-.button.secondary-control.reject {
-	background-image: url('../images/cancel.svg');
 }
 .button.secondary-control.back {
 	background-color: rgba(255,153,0,0.8);

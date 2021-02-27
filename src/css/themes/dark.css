@@ -7,14 +7,14 @@ html.theme-dark #header {
 	background: #222;
 }
 html.theme-dark .button {
-	color: #eee;
+	color: rgba(255,255,255,.8);
 	background-color: #444;
 }
 html.theme-dark .header-button {
 	opacity: .4;
 }
 html.theme-dark .button.disabled {
-	color: #999;
+	color: rgba(255,255,255,.4);
 }
 html.theme-dark .secondary-controls {
 	background: #222;
@@ -89,7 +89,6 @@ html.theme-dark #cover {
 	background-color: rgba(0, 0, 0, .8);
 }
 html.theme-dark.loaded.busy #cover-image {
-	background-image: url('../images/busy-dark.gif');
 	background-color: transparent;
 	box-shadow: none;
 }
