@@ -320,20 +320,25 @@ app.views.Send = (function() {
 		},
 		updateBalance: function() {
 			if (!this.$balance) return;
-			var balance = this.getBalance();
-			var total = balance.total;
-			var pending = balance.pending;
-			var fiatCurrency = app.settings.get('fiatCurrency');
 			var displayCurrency = app.settings.get('displayCurrency');
-			if (displayCurrency === fiatCurrency) {
-				// Convert the coin amounts to fiat.
-				total = this.convertToFiatAmount(total);
-				pending = this.convertToFiatAmount(pending);
+			if (!this.hasFetchedUnspentTxOutputs()) {
+				this.$balance.total.text('?');
+				this.$balance.pending.parent().removeClass('non-zero');
+			} else {
+				var balance = this.getBalance();
+				var total = balance.total;
+				var pending = balance.pending;
+				var fiatCurrency = app.settings.get('fiatCurrency');
+				if (displayCurrency === fiatCurrency) {
+					// Convert the coin amounts to fiat.
+					total = this.convertToFiatAmount(total);
+					pending = this.convertToFiatAmount(pending);
+				}
+				this.$balance.pending.text(pending);
+				this.$balance.total.text(total);
+				this.$balance.pending.parent().toggleClass('non-zero', balance.pending > 0);
 			}
-			this.$balance.pending.text(pending);
-			this.$balance.total.text(total);
 			this.$balance.symbol.text(displayCurrency);
-			this.$('.balance-pending').toggleClass('non-zero', balance.pending > 0);
 		},
 		toggleDisplayCurrency: function() {
 			var coinSymbol = app.wallet.getCoinSymbol();
@@ -459,6 +464,11 @@ app.views.Send = (function() {
 			if (amount) {
 				this.$inputs.amount.val(amount);
 			}
+		},
+		hasFetchedUnspentTxOutputs: function() {
+			var fromCache = this.getCache('utxo');
+			var fromModel = this.model.get('utxo');
+			return _.isArray(fromCache) || _.isArray(fromModel);
 		},
 		fetchUnspentTxOutputs: function() {
 			app.wallet.getUnspentTxOutputs(_.bind(function(error, utxo) {
