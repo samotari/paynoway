@@ -11,6 +11,7 @@ app.lang['en'] = (function() {
 		'copy': 'Copy',
 		'copy-to-clipboard': 'Copy to clipboard',
 		'copy-to-clipboard.success': 'Copied to clipboard',
+		'ok': 'OK',
 
 		'configure.title': 'Configuration',
 		'configure.address': 'Address',
@@ -36,9 +37,10 @@ app.lang['en'] = (function() {
 		'device.camera.not-available': 'The device\'s camera is not available',
 
 		'disclaimers.title': 'Disclaimers',
-		'disclaimers.1': 'This app is intended to be used for testing purposes.',
-		'disclaimers.2': 'Please do not use this app to double-spend against merchants without their explicit consent.',
-		'disclaimers.3': 'A successful double-spend is not guaranteed - use at your own risk.',
+		'disclaimers.testing-and-educational-purposes': 'This app is intended to be used for testing and educational purposes.',
+		'disclaimers.explicit-consent': 'Please do not use this app to double-spend against merchants without their explicit consent.',
+		'disclaimers.double-spend-not-guaranteed': 'A successful double-spend is not guaranteed - use at your own risk.',
+		'disclaimers.private-key-backup': 'You are responsible for creating a backup of your private key(s). Without a backup, if you delete the app or lose your device, your funds will be permanently lost.',
 
 		'export-wif.title': 'Export Private Key',
 
