@@ -246,6 +246,18 @@
 		</div>
 	</script>
 
+	<script type="text/html" id="template-export-wif">
+		<h2 class="page-title">{{i18n "export-wif.title"}}</h2>
+		<div class="wif">
+			<div class="wif-qrcode"></div>
+			<div class="wif-text"></div>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button copy-to-clipboard">{{i18n "copy-to-clipboard"}}</a>
+			<a class="secondary-control button finished">{{i18n "close"}}</a>
+		</div>
+	</script>
+
 	<script type="text/json" id="json-info"><%= JSON.stringify(info) %></script>
 	<script src="cordova.js"></script>
 <% if (target === 'dev') { %>

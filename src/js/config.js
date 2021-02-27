@@ -384,13 +384,8 @@ app.config = (function() {
 					{
 						name: 'visibility',
 						fn: function(value, cb) {
-							try {
-								var $input = $(':input[name="wif"]');
-								$input.attr('type', $input.attr('type') === 'text' ? 'password' : 'text');
-							} catch (error) {
-								app.log(error);
-							}
 							cb(null, value);
+							app.router.navigate('#export-wif', { trigger: true });
 						},
 					},
 					{

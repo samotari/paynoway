@@ -1,0 +1,50 @@
+.view.export-wif {
+	padding-bottom: 7rem;
+}
+.view.export-wif .page-title {
+	position: absolute;
+	left: 0;
+	top: 1rem;
+	width: 100%;
+	height: 2rem;
+	line-height: 2rem;
+	text-align: center;
+	margin: 0;
+}
+.view.export-wif .wif {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	padding-top: 3.5rem;
+	padding-bottom: 5.5rem;
+}
+.view.export-wif .wif-instructions,
+.view.export-wif .wif-text {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	height: 4rem;
+	line-height: 4rem;
+	text-align: center;
+	margin: 0;
+}
+.view.export-wif .wif-instructions {
+	top: 0;
+	padding-bottom: 1rem;
+}
+.view.export-wif .wif-text {
+	bottom: 0;
+	font-weight: 100;
+	font-family: 'Courier';
+	font-size: 1.2rem;
+	line-height: 1.7rem;
+	letter-spacing: .25rem;
+	word-break: break-all;
+	padding-top: 2rem;
+}
+.view.export-wif .wif-qrcode {
+	display: block;
+	width: 100%;
+	height: 100%;
+}

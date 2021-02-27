@@ -23,6 +23,7 @@ app.Router = (function() {
 			'configure': 'configure',
 			'debug': 'debug',
 			'disclaimers': 'disclaimers',
+			'export-wif': 'exportWIF',
 			'history': 'history',
 			'receive': 'receive',
 			'send': 'send',
@@ -67,6 +68,11 @@ app.Router = (function() {
 		disclaimers: function() {
 
 			app.mainView.renderView('Disclaimers');
+		},
+
+		exportWIF: function() {
+
+			app.mainView.renderView('ExportWIF');
 		},
 
 		history: function() {

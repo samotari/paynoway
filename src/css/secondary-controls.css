@@ -33,7 +33,7 @@
 /* two items */
 .secondary-control:first-child:nth-last-child(2),
 .secondary-control:first-child:nth-last-child(2) ~ .secondary-control {
-	width: 49%;
+	width: 48.5%;
 }
 /* three items */
 .secondary-control:first-child:nth-last-child(3),
@@ -64,6 +64,7 @@
 	background-image: url('../images/checkmark.svg');
 }
 .button.secondary-control.cancel,
+.button.secondary-control.close,
 .button.secondary-control.reject {
 	background-image: url('../images/cancel.svg');
 }
