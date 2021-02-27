@@ -186,8 +186,7 @@ node_modules/handlebars/dist/handlebars.js\
 $(BUILD_DEPS)/js/bitcoin.js\
 $(BUILD_DEPS)/js/Buffer.js\
 $(BUILD_DEPS)/js/QRCode.js\
-$(BUILD_DEPS)/js/querystring.js\
-node_modules/moment/min/moment-with-locales.js
+$(BUILD_DEPS)/js/querystring.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	rm -f $(BUILD_DEPS_JS)
 	for file in $(DEPS_JS_FILES); do \
@@ -206,8 +205,7 @@ node_modules/handlebars/dist/handlebars.min.js\
 $(BUILD_DEPS)/js/bitcoin.min.js\
 $(BUILD_DEPS)/js/Buffer.min.js\
 $(BUILD_DEPS)/js/QRCode.min.js\
-$(BUILD_DEPS)/js/querystring.min.js\
-node_modules/moment/min/moment-with-locales.min.js
+$(BUILD_DEPS)/js/querystring.min.js
 $(BUILD_DEPS_MIN_JS): $(DEPS_MIN_JS_FILES)
 	rm -f $(BUILD_DEPS_MIN_JS)
 	for file in $(DEPS_MIN_JS_FILES); do \
