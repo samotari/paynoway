@@ -24,7 +24,7 @@
 }
 .secondary-control + .secondary-control {
 	border-left: none;
-	margin-left: 2.75%;
+	margin-left: 1%;
 }
 /* one item */
 .secondary-control:first-child:nth-last-child(1) {
@@ -33,17 +33,17 @@
 /* two items */
 .secondary-control:first-child:nth-last-child(2),
 .secondary-control:first-child:nth-last-child(2) ~ .secondary-control {
-	width: 48.5%;
+	width: 49.5%;
 }
 /* three items */
 .secondary-control:first-child:nth-last-child(3),
 .secondary-control:first-child:nth-last-child(3) ~ .secondary-control {
-	width: 31.33333%;
+	width: 32.6666%;
 }
 /* four items */
 .secondary-control:first-child:nth-last-child(4),
 .secondary-control:first-child:nth-last-child(4) ~ .secondary-control {
-	width: 23%;
+	width: 24.25%;
 }
 .button.secondary-control {
 	background-position: center center;

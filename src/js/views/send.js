@@ -323,7 +323,7 @@ app.views.Send = (function() {
 			var displayCurrency = app.settings.get('displayCurrency');
 			if (!this.hasFetchedUnspentTxOutputs()) {
 				this.$balance.total.text('?');
-				this.$balance.pending.parent().removeClass('non-zero');
+				this.$el.removeClass('has-pending-balance');
 			} else {
 				var balance = this.getBalance();
 				var total = balance.total;
@@ -336,7 +336,7 @@ app.views.Send = (function() {
 				}
 				this.$balance.pending.text(pending);
 				this.$balance.total.text(total);
-				this.$balance.pending.parent().toggleClass('non-zero', balance.pending > 0);
+				this.$el.toggleClass('has-pending-balance', balance.pending > 0);
 			}
 			this.$balance.symbol.text(displayCurrency);
 		},

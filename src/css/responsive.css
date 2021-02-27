@@ -3,6 +3,90 @@
 */
 @media screen and (min-resolution: 120dpi) {
 	body {
-		font-size: 1.4rem;
+		font-size: 1.2rem;
+	}
+}
+
+@media screen and (max-height: 648px) {
+	body {
+		font-size: 1rem;
+	}
+	#header {
+		height: 3rem;
+	}
+	.header.button {
+		width: 3rem;
+		background-size: 2.1rem;
+	}
+	.header-button.debug {
+		background-size: 1rem;
+	}
+	#view {
+		padding-top: 3rem;
+	}
+	.form-label {
+		margin-bottom: .3rem;
+	}
+	.secondary-controls {
+		height: 3.6rem;
+		padding: .2rem;
+	}
+	.button.secondary-control,
+	.view.send .button.secondary-control {
+		background-size: 2.2rem;
+	}
+	.view.receive,
+	.view.export-wif {
+		padding-bottom: 5rem;
+	}
+	.view.receive .address-text,
+	.view.export-wif .wif-text {
+		font-size: 1rem;
+		line-height: 1.5rem;
+	}
+	.view.receive .address-text {
+		bottom: 1rem;
+	}
+	.view.send .scoreboard-and-balance {
+		height: 9.2rem;
+	}
+	.view.send .scoreboard {
+		height: 6.5rem;
+	}
+	.view.send .scoreboard .scoreboard-3rd,
+	.view.send .scoreboard .scoreboard-4th,
+	.view.send .scoreboard .scoreboard-3rd th,
+	.view.send .scoreboard .scoreboard-4th td {
+		height: 1.5rem;
+		line-height: 1.5rem;
+		font-size: 1.25rem;
+	}
+	.view.send .balance {
+		top: 6.8rem;
+		height: 2.2rem;
+	}
+	.view.send .form {
+		padding-top: 9.6rem;
+		padding-bottom: 6rem;
+	}
+	.view.send.has-pending-balance .scoreboard-and-balance {
+		height: 10rem;
+	}
+	.view.send.has-pending-balance .balance {
+		height: 3.6rem;
+	}
+	.view.send.has-pending-balance .form {
+		padding-top: 11rem;
+	}
+	.view.send .form-row + .form-row.form-row--feeRate {
+		margin-top: .8rem;
+	}
+	.view.send .form-row + .form-row.form-row--autoBroadcastDoubleSpend,
+	.view.send .form-row + .form-row.form-row--autoBroadcastDoubleSpendDelay {
+		margin-top: .4rem;
+	}
+	.view.debug pre {
+		font-size: 1rem;
+		line-height: 1.2rem;
 	}
 }

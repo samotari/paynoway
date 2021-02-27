@@ -24,8 +24,8 @@
 	position: absolute;
 	left: 0;
 	width: 100%;
-	height: 4rem;
-	line-height: 4rem;
+	height: auto;
+	line-height: 3.5rem;
 	text-align: center;
 	margin: 0;
 }
@@ -41,7 +41,6 @@
 	line-height: 1.7rem;
 	letter-spacing: .25rem;
 	word-break: break-all;
-	padding-top: 2rem;
 }
 .view.receive .address-qrcode {
 	display: block;

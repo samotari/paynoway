@@ -112,7 +112,8 @@ $(CSS)/forms.css\
 $(CSS)/header.css\
 $(CSS)/secondary-controls.css\
 $(CSS)/views/*.css\
-$(CSS)/themes/*.css
+$(CSS)/themes/*.css\
+$(CSS)/responsive.css
 APP_CSS_MIN_FILES=$(addprefix $(BUILD)/, $(subst $(SRC), , $(patsubst %.css, %.min.css, $(APP_CSS_FILES))))
 
 $(BUILD_ALL_CSS): $(CSS)/*.css $(CSS)/**/*.css

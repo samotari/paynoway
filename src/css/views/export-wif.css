@@ -24,8 +24,8 @@
 	position: absolute;
 	left: 0;
 	width: 100%;
-	height: 4rem;
-	line-height: 4rem;
+	height: auto;
+	line-height: 3.5rem;
 	text-align: center;
 	margin: 0;
 }
@@ -34,14 +34,13 @@
 	padding-bottom: 1rem;
 }
 .view.export-wif .wif-text {
-	bottom: 0;
+	bottom: -1rem;
 	font-weight: 100;
 	font-family: 'Courier';
 	font-size: 1.2rem;
 	line-height: 1.7rem;
 	letter-spacing: .25rem;
 	word-break: break-all;
-	padding-top: 2rem;
 }
 .view.export-wif .wif-qrcode {
 	display: block;

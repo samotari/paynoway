@@ -91,13 +91,14 @@
 	top: 0;
 	right: 0;
 	width: auto;
+	height: 100%;
 	margin-top: 0;
 }
 .form-field-action {
 	display: inline-block;
 	vertical-align: top;
 	width: 1.6rem;
-	height: 1.6rem;
+	height: 100%;
 	background-position: center center;
 	background-repeat: no-repeat;
 	background-size: 1.2rem;
