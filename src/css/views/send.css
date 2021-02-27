@@ -250,8 +250,6 @@
 	padding-bottom: .2rem;
 }
 .view.send .form-row-type--checkbox .form-label {
-	float: right;
-	width: 78%;
 	height: 1.2rem;
 	opacity: .4;
 	text-align: left;
@@ -263,8 +261,6 @@
 	opacity: 1;
 }
 .view.send .form-row-type--checkbox .form-field {
-	float: left;
-	width: 22%;
 	height: 1.2rem;
 	line-height: 1.2rem;
 	text-align: right;
@@ -273,15 +269,8 @@
 .view.send .form-row--replacementStyle .form-label {
 	display: none;
 }
-.view.send .form-row--feeRate .form-field,
-.view.send .form-row--autoBroadcastDoubleSpendDelay .form-field {
-	float: left;
-	width: 22%;
-}
 .view.send .form-row--feeRate .form-label,
 .view.send .form-row--autoBroadcastDoubleSpendDelay .form-label {
-	float: right;
-	width: 78%;
 	text-align: left;
 	line-height: 1.5rem;
 	padding-left: .8rem;
@@ -298,4 +287,25 @@
 	font-weight: 700;
 	font-size: 1.2rem;
 	color: rgba(255,255,255,.5);
+}
+.view.send .form-row-type--checkbox .form-field,
+.view.send .form-row--feeRate .form-field,
+.view.send .form-row--autoBroadcastDoubleSpendDelay .form-field {
+	float: left;
+	width: 25%;
+}
+.view.send .form-row-type--checkbox .form-label,
+.view.send .form-row--feeRate .form-label,
+.view.send .form-row--autoBroadcastDoubleSpendDelay .form-label {
+	float: right;
+	width: 75%;
+}
+.view.send input[name="feeRate"] {
+	width: 3.75rem;
+}
+.view.send .form-row--feeRate .form-field-action {
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	padding: 0;
 }

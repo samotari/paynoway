@@ -13,6 +13,7 @@ app.views.Send = (function() {
 			'change :input[name="address"]': 'onChangeInputs',
 			'change :input[name="amount"]': 'onChangeInputs',
 			'change :input[name="feeRate"]': 'onChangeInputs',
+			'change :input[name="feeRate"]': 'onChangeFeeRate',
 			'change :input[name="autoBroadcastDoubleSpend"]': 'saveOption',
 			'change :input[name="autoBroadcastDoubleSpendDelay"]': 'saveOption',
 			'change :input[name="paymentOutput"]': 'saveOption',
@@ -135,6 +136,14 @@ app.views.Send = (function() {
 						throw new Error(app.i18n.t('send.fee-rate.invalid-number'));
 					}
 				},
+				actions: [
+					{
+						name: 'cycle',
+						fn: function(value, cb) {
+							app.wallet.getFeeRate(cb);
+						},
+					},
+				],
 			},
 			{
 				name: 'autoBroadcastDoubleSpend',
