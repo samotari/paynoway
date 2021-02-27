@@ -1,5 +1,15 @@
 # Changelog
 
+* TBD:
+  * New features/improvements:
+    * Easily toggle between fiat currency or coin amounts in send view
+    * Added new config options for fiat currency and exchange rate provider
+    * Added button to re-fetch fee rate in send view
+    * Export WIF as QR code or copy to clipboard
+    * Confirmation prompt before changing wif via camera QR code scan
+    * Added new debug view to help users provide precise app information in their bug reports
+  * Bug fixes:
+    * Fixed "use-all" calculation in send view - this was incorrect in the case of multiple UTXOs
 * v1.1.0:
   * Advanced double-spend options:
     * Automatically broadcast double-spend tx (with delay)
