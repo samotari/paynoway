@@ -23,9 +23,28 @@ app.views.utility.Form = (function() {
 
 		initialize: function() {
 
-			_.bindAll(this, 'process');
+			_.bindAll(this,
+				'process',
+				'onKeyboardVisible'
+			);
 			this.process = _.throttle(this.process, 500, { leading: false });
 			this.prepareInputs();
+			this.listenTo(app.device, 'keyboard:visible', this.onKeyboardVisible);
+		},
+
+		onKeyboardVisible: function() {
+
+			this.scrollToFocusedInput();
+		},
+
+		scrollToFocusedInput: function() {
+
+			var $focus = $(document.activeElement);
+			if ($focus.length > 0 && $focus.is(':input') && $.contains(this.$el[0], $focus[0])) {
+				var $label = $focus.parents('.form-row').first().find('.form-label').first();
+				var top = ($label.length > 0 ? $label.offset().top : $focus.offset().top) + 20;
+				this.$el.scrollTop(top);
+			}
 		},
 
 		prepareInputs: function() {

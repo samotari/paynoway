@@ -326,3 +326,17 @@
 	border-radius: 50%;
 	padding: 0;
 }
+
+	/*  UI keyboard is visible  */
+	html.keyboard-visible #header,
+	html.keyboard-visible .view.send .scoreboard-and-balance {
+		display: none;
+	}
+	html.keyboard-visible #view {
+		padding-top: 0;
+	}
+	html.keyboard-visible .view.send .form {
+		padding-top: 1rem;
+		padding-bottom: 1.5rem;
+	}
+	/*  UI keyboard is visible  */
