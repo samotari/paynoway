@@ -8,6 +8,10 @@
     * Export WIF as QR code or copy to clipboard
     * Confirmation prompt before changing wif via camera QR code scan
     * Added new debug view to help users provide precise app information in their bug reports
+    * Persist user's changes (fee-rate, advanced double-spend options)
+    * Ensure active input field is visible when system keyboard shown
+    * Most buttons now have both an icon and text
+    * UI improvements for smaller screens
   * Bug fixes:
     * Fixed "use-all" calculation in send view - this was incorrect in the case of multiple UTXOs
 * v1.1.0:
