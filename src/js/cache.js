@@ -46,7 +46,10 @@ app.cache = (function() {
 					data = item.data;
 				}
 			}
-			return data || null;
+			if (_.isUndefined(data)) {
+				return null;
+			}
+			return data;
 		},
 		set: function(key, data, options) {
 			options = _.defaults(options || {}, {

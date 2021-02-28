@@ -14,9 +14,10 @@ app.views.Send = (function() {
 			'change :input[name="amount"]': 'onChangeInputs',
 			'change :input[name="feeRate"]': 'onChangeInputs',
 			'change :input[name="feeRate"]': 'onChangeFeeRate',
-			'change :input[name="autoBroadcastDoubleSpend"]': 'saveOption',
-			'change :input[name="autoBroadcastDoubleSpendDelay"]': 'saveOption',
-			'change :input[name="paymentOutput"]': 'saveOption',
+			'change :input[name="feeRate"]': 'onChangeCacheableOption',
+			'change :input[name="autoBroadcastDoubleSpend"]': 'onChangeCacheableOption',
+			'change :input[name="autoBroadcastDoubleSpendDelay"]': 'onChangeCacheableOption',
+			'change :input[name="paymentOutput"]': 'onChangeCacheableOption',
 			'click .button.payment': 'pay',
 			'click .button.double-spend': 'doubleSpend',
 			'click .button.reset': 'reset',
@@ -24,6 +25,12 @@ app.views.Send = (function() {
 			'click .currency-value': 'toggleDisplayCurrency',
 			'click .currency-symbol': 'toggleDisplayCurrency',
 		},
+		cacheableOptions: [
+			'feeRate',
+			'autoBroadcastDoubleSpend',
+			'autoBroadcastDoubleSpendDelay',
+			'paymentOutput',
+		],
 		inputs: [
 			{
 				name: 'address',
@@ -135,6 +142,9 @@ app.views.Send = (function() {
 					if (_.isNull(value)) {
 						throw new Error(app.i18n.t('send.fee-rate.invalid-number'));
 					}
+					if (!value.isGreaterThanOrEqualTo(0)) {
+						throw new Error(app.i18n.t('send.fee-rate.greater-than-or-equal-zero'));
+					}
 				},
 				actions: [
 					{
@@ -193,7 +203,6 @@ app.views.Send = (function() {
 				'fetchUnspentTxOutputs',
 				'precalculateMaximumAmount',
 				'toggleFlags',
-				'updateFeeRate',
 				'updateBalance',
 				'updateScoreboard',
 				'toggleDisplayCurrency'
@@ -205,7 +214,6 @@ app.views.Send = (function() {
 			this.listenTo(this.model, 'change:utxo change:exchangeRate', this.updateBalance);
 			this.listenTo(this.model, 'change:amount change:exchangeRate', this.updateAmount);
 			this.listenTo(this.model, 'change:address', this.updateAddress);
-			this.listenTo(this.model, 'change:feeRate', this.updateFeeRate);
 			this.listenTo(this.model, 'change:payment', this.onPaymentChange);
 			this.listenTo(this.model, 'change:utxo change:address change:feeRate', this.precalculateMaximumAmount);
 			this.listenTo(this.model, 'change:exchangeRate', this.updateScoreboard);
@@ -250,16 +258,21 @@ app.views.Send = (function() {
 		},
 		setCache: function(field, value) {
 			var cacheKey = this.getCacheKey(field);
-			return app.cache.set(cacheKey, value);
+			return app.cache.set(cacheKey, value, { expires: false });
 		},
 		clearCache: function(field) {
 			var cacheKey = this.getCacheKey(field);
 			app.cache.clear(cacheKey);
 		},
-		pullFromCache: function() {
-			_.each(['feeRate', 'minRelayFeeRate', 'payment', 'utxo'], function(field) {
-				var value = this.getCache(field);
-				this.model.set(field, value);
+		updateModelFromCache: function() {
+			_.each([
+				'feeRate',
+				'minRelayFeeRate',
+				'payment',
+				'utxo',
+			], function(name) {
+				var value = this.getCache(name);
+				this.model.set(name, value);
 			}, this);
 		},
 		onRender: function() {
@@ -267,6 +280,7 @@ app.views.Send = (function() {
 				address: this.$(':input[name="address"]'),
 				amount: this.$(':input[name="amount"]'),
 				feeRate: this.$(':input[name="feeRate"]'),
+				autoBroadcastDoubleSpend: this.$(':input[name="autoBroadcastDoubleSpend"]'),
 			};
 			this.$buttons = {
 				payment: this.$('.button.payment'),
@@ -281,18 +295,21 @@ app.views.Send = (function() {
 			this.$scoreboard = this.$('.scoreboard');
 			this.$inputAmountSymbol = $('<span/>').addClass('currency-symbol');
 			this.$inputs.amount.after(this.$inputAmountSymbol);
-			this.pullFromCache();
+			this.updateModelFromCache();
 			this.toggleFlags();
 			this.updateBalance();
 			this.updateAddress();
 			this.updateAmount();
-			this.updateFeeRate();
 			this.updateScoreboard();
 			if (this.paymentWasSent()) {
 				this.updateFieldsWithDoubleSpendInfo();
 			}
-			this.loadAdvancedOptions();
+			this.loadCacheableOptions();
 			this.toggleAutoDoubleSpendDelay();
+		},
+		updateAutoBroadcastDoubleSpend: function() {
+			var state = this.model.get('autoBroadcastDoubleSpend');
+			this.$inputs.autoBroadcastDoubleSpend.prop()
 		},
 		toggleAutoDoubleSpendDelay: function() {
 			var $checkbox = this.$(':input[name=autoBroadcastDoubleSpend]');
@@ -421,13 +438,6 @@ app.views.Send = (function() {
 			var format = app.wallet.getCoinSymbol();
 			return app.util.formatNumber((new BigNumber(amount)).dividedBy(rate).toString(), format);
 		},
-		updateFeeRate: function() {
-			if (!this.$inputs) return;
-			var feeRate = this.model.get('feeRate') || 1000;// satoshis/kilobyte
-			// Convert to satoshis/byte for the UI.
-			feeRate = (new BigNumber(feeRate)).dividedBy(1000);
-			this.$inputs.feeRate.val(feeRate.toString());
-		},
 		updateAddress: function() {
 			if (!this.$inputs) return;
 			var address = this.model.get('address');
@@ -481,58 +491,63 @@ app.views.Send = (function() {
 			}, this));
 		},
 		fetchFeeRate: function() {
-			var model = this.model;
-			var setCache = _.bind(this.setCache, this);
 			async.parallel({
 				feeRate: _.bind(app.wallet.getFeeRate, app.wallet),
 				minRelayFeeRate: _.bind(app.wallet.getMinRelayFeeRate, app.wallet),
-			}, function(error, results) {
+			}, _.bind(function(error, results) {
 				if (error) {
 					app.log(error);
 					app.mainView.showMessage(error);
 				} else {
-					_.each(['feeRate', 'minRelayFeeRate'], function(field) {
-						if (!model.get(field)) {
-							model.set(field, results[field]);
-							setCache(field, results[field]);
-						}
-					});
+					_.each(results, function(value, name) {
+						this.model.set(name, value);
+					}, this);
 				}
-			});
+			}, this));
 		},
 		onChangeInputs: function() {
 			this.toggleFlags();
 			this.precalculateMaximumAmount();
 		},
-		saveOption: function(evt) {
+		onChangeCacheableOption: function(evt) {
 			var $target = $(evt.target);
 			var name = $target.attr('name');
+			var value;
 			if ($target.attr('type') === 'checkbox') {
-				this.setCache(name, $target.is(':checked') ? 1 : 0);
+				value = $target.is(':checked') ? 1 : 0;
 			} else {
-				this.setCache(name, $target.val());
+				value = $target.val();
 			}
-			this.toggleAutoDoubleSpendDelay();
+			this.saveCacheableOption(name, value);
 		},
-		loadAdvancedOptions: function() {
-			var options = this.getAdvancedOptions();
-			this.$(':input[name=autoBroadcastDoubleSpend]').prop('checked', options.autoBroadcastDoubleSpend === 1);
-			this.$(':input[name=autoBroadcastDoubleSpendDelay]').val(options.autoBroadcastDoubleSpendDelay);
-			this.$(':input[name=paymentOutput]').val(options.paymentOutput);
+		saveCacheableOption: function(name, value) {
+			this.setCache(name, value);
+			if (name === 'autoBroadcastDoubleSpend') {
+				this.toggleAutoDoubleSpendDelay();
+			}
 		},
-		getAdvancedOptions: function() {
-			return _.chain(['autoBroadcastDoubleSpend', 'autoBroadcastDoubleSpendDelay', 'paymentOutput']).map(function(name) {
+		loadCacheableOptions: function() {
+			_.each(this.cacheableOptions, function(name) {
 				var $input = this.$(':input[name="' + name + '"]');
-				var value = this.getCache(name);
-				if (_.isNull(value)) {
-					if ($input.attr('type') === 'checkbox') {
-						value = $input.is(':checked') ? 1 : 0;
-					} else {
-						value = $input.val();
-					}
+				var value = this.getCacheableOptionValue(name);
+				if ($input.attr('type') === 'checkbox') {
+					$input.prop('checked', !!value);
+				} else {
+					$input.val(value);
 				}
-				return [name, value];
-			}, this).object().value();
+			}, this);
+		},
+		getCacheableOptionValue: function(name) {
+			var value = this.getCache(name);
+			if (_.isNull(value)) {
+				var $input = this.$(':input[name="' + name + '"]');
+				if ($input.attr('type') === 'checkbox') {
+					value = $input.is(':checked') ? 1 : 0;
+				} else {
+					value = $input.val();
+				}
+			}
+			return value;
 		},
 		onPaymentChange: function() {
 			this.toggleFlags();
@@ -602,8 +617,6 @@ app.views.Send = (function() {
 			};
 		},
 		createDoubleSpend: function(payment, options) {
-			// Check the "paymentOutput" option (dropIt vs. replaceWithDust).
-			var advOptions = this.getAdvancedOptions();
 			payment = payment || this.model.get('payment');
 			options = _.defaults(options || {}, {
 				fee: null,
@@ -640,7 +653,8 @@ app.views.Send = (function() {
 			// A zero amount here will send all the funds (less fees) as change to the given address.
 			var amount = 0;
 			var extraOutputs = [];
-			if (advOptions.paymentOutput === 'replaceWithDust') {
+			// Check the "paymentOutput" option (dropIt vs. replaceWithDust).
+			if (this.getCacheableOptionValue('paymentOutput') === 'replaceWithDust') {
 				extraOutputs.push({
 					address: payment.address,
 					value: 1,
@@ -761,9 +775,7 @@ app.views.Send = (function() {
 			}
 		},
 		handleAutoDoubleSpend: function() {
-			var advOptions = this.getAdvancedOptions();
-			var autoBroadcastDoubleSpend = advOptions.autoBroadcastDoubleSpend;
-			if (autoBroadcastDoubleSpend) {
+			if (this.getCacheableOptionValue('autoBroadcastDoubleSpend')) {
 				this.startAutoDoubleSpendTimer();
 			}
 		},
@@ -775,8 +787,7 @@ app.views.Send = (function() {
 			});
 		},
 		getAutoDoubleSpendDelay: function() {
-			var advOptions = this.getAdvancedOptions();
-			return parseInt(advOptions.autoBroadcastDoubleSpendDelay) * 1000;
+			return parseInt(this.getCacheableOptionValue('autoBroadcastDoubleSpendDelay')) * 1000;
 		},
 		cancelAutoDoubleSpendTimer: function() {
 			if (this.autoDoubleSpendVisualTimer) {

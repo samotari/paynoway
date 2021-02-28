@@ -58,6 +58,7 @@ app.lang['en'] = (function() {
 		'send.invalid-amount.greater-than-zero': 'Amount must be greater than zero',
 		'send.fee-rate': 'Miner fee (sats / vbyte)',
 		'send.fee-rate.invalid-number': 'Must be a number',
+		'send.fee-rate.greater-than-or-equal-zero': 'Fee rate must be greater than or equal to zero',
 		'send.auto-broadcast-double-spend': 'Auto-broadcast double-spend',
 		'send.auto-broadcast-double-spend.delay': 'Delay (seconds)',
 		'send.payment-output': 'What to do with payment output',
