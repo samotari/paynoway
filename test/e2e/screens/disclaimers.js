@@ -4,10 +4,13 @@ require('../global-hooks');
 
 describe('#disclaimers', function() {
 
-	const selectors = {
+	let selectors = {
 		text: '.view.disclaimers ul li',
 		acceptButton: '.view.disclaimers .button.accept',
 	};
+
+	selectors.acceptButtonDisabled = selectors.acceptButton + '.disabled';
+	selectors.acceptButtonNotDisabled = selectors.acceptButton + ':not(.disabled)';
 
 	beforeEach(function() {
 		return manager.evaluateInPageContext(function() {
@@ -23,12 +26,37 @@ describe('#disclaimers', function() {
 		return manager.page.waitForSelector(selectors.text);
 	});
 
-	it('accept button exists', function() {
-		return manager.page.waitForSelector(selectors.acceptButton);
+	it('accept button exists and is disabled', function() {
+		return manager.page.waitForSelector(selectors.acceptButtonDisabled);
 	});
 
-	it('pressing accept button closes disclaimers and shows configure view', function() {
-		return manager.page.waitForSelector(selectors.acceptButton).then(() => {
+	describe('while accept button is disabled', function() {
+
+		beforeEach(function() {
+			return manager.page.waitForSelector(selectors.acceptButtonDisabled);
+		});
+
+		it('pressing accept button does nothing', function() {
+			return manager.page.click(selectors.acceptButton).then(() => {
+				const hash = manager.getPageLocationHash();
+				expect(hash).to.equal('disclaimers');
+			});
+		});
+	});
+
+	describe('while accept button is not disabled', function() {
+
+		beforeEach(function() {
+			return manager.evaluateInPageContext(function() {
+				app.mainView.currentView.restartVisualTimer({ delay: 300 });
+			})
+		});
+
+		beforeEach(function() {
+			return manager.page.waitForSelector(selectors.acceptButtonNotDisabled);
+		});
+
+		it('pressing accept button navigates to configure view', function() {
 			return manager.page.click(selectors.acceptButton).then(() => {
 				const hash = manager.getPageLocationHash();
 				expect(hash).to.equal('configure');

@@ -11,6 +11,7 @@ let manager = module.exports = {
 
 	browser: null,
 	page: null,
+	puppeteer: puppeteer,
 
 	prepareStaticWebServer: function() {
 		return new Promise(function(resolve, reject) {
@@ -32,9 +33,10 @@ let manager = module.exports = {
 			args: [
 				// To prevent CORS errors:
 				'--disable-web-security',
+				'--start-fullscreen',
 			],
-			headless: false,
-			slowMo: 50,
+			headless: true,
+			slowMo: 0,
 			timeout: 10000,
 		});
 		return puppeteer.launch(options).then(function(browser) {

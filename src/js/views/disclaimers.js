@@ -16,7 +16,7 @@ app.views.Disclaimers = (function() {
 			this.$acceptButton = this.$('.button.accept');
 			this.startVisualTimer({
 				$timer: this.$('.timer'),
-				delay: 5000,
+				delay: app.config.disclaimers.acceptDelay,
 				fn: _.bind(this.enableAcceptButton, this),
 			});
 		},

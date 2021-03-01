@@ -11,6 +11,11 @@ beforeEach(function() {
 });
 
 beforeEach(function() {
+	const device = manager.puppeteer.devices['Nexus 5'];
+	return manager.page.emulate(device);
+});
+
+beforeEach(function() {
 	return manager.onAppLoaded();
 });
 

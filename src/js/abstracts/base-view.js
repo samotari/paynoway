@@ -18,7 +18,8 @@ app.abstracts.BaseView = (function() {
 				'close',
 				'render',
 				'onResize',
-				'onChangeLocale'
+				'onChangeLocale',
+				'doVisualTimerTick',
 			);
 
 			Backbone.View.prototype.constructor.apply(this, arguments);
@@ -130,6 +131,7 @@ app.abstracts.BaseView = (function() {
 		},
 
 		startVisualTimer: function(options) {
+			this.clearVisualTimer();
 			options = _.defaults(options || {}, {
 				$timer: null,
 				fn: null,
@@ -153,19 +155,43 @@ app.abstracts.BaseView = (function() {
 			if (options.delay <= 0) {
 				throw new Error('Invalid option ("delay"): Must be greater than 0');
 			}
-			var startTime = Date.now();
-			(function updateTimer() {
+			this.visualTimer = {
+				options: options,
+				startTime: Date.now(),
+				interval: setInterval(this.doVisualTimerTick, 50),
+			};
+		},
+
+		restartVisualTimer: function(options) {
+			if (this.visualTimer) {
+				options = _.extend({}, this.visualTimer.options, options);
+				this.startVisualTimer(options);
+			}
+		},
+
+		doVisualTimerTick: function() {
+			if (this.visualTimer) {
+				var options = this.visualTimer.options;
+				var startTime = this.visualTimer.startTime;
 				var elapsedTime = Date.now() - startTime;
 				if (elapsedTime < options.delay) {
 					var timeRemaining = options.delay - elapsedTime;
 					var secondsRemaining = Math.round(timeRemaining / 1000);
 					options.$timer.text(secondsRemaining);
-					return _.delay(updateTimer, 50);
+				} else {
+					this.clearVisualTimer();
+					options.fn();
 				}
+			}
+		},
+
+		clearVisualTimer: function() {
+			if (this.visualTimer) {
+				clearInterval(this.visualTimer.interval);
+				var options = this.visualTimer.options;
 				options.$timer.text('');
-				options.fn();
-				return null;
-			})();
+				this.visualTimer = null;
+			}
 		},
 
 	}, {

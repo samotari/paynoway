@@ -28,6 +28,9 @@ app.config = (function() {
 		},
 		debug: false,
 		defaultLocale: 'en',
+		disclaimers: {
+			acceptDelay: 5000,
+		},
 		jsonRpcTcpSocketClient: {
 			timeout: 10000,
 		},
