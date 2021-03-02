@@ -17,6 +17,20 @@ app.Router = (function() {
 		return _.contains(allowedWhenNotConfigured, routerMethodName);
 	};
 
+	var allowedWhenNetworkDeprecated = [
+		// !! IMPORTANT !!
+		// These are router function names, not URI hashes.
+		'configure',
+		'debug',
+		'disclaimers',
+		'exportWIF',
+	];
+
+	var isAllowedWhenNetworkDeprecated = function(routerMethodName) {
+
+		return _.contains(allowedWhenNetworkDeprecated, routerMethodName);
+	};
+
 	return Backbone.Router.extend({
 
 		routes: {
@@ -37,6 +51,13 @@ app.Router = (function() {
 			app.log('router.execute', name);
 
 			if (!app.isConfigured() && !isAllowedWhenNotConfigured(name)) {
+				// Not yet configured.
+				this.navigate('configure', { trigger: true });
+				// Return false here prevents the current route's handler function from firing.
+				return false;
+			}
+
+			if (app.wallet.networkIsDeprecated() && !isAllowedWhenNetworkDeprecated(name)) {
 				// Not yet configured.
 				this.navigate('configure', { trigger: true });
 				// Return false here prevents the current route's handler function from firing.

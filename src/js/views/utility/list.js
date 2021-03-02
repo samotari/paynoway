@@ -8,6 +8,8 @@ app.views.utility.List = (function() {
 
 	return app.abstracts.BaseView.extend({
 
+		// debug: { prefix: 'List' },
+
 		ItemView: function() {
 			return app.views.utility.ListItem;
 		},
@@ -53,7 +55,7 @@ app.views.utility.List = (function() {
 
 		onRender: function() {
 
-			app.log('List.onRender');
+			this.log('onRender');
 			this.$items = this.getItemContainer();
 			this.$items.on('scroll', this.onScroll);
 			this.$el.toggleClass('has-items', this.hasItems());
@@ -69,7 +71,7 @@ app.views.utility.List = (function() {
 		renderItems: function() {
 
 			if (!this.$items) return;
-			app.log('List.renderItems');
+			this.log('renderItems');
 			this.removeAll();
 			var collection = _.result(this, 'collection');
 			_.each(collection.models, function(model) {
@@ -80,7 +82,7 @@ app.views.utility.List = (function() {
 		addItem: function(model, collection, options) {
 
 			if (!this.$items) return;
-			app.log('List.addItem');
+			this.log('addItem');
 			options = options || {};
 			var ItemView = _.result(this, 'ItemView');
 			var view = new ItemView({ model: model });
@@ -100,7 +102,7 @@ app.views.utility.List = (function() {
 
 		removeItem: function(model) {
 
-			app.log('List.removeItem');
+			this.log('removeItem');
 			var index = _.findIndex(this.itemViews, function(itemView) {
 				return itemView.model.cid === model.cid;
 			});
@@ -112,14 +114,14 @@ app.views.utility.List = (function() {
 
 		removeAll: function() {
 
-			app.log('List.removeAll');
+			this.log('removeAll');
 			_.invoke(this.itemViews, 'close');
 			this.itemViews = [];
 		},
 
 		checkItems: function() {
 
-			app.log('List.checkItems');
+			this.log('checkItems');
 			var collection = _.result(this, 'collection');
 			if (!collection) return;
 			var modelsIdHash = {};
@@ -140,7 +142,7 @@ app.views.utility.List = (function() {
 
 		setElement: function() {
 
-			app.log('List.setElement');
+			this.log('setElement');
 			app.abstracts.BaseView.prototype.setElement.apply(this, arguments);
 			this.checkItems();
 			this.$items = this.getItemContainer();
@@ -151,7 +153,7 @@ app.views.utility.List = (function() {
 
 		onScroll: function() {
 
-			app.log('List.onScroll');
+			this.log('onScroll');
 			this.throttledSaveScrollHeight();
 		},
 
@@ -171,7 +173,7 @@ app.views.utility.List = (function() {
 
 		onClose: function() {
 
-			app.log('List.onClose');
+			this.log('onClose');
 			if (this.$items) {
 				this.$items.off('scroll', this.onScroll);
 			}

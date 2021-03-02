@@ -206,6 +206,10 @@
 }
 .view.send .button.secondary-control.double-spend:before {
 	background-image: url('../images/wink.svg');
+	opacity: .6;
+}
+.view.send .secondary-control.double-spend.has-active-timer:before {
+	opacity: .4;
 }
 .view.send .button.secondary-control.reset:before {
 	background-image: url('../images/cancel.svg');
@@ -217,7 +221,7 @@
 	background-color: rgba(255,0,0,0.8);
 }
 .view.send .button.secondary-control.reset {
-	background-color: #333;
+	background-color: #666;
 }
 .view.send .form-row--amount .form-field.has-1-actions {
 	padding-right: 7.6rem;
@@ -302,7 +306,8 @@
 }
 .view.send .secondary-control.double-spend .timer {
 	position: absolute;
-	left: 1.35rem;
+	left: 1.25rem;
+	font-size: 1.4rem;
 }
 .view.send .form-row-type--checkbox .form-field,
 .view.send .form-row--feeRate .form-field,

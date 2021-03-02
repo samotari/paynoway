@@ -5,3 +5,15 @@
 	font-family: 'Courier';
 	letter-spacing: .2rem;
 }
+.view-configure .network-deprecated-notice,
+.view-configure .network-deprecated-notice-export-wif {
+	display: none;
+	font-size: 1rem;
+	color: orange;
+}
+html.deprecated-network .view-configure .network-deprecated-notice {
+	display: block;
+}
+html.deprecated-network.configured .view-configure .network-deprecated-notice-export-wif {
+	display: block;
+}

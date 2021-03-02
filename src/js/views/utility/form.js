@@ -50,7 +50,7 @@ app.views.utility.Form = (function() {
 		prepareInputs: function() {
 
 			var inputs = _.result(this, 'inputs') || [];
-			this.inputs = _.map(inputs, this.prepareInput, this);
+			this.preparedInputs = _.map(inputs, this.prepareInput, this);
 		},
 
 		prepareInput: function(input) {
@@ -84,7 +84,7 @@ app.views.utility.Form = (function() {
 		serializeData: function() {
 
 			var data = app.abstracts.BaseView.prototype.serializeData.apply(this, arguments);
-			data.inputs = this.inputs;
+			data.inputs = this.preparedInputs;
 			return data;
 		},
 
@@ -282,7 +282,7 @@ app.views.utility.Form = (function() {
 
 		getInputByName: function(name) {
 
-			return _.findWhere(this.inputs, { name: name });
+			return _.findWhere(this.preparedInputs, { name: name });
 		},
 
 		save: function(data) {

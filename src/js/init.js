@@ -11,6 +11,35 @@ app.onDeviceReady(function() {
 	Handlebars.registerPartial('formFieldRow', $('#template-form-field-row').html());
 
 	app.onReady(function() {
+		app.services.coin = _.mapObject(app.config.webServices, function(webServiceConfig) {
+			return new webServiceConfig.constructor({
+				defaultUrls: webServiceConfig.defaultUrls,
+			});
+		});
+	});
+
+	app.onReady(function() {
+		var toggleDeprecatedFlag = function() {
+			$('html').toggleClass('deprecated-network', app.wallet.networkIsDeprecated());
+		};
+		app.settings.on('change:network', toggleDeprecatedFlag);
+		toggleDeprecatedFlag();
+	});
+
+	app.onReady(function() {
+		app.settings.on('change:fiatCurrency', function() {
+			app.wallet.refreshCachedExchangeRate();
+			var displayCurrency = app.settings.get('displayCurrency');
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var coinSymbol = app.wallet.getCoinSymbol();
+			if (displayCurrency !== coinSymbol) {
+				app.settings.set('displayCurrency', fiatCurrency);
+			}
+		});
+		app.wallet.refreshCachedExchangeRate();
+	});
+
+	app.onReady(function() {
 
 		// Initialize the main view.
 		app.mainView = new app.views.Main();
@@ -31,38 +60,6 @@ app.onDeviceReady(function() {
 		if (!app.hasReadDisclaimers()) {
 			app.router.navigate('#disclaimers', { trigger: true });
 		}
-	});
-
-	app.onStart(function(done) {
-		_.delay(function() {
-			try {
-				app.initializeElectrumServices();
-			} catch (error) {
-				app.log(error);
-			}
-			done();
-		}, 50);
-	});
-
-	app.onReady(function() {
-		var initializeElectrumServices = _.debounce(app.initializeElectrumServices, 50);
-		app.settings.on('change:network', function() {
-			initializeElectrumServices();
-		});
-	});
-
-	app.onReady(function() {
-		// Fetches and caches the exchange rate.
-		app.wallet.getExchangeRate(_.noop);
-		app.settings.on('change:fiatCurrency', function() {
-			app.wallet.getExchangeRate(_.noop);
-			var displayCurrency = app.settings.get('displayCurrency');
-			var fiatCurrency = app.settings.get('fiatCurrency');
-			var coinSymbol = app.wallet.getCoinSymbol();
-			if (displayCurrency !== coinSymbol) {
-				app.settings.set('displayCurrency', fiatCurrency);
-			}
-		});
 	});
 
 	app.queues.onStart.resume();

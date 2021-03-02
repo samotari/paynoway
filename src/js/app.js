@@ -4,31 +4,6 @@ var app = app || {};
 
 	'use strict';
 
-	app.initializeElectrumServices = function(options) {
-		options = _.defaults(options || {}, {
-			force: false,
-		});
-		app.services = app.services || {};
-		app.services.electrum = app.services.electrum || {};
-		var network = app.settings.get('network');
-		if (!app.services.electrum[network] || options.force) {
-			var networkConfig = app.wallet.getNetworkConfig(network);
-			options = _.extend({}, options, {
-				servers: networkConfig.electrum.servers,
-				defaultPorts: networkConfig.electrum.defaultPorts,
-				debug: app.debugging(),
-			});
-			var service = app.services.electrum[network] = new app.abstracts.ElectrumService(network, options);
-			service.initialize(function(error) {
-				if (error) {
-					app.log('Failed to initialize ElectrumService', network, error);
-				} else {
-					app.log('ElectrumService initialized!', network);
-				}
-			});
-		}
-	};
-
 	app.hasReadDisclaimers = function() {
 		return app.settings.get('hasReadDisclaimers') === true;
 	};
@@ -47,6 +22,7 @@ var app = app || {};
 
 	app.busy = function(isBusy) {
 		$('html').toggleClass('busy', isBusy !== false);
+		$('#cover-text').text(isBusy ? app.i18n.t('busy-text') : '');
 	};
 
 	app.isCordova = function() {
@@ -59,14 +35,6 @@ var app = app || {};
 
 	app.isConfigured = function() {
 		return app.wallet.isSetup();
-	};
-
-	app.isDeveloperMode = function() {
-		return app.settings.get('developer') === true;
-	};
-
-	app.setDeveloperMode = function(enabled) {
-		app.settings.set('developer', enabled === true);
 	};
 
 	app.isTest = function() {
@@ -90,6 +58,8 @@ var app = app || {};
 			console.log.apply(console, arguments);
 		}
 	};
+
+	app.log = _.bind(app.log, app);
 
 	try {
 		app.info = JSON.parse($('#json-info').html());

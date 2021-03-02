@@ -7,6 +7,7 @@ app.lang['en'] = (function() {
 	return {
 		'self.label': 'English',
 
+		'busy-text': 'Please wait...',
 		'close': 'Close',
 		'copy': 'Copy',
 		'copy-to-clipboard': 'Copy to clipboard',
@@ -20,12 +21,18 @@ app.lang['en'] = (function() {
 		'configure.address-type.p2wpkh-p2sh': 'Segwit (backwards compatible)',
 		'configure.address-type.p2wpkh': 'Segwit (bech32)',
 		'configure.block-explorer': 'Block Explorer',
+		'configure.web-service-type': 'Web Service Type',
+		'configure.web-service-url': 'Web Service URL',
+		'configure.web-service-url.notes': 'Use the default web service instance, or use your own. Learn how to self-host this web service <a href="{{projectUrl}}">here</a>.',
+		'configure.web-service-url.test-success': 'Web service test was successful',
 		'configure.wif': 'Private Key (WIF)',
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
 		'configure.fiatCurrency': 'Fiat Currency',
 		'configure.exchangeRateProvider': 'Exchange Rate Provider',
+		'configure.network-deprecated': 'The selected network is no longer supported by this app.',
+		'configure.network-deprecated.export-wif': 'Please use the button below to export your private key.',
 
 		'debug.title': 'Debug Info',
 		'debug.description': 'Please copy/paste the information shown here when reporting problems to the project\'s issue tracker.',
@@ -46,6 +53,8 @@ app.lang['en'] = (function() {
 
 		'form.field-required': 'This field is required',
 
+		'history.list-header.status': 'status',
+		'history.list-header.type': 'type',
 		'history.empty': 'No transactions yet for this network.',
 
 		'receive.title': 'Receiving Address',
@@ -72,16 +81,18 @@ app.lang['en'] = (function() {
 		'send.utxo.empty': 'Your wallet does not have any unspent tx outputs.',
 		'send.utxo.txid': 'txid',
 		'send.utxo.amount': 'amount',
-		'send.confirm-tx-details': 'Are you sure you want to send {{amount}} {{symbol}} to {{address}} with a miner fee of {{fee}} {{symbol}}?',
-		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee of {{fee}} {{symbol}}?',
+		'send.confirm-tx-details': 'Are you sure you want to broadcast the following transaction?\n\n({{label}})\n\nADDRESS:\n{{address}}\n\nAMOUNT:\n{{amount}} {{symbol}}\n\nFEE:\n{{fee}} {{symbol}}',
+		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee-rate of {{feeRate}} sats per vbyte?',
 		'send.error-missing-inputs': 'TRANSACTION REJECTED:\nMissing inputs. It is possible that the payment transaction was already confirmed :(',
-		'send.reset-confirm': 'Are you sure you want to reset? (The last double-spend tx will be lost)',
+		'send.reset-confirm': 'Are you sure you want to reset the form?',
 		'send.pay': 'Pay',
 		'send.return': 'Return',
 		'send.reset': 'Reset',
 
-		'services.electrum.failed-request.no-connected-servers': 'Unable to complete request - no connected Electrum servers',
 		'services.exchange-rates.unsupported-currency-pair': 'Unsupported currency pair: "{{from}}:{{to}}"',
+
+		'tx-broadcast.success': 'SUCCESS: Transaction was broadcast successfully.',
+		'tx-fetch.success': 'Transaction found',
 
 		'wallet.insuffient-funds': 'Insufficient funds',
 	};

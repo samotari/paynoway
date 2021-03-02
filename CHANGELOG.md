@@ -1,19 +1,23 @@
 # Changelog
 
 * TBD:
-  * New features/improvements:
-    * Easily toggle between fiat currency or coin amounts in send view
-    * Added new config options for fiat currency and exchange rate provider
-    * Added button to re-fetch fee rate in send view
-    * Export WIF as QR code or copy to clipboard
-    * Confirmation prompt before changing wif via camera QR code scan
-    * Added new debug view to help users provide precise app information in their bug reports
-    * Persist user's changes (fee-rate, advanced double-spend options)
-    * Ensure active input field is visible when system keyboard shown
-    * Most buttons now have both an icon and text
-    * UI improvements for smaller screens
-  * Bug fixes:
-    * Fixed "use-all" calculation in send view - this was incorrect in the case of multiple UTXOs
+  * Easily toggle between fiat currency or coin amounts in send view by clicking any displayed amount
+  * Added new config options for fiat currency and exchange rate provider
+  * Export WIF as QR code or copy to clipboard
+  * Confirmation prompt before changing wif via camera QR code scan
+  * Added new debug view to help users provide precise app information in their bug reports
+  * Persist changes to options in send view (e.g fee rate, auto-double spend toggle)
+  * Added button to re-fetch fee rate in send view
+  * Most buttons now have both an icon and text
+  * Ensure active input field is visible when system keyboard shown
+  * Improvements for smaller screens
+  * Removed ElectrumX server communication
+  * App now uses a web service API (esplora or mempool) to perform coin-related functions (e.g broadcast raw transactions). Can use default web service instance, or self-host your own.
+  * Added button to copy the raw transaction (hex) to device clipboard in the history view
+  * Added button to easily re-broadcast transactions in the history view
+  * Multiple web service APIs used simultaneously to broadcast double-spend transactions and to re-broadcast a transaction in the history view
+  * Fixed "use-all" calculation in send view - this was incorrect in the case of multiple UTXOs
+  * Dropped support for Litecoin network. Can export private key to a different wallet application.
 * v1.1.0:
   * Advanced double-spend options:
     * Automatically broadcast double-spend tx (with delay)

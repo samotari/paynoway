@@ -59,6 +59,10 @@ app.models.Transaction = (function() {
 			var rawTx = this.get('rawTx');
 			return bitcoin.Transaction.fromHex(rawTx);
 		},
+		scriptToAddress: function(script, network) {
+			var constants = app.wallet.getNetworkConstants(network);
+			return bitcoin.address.fromOutputScript(script, constants);
+		},
 		txInputToString: function(input) {
 			var txid = Buffer.from(input.hash.reverse()).toString('hex');
 			return txid + ':' + input.index;

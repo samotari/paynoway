@@ -52,7 +52,6 @@
         "ANDROID_SUPPORT_V4_VERSION": "27.+"
       },
       "cordova-plugin-inappbrowser": {},
-      "cz.blocshop.socketsforcordova": {},
       "cordova-android-support-gradle-release": {
         "ANDROID_SUPPORT_VERSION": "26.+"
       },
@@ -84,7 +83,6 @@
     "cordova-plugin-whitelist": "1.3.4",
     "core-js-bundle": "3.9.0",
     "cssnano": "4.1.10",
-    "cz.blocshop.socketsforcordova": "https://github.com/chill117/sockets-for-cordova.git",
     "express": "4.17.1",
     "handlebars": "4.7.7",
     "jquery": "3.5.1",
@@ -97,7 +95,6 @@
     "puppeteer": "7.1.0",
     "qrcode": "1.4.4",
     "serve-static": "1.14.1",
-    "sockets-for-cordova": "git+https://github.com/chill117/sockets-for-cordova.git",
     "uglify-js": "3.12.8",
     "underscore": "1.12.0",
     "ws": "7.4.3"

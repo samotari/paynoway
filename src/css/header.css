@@ -59,3 +59,9 @@ html.configured .header-button.history {
 .header-button.debug {
 	float: right;
 }
+
+html.deprecated-network .header-button.receive,
+html.deprecated-network .header-button.send,
+html.deprecated-network .header-button.history {
+	display: none;
+}

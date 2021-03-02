@@ -10,23 +10,65 @@ app.views.Configure = (function() {
 		template: '#template-configure',
 		className: 'configure',
 		inputs: function() {
+			if (app.wallet.networkIsDeprecated()) {
+				return _.map(app.config.settings, function(setting) {
+					setting = _.clone(setting);
+					setting.readonly = true;
+					if (app.wallet.getWIF()) {
+						switch (setting.name) {
+							case 'blockExplorer':
+							case 'webServiceType':
+							case 'webServiceUrl':
+							case 'fiatCurrency':
+							case 'exchangeRateProvider':
+								setting.visible = false;
+								break;
+							case 'wif':
+								setting.actions = _.where(setting.actions, { name: 'visibility' });
+								break;
+						}
+					} else {
+						switch (setting.name) {
+							case 'network':
+								// Only show the network select.
+								break;
+							default:
+								setting.visible = false;
+								break;
+						}
+					}
+					return setting;
+				});
+			}
 			return app.config.settings;
 		},
 		initialize: function() {
-			app.views.utility.Form.prototype.initialize.apply(this, arguments);
 			this.listenTo(app.settings, 'change', function(key, value) {
 				if (key.indexOf('.') !== -1) {
 					var parts = key.split('.');
-					switch (parts[1]) {
+					switch (_.last(parts)) {
 						case 'addressType':
 						case 'wif':
 							this.updateAddress();
 							this.updateBlockExplorerOptions();
 							break;
+						case 'webServiceType':
+							this.updateWebServiceUrl();
+							break;
 					}
 				}
 			});
 			this.listenTo(app.settings, 'change:network', this.updateInputs);
+			var oldNetwork = app.settings.get('network');
+			this.listenTo(app.settings, 'change:network', _.bind(function() {
+				var newNetwork = app.settings.get('network');
+				if (app.wallet.networkIsDeprecated(newNetwork) || app.wallet.networkIsDeprecated(oldNetwork)) {
+					this.prepareInputs();
+					this.reRender();
+				}
+				oldNetwork = newNetwork;
+			}, this));
+			app.views.utility.Form.prototype.initialize.apply(this, arguments);
 		},
 		onRender: function() {
 			this.$inputs = {
@@ -34,6 +76,7 @@ app.views.Configure = (function() {
 				addressType: this.$(':input[name="addressType"]'),
 				network: this.$(':input[name="network"]'),
 				wif: this.$(':input[name="wif"]'),
+				webServiceUrl: this.$(':input[name="webServiceUrl"]'),
 			};
 			app.views.utility.Form.prototype.onRender.apply(this, arguments);
 		},
@@ -58,10 +101,11 @@ app.views.Configure = (function() {
 			}
 		},
 		updateInputs: function(network) {
-			_.each(['address', 'addressType', 'wif'], function(key) {
+			_.each(['address', 'addressType', 'wif', 'webServiceUrl'], function(key) {
 				this.$inputs[key].val(this.getValue(key, network));
 			}, this);
 			this.updateBlockExplorerOptions();
+			this.updateWebServiceTypeOptions();
 		},
 		updateAddress: function(network) {
 			this.$inputs.address.val(this.getValue('address', network));
@@ -80,6 +124,29 @@ app.views.Configure = (function() {
 				});
 				$select.append($option);
 			});
+		},
+		updateWebServiceTypeOptions: function() {
+			var formData = this.getFormData();
+			var network = formData.network;
+			var $select = this.$('select[name=webServiceType]');
+			$select.empty();
+			_.each(app.wallet.getWebServiceTypes({ network: network }), function(type) {
+				var $option = $('<option>', {
+					value: type,
+					text: type,
+				});
+				$select.append($option);
+			});
+		},
+		updateWebServiceUrl: function() {
+			var formData = this.getFormData();
+			var network = formData.network;
+			var type = formData.webServiceType;
+			var defaultUrl = app.wallet.getWebServiceDefaultUrl(type, network);
+			this.$inputs.webServiceUrl.val(defaultUrl).trigger('change');
+			var input = this.getInputByName('webServiceUrl');
+			var notes = _.result(input, 'notes');
+			this.$('.form-row--webServiceUrl .form-notes').html(notes);
 		},
 		process: function(evt) {
 			var $target = $(evt.target);
@@ -108,21 +175,8 @@ app.views.Configure = (function() {
 			}
 		},
 		save: function(data) {
-			var network = data.network;
-			data = _.chain(data)
-				.omit('network', 'address')
-				.map(function(value, key) {
-					switch (key) {
-						case 'exchangeRateProvider':
-						case 'fiatCurrency':
-							return [ key, value ];
-						default:
-							var path = [network, key].join('.');
-							return [path, value];
-					}
-				}).object().value();
-			data.network = network;
-			app.settings.set(data);
+			data = _.omit(data, 'address');
+			app.wallet.saveSettings(data, data.network);
 		},
 	});
 

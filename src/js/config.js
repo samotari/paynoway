@@ -31,9 +31,6 @@ app.config = (function() {
 		disclaimers: {
 			acceptDelay: 5000,
 		},
-		jsonRpcTcpSocketClient: {
-			timeout: 10000,
-		},
 		networks: {
 			bitcoin: {
 				label: 'Bitcoin (mainnet)',
@@ -47,33 +44,7 @@ app.config = (function() {
 				scriptHash: parseInt('05', 16),// p2sh
 				wif: parseInt('80', 16),
 				messagePrefix: "\u0018Bitcoin Signed Message:\n",
-				electrum: {
-					defaultPorts: {
-						tcp: 50001,
-						ssl: 50002,
-					},
-					servers: [
-						'electrum.vom-stausee.de s t',
-						'electrum.hsmiths.com s t',
-						'helicarrier.bauerj.eu s t',
-						'hsmiths4fyqlw5xw.onion s t',
-						'ozahtqwp25chjdjd.onion s t',
-						'electrum.hodlister.co s',
-						'electrum3.hodlister.co s',
-						'btc.usebsv.com s50006',
-						'fortress.qtornado.com s443 t',
-						'ecdsa.net s110 t',
-						'e2.keff.org s t',
-						'currentlane.lovebitco.in s t',
-						'electrum.jochen-hoenicke.de s50005 t50003',
-						'vps5.hsmiths.com s',
-						'electrum.emzy.de s',
-					],
-				},
-				fees: {
-					minBump: 250,
-					targetNumberOfBlocks: 28,
-				},
+				bumpFeeRate: 1.5,
 				blockExplorers: [
 					{
 						key: 'bitaps.com',
@@ -137,24 +108,7 @@ app.config = (function() {
 				scriptHash: parseInt('c4', 16),// p2sh
 				wif: parseInt('ef', 16),
 				messagePrefix: "\u0018Bitcoin Signed Message:\n",
-				electrum: {
-					defaultPorts: {
-						tcp: 51001,
-						ssl: 51002,
-					},
-					servers: [
-						'testnet.hsmiths.com t53011 s53012',
-						'hsmithsxurybd7uh.onion t53011 s53012',
-						'testnet.qtornado.com s t',
-						'testnet1.bauerj.eu t50001 s50002',
-						'tn.not.fyi t55001 s55002',
-						'bitcoin.cluelessperson.com s t',
-					],
-				},
-				fees: {
-					minBump: 250,
-					targetNumberOfBlocks: 28,
-				},
+				bumpFeeRate: 1.5,
 				blockExplorers: [
 					{
 						key: 'bitaps.com',
@@ -202,67 +156,55 @@ app.config = (function() {
 				scriptHash: parseInt('32', 16),// p2sh
 				wif: parseInt('b0', 16),
 				messagePrefix: "\u0018Litecoin Signed Message:\n",
-				electrum: {
-					defaultPorts: {
-						tcp: 50001,
-						ssl: 50002,
-					},
-					servers: [
-						'ex.lug.gs s444',
-						'electrum-ltc.bysh.me s t',
-						'electrum-ltc.ddns.net s t',
-						'electrum-ltc.wilv.in s t',
-						'electrum.cryptomachine.com p1000 s t',
-						'electrum.ltc.xurious.com s t',
-						'eywr5eubdbbe2laq.onion s50008 t50007',
-					],
+				deprecated: true,
+			},
+		},
+		webServices: {
+			'mempool': {
+				full: true,
+				constructor: app.services.Mempool,
+				projectUrl: 'https://github.com/mempool/mempool',
+				defaultUrls: {
+					'bitcoin': 'https://mempool.space',
+					'bitcoinTestnet': 'https://mempool.space/testnet',
 				},
-				fees: {
-					minBump: 250,
-					targetNumberOfBlocks: 28,
+			},
+			'esplora': {
+				full: true,
+				constructor: app.services.Esplora,
+				projectUrl: 'https://github.com/Blockstream/esplora',
+				defaultUrls: {
+					'bitcoin': 'https://blockstream.info',
+					'bitcoinTestnet': 'https://blockstream.info/testnet',
 				},
-				blockExplorers: [
-					{
-						key: 'bitaps.com',
-						label: 'bitaps.com',
-						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
-						url: {
-							tx: 'https://ltc.bitaps.com/{{txid}}',
-						},
-					},
-					{
-						key: 'blockchair.com',
-						label: 'blockchair.com',
-						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
-						url: {
-							tx: 'https://blockchair.com/litecoin/transaction/{{txid}}',
-						},
-					},
-					{
-						key: 'blockcypher.com',
-						label: 'blockcypher.com',
-						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
-						url: {
-							tx: 'https://live.blockcypher.com/ltc/tx/{{txid}}',
-						},
-					},
-					{
-						key: 'btc.com',
-						label: 'btc.com',
-						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh'],
-						url: {
-							tx: 'https://ltc.btc.com/{{txid}}',
-						},
-					},
-					{
-						key: 'chain.so',
-						label: 'chain.so',
-						supportedAddressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
-						url: {
-							tx: 'https://chain.so/tx/LTC/{{txid}}',
-						},
-					},
-				],
+			},
+			'bitapps': {
+				constructor: app.services.BitApps,
+				defaultUrls: {
+					'bitcoin': 'https://api.bitaps.com/btc/mainnet',
+					'bitcoinTestnet': 'https://api.bitaps.com/btc/testnet',
+				},
+			},
+			'blockchair': {
+				constructor: app.services.BlockChair,
+				defaultUrls: {
+					'bitcoin': 'https://api.blockchair.com/bitcoin',
+					'bitcoinTestnet': 'https://api.blockchair.com/bitcoin/testnet',
+				},
+			},
+			'blockcypher': {
+				constructor: app.services.BlockCypher,
+				defaultUrls: {
+					'bitcoin': 'https://api.blockcypher.com/v1/btc',
+					'bitcoinTestnet': 'https://api.blockcypher.com/v1/bcy/test',
+				},
+			},
+			'smartbit': {
+				constructor: app.services.SmartBit,
+				defaultUrls: {
+					'bitcoin': 'https://api.smartbit.com.au',
+					'bitcoinTestnet': 'https://testnet-api.smartbit.com.au',
+				},
 			},
 		},
 		numberFormats: {
@@ -277,16 +219,6 @@ app.config = (function() {
 				decimals: 2,
 			},
 			'BTC': {
-				BigNumber: {
-					FORMAT: {
-						decimalSeparator: '.',
-						groupSeparator: ',',
-						groupSize: 3,
-					},
-				},
-				decimals: 8,
-			},
-			'LTC': {
 				BigNumber: {
 					FORMAT: {
 						decimalSeparator: '.',
@@ -339,26 +271,6 @@ app.config = (function() {
 				default: 'bitcoin',
 			},
 			{
-				name: 'blockExplorer',
-				label: function() {
-					return app.i18n.t('configure.block-explorer');
-				},
-				visible: true,
-				type: 'select',
-				options: function() {
-					var network = app.wallet.getNetwork();
-					var addressType = app.wallet.getSetting('addressType');
-					var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
-					return _.map(blockExplorers, function(blockExplorer) {
-						return _.pick(blockExplorer, 'key', 'label');
-					});
-				},
-				default: function() {
-					var networkConfig = app.wallet.getNetworkConfig();
-					return _.first(networkConfig.blockExplorers).key;
-				},
-			},
-			{
 				name: 'wif',
 				label: function() {
 					return app.i18n.t('configure.wif');
@@ -371,12 +283,14 @@ app.config = (function() {
 						try {
 							keyPair = app.wallet.getKeyPair(data.network, value);
 						} catch (error) {
+							app.log(error);
 							throw new Error(app.i18n.t('configure.wif.invalid'));
 						}
 						switch (data.addressType) {
 							case 'p2wpkh-p2sh':
 							case 'p2wpkh':
 								if (!keyPair.compressed) {
+									app.log(error);
 									throw new Error(app.i18n.t('configure.wif.segwit-uncompressed-invalid'));
 								}
 								break;
@@ -387,8 +301,8 @@ app.config = (function() {
 					{
 						name: 'visibility',
 						fn: function(value, cb) {
-							cb(null, value);
 							app.router.navigate('#export-wif', { trigger: true });
+							cb(null, value);
 						},
 					},
 					{
@@ -483,6 +397,28 @@ app.config = (function() {
 				readonly: true,
 			},
 			{
+				name: 'blockExplorer',
+				label: function() {
+					return app.i18n.t('configure.block-explorer');
+				},
+				visible: true,
+				type: 'select',
+				options: function() {
+					var network = app.wallet.getNetwork();
+					var addressType = app.wallet.getSetting('addressType');
+					var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
+					return _.map(blockExplorers, function(blockExplorer) {
+						return _.pick(blockExplorer, 'key', 'label');
+					});
+				},
+				default: function() {
+					var networkConfig = app.wallet.getNetworkConfig();
+					if (networkConfig.blockExplorers) {
+						return _.first(networkConfig.blockExplorers).key
+					}
+				},
+			},
+			{
 				name: 'fiatCurrency',
 				label: function() {
 					return app.i18n.t('configure.fiatCurrency');
@@ -528,6 +464,72 @@ app.config = (function() {
 					}, cb);
 				},
 			},
+			{
+				name: 'webServiceType',
+				label: function() {
+					return app.i18n.t('configure.web-service-type');
+				},
+				visible: true,
+				type: 'select',
+				options: function() {
+					return _.map(app.wallet.getWebServiceTypes(), function(type) {
+						return { key: type, label: type };
+					});
+				},
+				default: function() {
+					return _.first(app.wallet.getWebServiceTypes());
+				},
+			},
+			{
+				name: 'webServiceUrl',
+				label: function() {
+					return app.i18n.t('configure.web-service-url');
+				},
+				notes: function() {
+					var projectUrl = app.wallet.getWebServiceProjectUrl();
+					return app.i18n.t('configure.web-service-url.notes', {
+						projectUrl: projectUrl,
+					});
+				},
+				visible: true,
+				type: 'text',
+				default: function() {
+					return app.wallet.getWebServiceDefaultUrl();
+				},
+				actions: [
+					{
+						name: 'test',
+						fn: function(value, cb) {
+							var formData = this.getFormData();
+							var type = formData.webServiceType;
+							var network = formData.network;
+							var url = value;
+							try {
+								var service = new app.config.webServices[type].constructor({ url: url });
+							} catch (error) {
+								app.log(error);
+								return cb(error);
+							}
+							service.fetchMinRelayFeeRate(function(error) {
+								if (!error) {
+									app.mainView.showMessage(app.i18n.t('configure.web-service-url.test-success'));
+								}
+								cb(error, null);
+							});
+						},
+					},
+					{
+						name: 'undo',
+						fn: function(value, cb) {
+							var formData = this.getFormData();
+							var type = formData.webServiceType;
+							var network = formData.network;
+							var value = app.wallet.getWebServiceDefaultUrl(type, network);
+							cb(null, value);
+						},
+					},
+				],
+			},
 		],
 		touch: {
 			quick: {
@@ -544,6 +546,15 @@ app.config = (function() {
 				minSpeed: 0.005,// % of screen width / millisecond
 				minMovementX: 25,// % screen width
 				tolerance: 1,// % screen width
+			},
+		},
+		wallet: {
+			transactions: {
+				refresh: {
+					concurrency: 1,
+					delay: 1000,
+					interval: 30000,
+				},
 			},
 		},
 	};

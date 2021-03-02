@@ -124,4 +124,11 @@
 	position: relative;
 	left: -2.25rem;
 	top: 0;
+	display: none;
+}
+.secondary-control .timer.active {
+	display: inline;
+}
+.button.secondary-control.has-active-timer:before {
+	opacity: .4;
 }

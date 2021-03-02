@@ -71,7 +71,7 @@ app.util = (function() {
 
 			if (!number) return '';
 			format = format || 'default';
-			var config = this.getNumberFormatConfig(format);
+			var config = app.util.getNumberFormatConfig(format);
 			BigNumber.config(config.BigNumber);
 			try {
 				number = (new BigNumber(number)).toFormat(config.decimals);
@@ -85,6 +85,29 @@ app.util = (function() {
 		getNumberFormatConfig: function(format) {
 
 			return _.defaults(app.config.numberFormats[format] || {}, app.config.numberFormats['default']);
+		},
+
+		convertToFiatAmount: function(amount) {
+
+			var rate = app.wallet.getExchangeRateFromCache();
+			if (!rate) return null;
+			var numberFormat = app.util.getNumberFormatConfig(app.settings.get('fiatCurrency'));
+			return (new BigNumber(amount)).times(rate).decimalPlaces(numberFormat.decimals).toString();
+		},
+
+		convertToCoinAmount: function(amount) {
+
+			var rate = app.wallet.getExchangeRateFromCache();
+			if (!rate) return null;
+			var numberFormat = app.util.getNumberFormatConfig(app.wallet.getCoinSymbol());
+			return (new BigNumber(amount)).dividedBy(rate).decimalPlaces(numberFormat.decimals).toString();
+		},
+
+		formatDisplayCurrencyAmount: function(amount) {
+
+			if (_.isNull(amount)) return '?';
+			var displayCurrency = app.settings.get('displayCurrency');
+			return app.util.formatNumber(amount, displayCurrency);
 		},
 
 		parsePaymentRequest: function(payReq) {

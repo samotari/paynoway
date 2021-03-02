@@ -33,9 +33,10 @@ let manager = module.exports = {
 			args: [
 				// To prevent CORS errors:
 				'--disable-web-security',
+				// Set full-screen to prevent styling issues:
 				'--start-fullscreen',
 			],
-			headless: true,
+			headless: false,
 			slowMo: 0,
 			timeout: 10000,
 		});
@@ -87,97 +88,6 @@ let manager = module.exports = {
 		const pageUrl = manager.page.url();
 		const parts = pageUrl.indexOf('#') !== -1 ? pageUrl.split('#') : [];
 		return parts[1] || '';
-	},
-
-	electrumServer: function(port) {
-		let wss = new WebSocket.Server({
-			port: port,
-		});
-		let sockets = [];
-		wss.on('connection', function(socket) {
-			sockets.push(socket);
-			const send = socket.send;
-			socket.send = function(message) {
-				send.apply(socket, arguments);
-			};
-			socket.on('message', function(message) {
-				let data;
-				try {
-					data = JSON.parse(message);
-				} catch (error) {
-					console.log(error);
-				}
-				switch (data.method) {
-					case 'server.peers.subscribe':
-						socket.send(JSON.stringify({
-							jsonrpc: '2.0',
-							method: data.method,
-							result: [],
-							id: data.id,
-						}));
-						break;
-					case 'server.ping':
-					case 'blockchain.scripthash.unsubscribe':
-						socket.send(JSON.stringify({
-							jsonrpc: '2.0',
-							method: data.method,
-							result: null,
-							id: data.id,
-						}));
-						break;
-				}
-			});
-		});
-		return {
-			wss,
-			sockets,
-			waitForClient: function() {
-				return new Promise(function(resolve, reject) {
-					let socket;
-					async.until(function() {
-						socket = _.last(sockets);
-						return !!socket;
-					}, function(next) {
-						_.delay(next, 5);
-					}, function(error) {
-						if (error) return reject(error);
-						resolve(socket);
-					});
-				});
-			},
-			mock: {
-				// Put mock helper functions here.
-				// For example, if we need to mock UTXOs for a given address/scripthash.
-			},
-			close: function() {
-				return new Promise(function(resolve, reject) {
-					wss.close(function(error) {
-						if (error) return reject(error);
-						resolve();
-					});
-				});
-			},
-		};
-	},
-
-	connectElectrumClient: function(name, servers) {
-		manager.socketServer.sockets = [];
-		return manager.evaluateInPageContext(function(name, servers) {
-			app.paymentMethods[name].electrum.servers = servers;
-			app.initializeElectrumServices({
-				force: true,
-			});
-		}, [name, servers]).then(function() {
-			return manager.page.waitForFunction(function(name) {
-				return !!app.services.electrum[name];
-			}, {}/* options */, [name]).then(function() {
-				return manager.evaluateInPageContext(function(name) {
-					app.services.electrum[name].connectClients(function() {});
-				}, [name]).then(function() {
-					return manager.socketServer.waitForClient();
-				});
-			})
-		});
 	},
 
 	screenshot: function(name) {

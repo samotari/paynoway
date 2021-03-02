@@ -8,6 +8,8 @@ app.views.Main = (function() {
 
 	return app.abstracts.BaseView.extend({
 
+		// debug: { prefix: 'Main' },
+
 		el: 'body',
 
 		events: {
@@ -53,7 +55,7 @@ app.views.Main = (function() {
 
 		renderView: function(name, options) {
 
-			app.log('mainView.renderView', name);
+			this.log('renderView', name);
 			this.closeCurrentView();
 
 			var $el = $('<div/>', {
@@ -100,7 +102,7 @@ app.views.Main = (function() {
 
 		onDocumentClick: function(evt) {
 
-			app.log('onDocumentClick');
+			this.log('onDocumentClick');
 			var $target = $(evt.target);
 
 			if (!$target.is(':input')) {
@@ -117,7 +119,7 @@ app.views.Main = (function() {
 
 		onTouchStart: function(evt) {
 
-			app.log('onTouchStart');
+			this.log('onTouchStart');
 			var $target = $(evt.target);
 			this.interaction = {
 				$target: $target,
@@ -130,7 +132,7 @@ app.views.Main = (function() {
 
 		onLongTouchStart: function(evt) {
 
-			app.log('onLongTouchStart');
+			this.log('onLongTouchStart');
 			// Trigger a custom event.
 			$(evt.target).trigger('longtouchstart').addClass('longtouch');
 		},
@@ -179,7 +181,7 @@ app.views.Main = (function() {
 
 		onTouchEnd: function(evt) {
 
-			app.log('onTouchEnd');
+			this.log('onTouchEnd');
 			if (this.interaction) {
 				var $target = $(evt.target);
 				clearTimeout(this.interaction.longTouchStartTimeout);
@@ -230,20 +232,20 @@ app.views.Main = (function() {
 
 		onSwipe: function(evt, velocity) {
 
-			app.log('onSwipe');
+			this.log('onSwipe');
 			// Trigger a custom event.
 			$(evt.target).trigger('swipe', [velocity]);
 		},
 
 		onTouchCancel: function(evt) {
 
-			app.log('onTouchCancel');
+			this.log('onTouchCancel');
 			this.resetInteraction(evt);
 		},
 
 		onMouseDown: function(evt) {
 
-			app.log('onMouseDown');
+			this.log('onMouseDown');
 			// Left-mouse button only.
 			if (!this.isTouchDevice && evt && evt.which === 1) {
 				this.onTouchStart(evt);
@@ -252,7 +254,7 @@ app.views.Main = (function() {
 
 		onMouseMove: function(evt) {
 
-			app.log('onMouseMove');
+			this.log('onMouseMove');
 			if (!this.isTouchDevice) {
 				this.onTouchMove(evt);
 			}
@@ -260,7 +262,7 @@ app.views.Main = (function() {
 
 		onMouseUp: function(evt) {
 
-			app.log('onMouseUp');
+			this.log('onMouseUp');
 			// Left-mouse button only.
 			if (!this.isTouchDevice && evt && evt.which === 1) {
 				this.onTouchEnd(evt);
@@ -269,7 +271,7 @@ app.views.Main = (function() {
 
 		onMouseLeave: function(evt) {
 
-			app.log('onMouseLeave');
+			this.log('onMouseLeave');
 			if (!this.isTouchDevice) {
 				this.onTouchEnd(evt);
 			}
@@ -277,7 +279,7 @@ app.views.Main = (function() {
 
 		onClickAnchor: function(evt) {
 
-			app.log('onClickAnchor');
+			this.log('onClickAnchor');
 			if (evt && evt.preventDefault) {
 				evt.preventDefault();
 			}

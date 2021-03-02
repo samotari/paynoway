@@ -27,10 +27,51 @@ app.wallet = (function() {
 			return this.getSetting('wif', network);
 		},
 
-		getSetting: function(key, network) {
+		getSettingKeyPath: function(key, network) {
 			network = network || this.getNetwork();
-			var path = [network, key].join('.');
-			return app.settings.get(path);
+			var pathParts = [];
+			switch (key) {
+				case 'exchangeRateProvider':
+				case 'fiatCurrency':
+				case 'network':
+					// Don't namespace these settings.
+					break;
+				case 'webServiceUrl':
+					// This one is special - namespace with network and web service type.
+					var webServiceType = this.getSetting('webServiceType', network);
+					pathParts.push(network);
+					pathParts.push(webServiceType);
+					break;
+				default:
+					// The rest should be namespaced with the network.
+					pathParts.push(network);
+					break;
+			}
+			pathParts.push(key);
+			return pathParts.join('.');
+		},
+
+		saveSettings: function(data, network) {
+			data = _.chain(data).map(function(value, key) {
+				var path = this.getSettingKeyPath(key, network);
+				return [ path, value ];
+			}, this).object().value();
+			app.settings.set(data);
+		},
+
+		saveSetting: function(key, value, network) {
+			var path = this.getSettingKeyPath(key, network);
+			app.settings.set(path, value);
+		},
+
+		getSetting: function(key, network) {
+			var path = this.getSettingKeyPath(key, network);
+			var value = app.settings.get(path);
+			if (_.isUndefined(value) || _.isNull(value)) {
+				// Fallback to the un-prefixed configuration's default value.
+				value = app.settings.getDefaultValue(key);
+			}
+			return value;
 		},
 
 		getNetwork: function() {
@@ -48,13 +89,50 @@ app.wallet = (function() {
 			return _.pick(networkConfig, 'bech32', 'bip32', 'messagePrefix', 'pubKeyHash', 'scriptHash', 'wif');
 		},
 
+		networkIsDeprecated: function(network) {
+			var networkConfig = this.getNetworkConfig(network);
+			return networkConfig && networkConfig.deprecated === true;
+		},
+
 		getCoinSymbol: function(network) {
 			return this.getNetworkConfig(network).symbol;
 		},
 
-		electrumService: function() {
-			var network = this.getNetwork();
-			return app.services && app.services.electrum && network && app.services.electrum[network] || null;
+		getWebServiceTypes: function(options) {
+			options = _.defaults(options || {}, {
+				full: true,
+				network: this.getNetwork(),
+			});
+			return _.chain(app.config.webServices).map(function(webServiceConfig, type) {
+				if (options.full === true && webServiceConfig.full !== true) {
+					return null;
+				}
+				if (options.network && _.isUndefined(webServiceConfig.defaultUrls[options.network])) {
+					return null;
+				}
+				return type;
+			}).compact().value();
+		},
+
+		getWebServiceDefaultUrl: function(type, network) {
+			var webServiceConfig = this.getWebServiceConfig(type, network);
+			return webServiceConfig && webServiceConfig.defaultUrls[network] || null;
+		},
+
+		getWebServiceProjectUrl: function(type, network) {
+			var webServiceConfig = this.getWebServiceConfig(type, network);
+			return webServiceConfig && webServiceConfig.projectUrl || null;
+		},
+
+		getWebServiceConfig: function(type, network) {
+			network = network || this.getNetwork();
+			type = type || app.wallet.getSetting('webServiceType', network);
+			return app.config.webServices[type] || null;
+		},
+
+		getWebService: function() {
+			var type = this.getSetting('webServiceType');
+			return app.services.coin[type] || null;
 		},
 
 		getBlockExplorers: function(network, addressType) {
@@ -84,17 +162,47 @@ app.wallet = (function() {
 			return template(data);
 		},
 
-		getExchangeRate: function(done) {
+		getExchangeRateFromCache: function() {
+			var cacheKey = this.getExchangeRateCacheKey();
+			return app.cache.get(cacheKey);
+		},
+
+		refreshCachedExchangeRate: function() {
+			this.getExchangeRate({ refetch: true }, function(error) {
+				if (error) {
+					app.log(error);
+				} else {
+					app.wallet.trigger('change:exchangeRate');
+				}
+			});
+		},
+
+		getExchangeRate: function(options, done) {
+			if (_.isFunction(options)) {
+				done = options;
+				options = null;
+			}
+			options = this.getExchangeRatesServiceOptions(options);
+			app.services.exchangeRates.get(options, done);
+		},
+
+		getExchangeRatesServiceOptions: function(options) {
 			var exchangeRateProvider = app.settings.get('exchangeRateProvider');
 			var fiatCurrency = app.settings.get('fiatCurrency');
 			var networkConfig = this.getNetworkConfig();
-			app.services.exchangeRates.get({
+			return _.extend({}, {
 				currencies: {
 					from: networkConfig.symbol,
 					to: fiatCurrency,
 				},
 				provider: exchangeRateProvider,
-			}, done);
+			}, options || {});
+		},
+
+		getExchangeRateCacheKey: function() {
+			var options = this.getExchangeRatesServiceOptions();
+			options = _.defaults(options || {}, app.services.exchangeRates.defaultOptions);
+			return app.services.exchangeRates.getCacheKey('rate', options);
 		},
 
 		getOutputScriptHash: function(address, constants) {
@@ -138,68 +246,91 @@ app.wallet = (function() {
 				cb = _.noop;
 			}
 			try {
-				var electrumService = _.result(this, 'electrumService');
-				if (!electrumService) return cb(new Error('Electrum service unavailable'));
+				var webService = this.getWebService();
 				var address = this.getAddress();
 				app.log('wallet.getUnspentTxOutputs', address);
-				var constants = this.getNetworkConstants();
-				var outputScriptHash = this.getOutputScriptHash(address, constants);
-				electrumService.cmd('blockchain.scripthash.listunspent', [outputScriptHash], function(error, result) {
-					if (error && error.message === 'unknown method "blockchain.scripthash.listunspent"') {
-						return electrumService.cmd('blockchain.address.listunspent', [address], cb);
-					}
-					cb(error, result);
-				});
+				webService.fetchUnspentTxOutputs(address, function(error, result) {
+					if (error) return cb(error);
+					app.log('wallet.getUnspentTxOutputs', address, result);
+					cb(null, result);
+				})
 			} catch (error) {
 				return cb(error);
 			}
 		},
 
-		getMinRelayFeeRate: function(cb) {
-			var electrumService = _.result(this, 'electrumService');
-			if (!electrumService) return cb(new Error('Electrum service unavailable'));
-			var toBaseUnit = _.bind(this.toBaseUnit, this);
-			electrumService.cmd('blockchain.relayfee', [], function(error, result) {
+		getBumpFeeRate: function() {
+			var networkConfig = this.getNetworkConfig();
+			return networkConfig.bumpFeeRate;
+		},
+
+		fetchMinRelayFeeRate: function(cb) {
+			var webService = this.getWebService();
+			webService.fetchMinRelayFeeRate(function(error, result) {
 				if (error) return cb(error);
-				// satoshis/kilobyte
-				var minRelayFee = toBaseUnit(result);
-				cb(null, minRelayFee);
+				cb(null, result);
 			});
 		},
 
-		getFeeRate: function(cb) {
-			var electrumService = _.result(this, 'electrumService');
-			if (!electrumService) return cb(new Error('Electrum service unavailable'));
-			var network = this.getNetwork();
-			var targetNumberOfBlocks = app.config.networks[network].fees.targetNumberOfBlocks;
-			var toBaseUnit = _.bind(this.toBaseUnit, this);
-			electrumService.cmd('blockchain.estimatefee', [targetNumberOfBlocks], function(error, result) {
-				if (error) return cb(error);
-				// satoshis/kilobyte
-				var feeRate = toBaseUnit(result);
-				cb(null, feeRate);
+		broadcastRawTx: function(rawTx, options, cb) {
+			options = _.defaults(options || {}, {
+				// Whether to broadcast "widely" - ie. to broadcast to all possible web services.
+				wide: false,
 			});
-		},
-
-		broadcastRawTx: function(rawTx, cb) {
-			var electrumService = _.result(this, 'electrumService');
-			if (!electrumService) return cb(new Error('Electrum service unavailable'));
-			electrumService.cmd('blockchain.transaction.broadcast', [rawTx], function(error, result) {
-				if (error) return cb(error);
-				// Success.
-				var txid = result[1];
-				cb(null, txid);
-			});
+			var services;
+			if (options.wide) {
+				// Push the transaction to all known web services that support it.
+				services = app.services.coin;
+			} else {
+				// Push the transaction to the primary web service only.
+				services = [ this.getWebService() ];
+			}
+			async.map(services,
+				function(service, next) {
+					try {
+						service.broadcastRawTx(rawTx, function(error, txid) {
+							if (error) {
+								app.log(error);
+							}
+							next(null, {
+								error: error,
+								txid: txid,
+								service: service.name,
+							});
+						});
+					} catch (error) {
+						app.log(error);
+						next();
+					}
+				},
+				function(error, results) {
+					if (error) return cb(error);
+					app.log(results);
+					if (results.length === 1) {
+						var result = results[0];
+						cb(result.error, result.txid);
+					} else {
+						var successes = _.filter(results, function(result) {
+							return !!result.txid;
+						});
+						var failures = _.filter(results, function(result) {
+							return !!result.error;
+						});
+						if (failures.length > successes.length) {
+							return cb(failures[0].error);
+						}
+						cb(null, successes[0].txid);
+					}
+				}
+			);
 		},
 
 		getTx: function(txHash, cb) {
-			var electrumService = _.result(this, 'electrumService');
-			if (!electrumService) return cb(new Error('Electrum service unavailable'));
-			electrumService.cmd('blockchain.transaction.get', [txHash, true], cb);
+			var webService = this.getWebService();
+			webService.fetchTx(txHash, cb);
 		},
 
 		buildTx: function(value, receivingAddress, utxo, options) {
-
 			options = _.defaults(options || {}, {
 				// Exact fee for this tx:
 				fee: 0,
@@ -210,30 +341,35 @@ app.wallet = (function() {
 				// Extra outputs:
 				extraOutputs: null,
 			});
-
 			var keyPair = this.getKeyPair();
 			var changeAddress = this.getAddress();
 			var addressType = this.getSetting('addressType');
-			var p2wpkh = bitcoin.payments.p2wpkh({
-				network: keyPair.network,
-				pubkey: keyPair.publicKey,
-			});
-			var p2sh = bitcoin.payments.p2sh({
-				network: keyPair.network,
-				redeem: p2wpkh,
-			});
+			var payment;
+			switch (addressType) {
+				case 'p2wpkh':
+					payment = bitcoin.payments.p2wpkh({
+						network: keyPair.network,
+						pubkey: keyPair.publicKey,
+					});
+					break;
+				case 'p2wpkh-p2sh':
+					payment = bitcoin.payments.p2sh({
+						network: keyPair.network,
+						redeem: p2wpkh,
+					});
+					break;
+			}
 			var fee = Math.ceil(options.fee || 0);
-			var txb = new bitcoin.TransactionBuilder(keyPair.network);
+			var psbt = new bitcoin.Psbt({ network: keyPair.network });
 			var utxoValueConsumed;
 			var utxoToConsume;
-
 			if (options.inputs) {
 				// Use only specific utxo as inputs.
 				utxoToConsume = _.filter(utxo, function(output) {
 					return !!_.find(options.inputs, function(input) {
 						var txHash = Buffer.from(input.hash && input.hash.data || input.hash).reverse().toString('hex');
 						var outputIndex = input.index;
-						return txHash === output.tx_hash && outputIndex === output.tx_pos;
+						return txHash === output.txid && outputIndex === output.vout;
 					});
 				});
 				utxoValueConsumed = _.reduce(utxoToConsume, function(memo, output) {
@@ -253,53 +389,65 @@ app.wallet = (function() {
 					return output;
 				}).compact().value();
 			}
-
 			var changeValue = (utxoValueConsumed - value) - fee;
 			if (changeValue < 0) {
 				throw new Error(app.i18n.t('wallet.insuffient-funds'));
 			}
-
 			// Add unspent outputs as inputs to the new tx.
 			_.each(utxoToConsume, function(output) {
-				var txid = output.tx_hash;
-				var n = output.tx_pos;
-				if (addressType === 'p2wpkh') {
-					// p2wpkh:
-					txb.addInput(txid, n, options.sequence || null, p2wpkh.output);
-				} else {
-					// p2pkh and p2wpkh-p2sh:
-					txb.addInput(txid, n, options.sequence || null);
+				var input = {
+					hash: output.txid,
+					index: output.vout,
+					sequence: options.sequence,
+				};
+				switch (addressType) {
+					case 'p2pkh':
+						var outputTxHex = app.wallet.transactions.get(output.txid);
+						if (!outputTxHex) {
+							throw new Error('Missing output transaction hash for utxo with txid', output.txid);
+						}
+						input.nonWitnessUtxo = Buffer.from(outputTxHex, 'hex');
+						break;
+					case 'p2wpkh':
+					case 'p2wpkh-p2sh':
+						input.witnessUtxo = {
+							script: payment.output,
+							value: output.value,
+						};
+						break;
 				}
+				psbt.addInput(input);
 			});
-
 			if (changeAddress === receivingAddress) {
-				txb.addOutput(receivingAddress, value + changeValue);
+				psbt.addOutput({
+					address: receivingAddress,
+					value: value + changeValue
+				});
 			} else {
-				txb.addOutput(receivingAddress, value);
-				txb.addOutput(changeAddress, changeValue);
-			}
-
-			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
-				_.each(options.extraOutputs, function(extraOutput) {
-					txb.addOutput(extraOutput.address, extraOutput.value);
+				psbt.addOutput({
+					address: receivingAddress,
+					value: value
+				});
+				psbt.addOutput({
+					address: changeAddress,
+					value: changeValue
 				});
 			}
-
+			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
+				_.each(options.extraOutputs, function(extraOutput) {
+					psbt.addOutput({
+						address: extraOutput.address,
+						value: extraOutput.value
+					});
+				});
+			}
 			// Sign each input.
 			_.each(utxoToConsume, function(output, index) {
-				if (addressType === 'p2pkh') {
-					// p2pkh:
-					txb.sign(index, keyPair);
-				} else if (addressType === 'p2wpkh-p2sh') {
-					// p2wpkh-p2sh:
-					txb.sign(index, keyPair, p2sh.redeem.output, null, output.value);
-				} else {
-					// p2wpkh:
-					txb.sign(index, keyPair, null, null, output.value);
-				}
+				psbt.signInput(index, keyPair);
+				psbt.validateSignaturesOfInput(index);
 			});
-
-			return txb.build();
+			psbt.finalizeAllInputs();
+			return psbt.extractTransaction();
 		},
 
 		toBaseUnit: function(value) {
@@ -327,6 +475,9 @@ app.wallet = (function() {
 		},
 
 		transactions: {
+			get: function(txid) {
+				return this.collection.findWhere({ txid: txid });
+			},
 			save: function(data) {
 				var model = this.collection.findWhere({ txid: data.txid });
 				if (model) {
@@ -370,39 +521,24 @@ app.wallet = (function() {
 					}
 				});
 			},
-			doStatusUpdates: function(done) {
-				var refreshTx = _.bind(this.refreshTx, this);
-				var queue = async.queue(function(task, next) {
-					refreshTx(task.model, next);
-				}, 3/* concurrency */);
-				var models = this.collection.where({ status: 'pending' });
-				_.each(models, function(model) {
-					queue.push({ model: model });
-				});
-				async.until(function(next) {
-					next(null, queue.length() === 0);
-				}, function(next) {
-					_.delay(next, 50);
-				}, done);
-			},
 			refreshTx: function(model, done) {
 				var txid = model.get('txid');
 				done = done || _.noop;
 				app.wallet.getTx(txid, function(error, tx) {
 					var updates = {};
 					if (error) {
-						if (/No such mempool or blockchain transaction/i.test(error.message)) {
+						if (/Transaction not found/i.test(error.message)) {
 							updates.status = 'invalid';
 						}
 					} else if (tx) {
-						var isConfirmed = !!tx.blockhash && tx.confirmations && tx.confirmations > 0;
+						var isConfirmed = tx.status && tx.status.confirmed;
 						updates.status = isConfirmed ? 'confirmed' : 'pending';
 					}
 					if (!_.isEmpty(updates)) {
 						model.set(updates);
 						wallet.transactions.save(model.toJSON());
 					}
-					done();
+					done(error, tx);
 				});
 			},
 			load: function(network) {
@@ -441,12 +577,30 @@ app.wallet = (function() {
 	});
 
 	app.onReady(function() {
-		async.forever(_.bind(function(next) {
-			wallet.transactions.doStatusUpdates(function() {
-				_.delay(next, 30 * 1000);
+		var queue = async.queue(function(task, next) {
+			var txid = task.model.get('txid');
+			if (!txid) return next();
+			var model = app.wallet.transactions.get(txid);
+			if (!model || model.get('status') !== 'pending') return next();
+			app.wallet.transactions.refreshTx(model, function(error) {
+				if (error) return next(error);
+				_.delay(next, app.config.wallet.transactions.refresh.delay);
 			});
-		}, this), _.noop);
+		}, app.config.wallet.transactions.refresh.concurrency);
+		var addPendingTransactionsToQueue = function() {
+			var models = app.wallet.transactions.collection.where({ status: 'pending' });
+			_.each(models, function(model) {
+				queue.push({ model: model });
+			});
+		};
+		app.wallet.transactions.refreshInterval = setInterval(
+			addPendingTransactionsToQueue,
+			app.config.wallet.transactions.refresh.interval
+		);
+		addPendingTransactionsToQueue();
 	});
+
+	_.extend(wallet, Backbone.Events);
 
 	return wallet;
 

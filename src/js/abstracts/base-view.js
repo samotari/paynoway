@@ -155,6 +155,8 @@ app.abstracts.BaseView = (function() {
 			if (options.delay <= 0) {
 				throw new Error('Invalid option ("delay"): Must be greater than 0');
 			}
+			options.$timer.addClass('active');
+			options.$timer.parents('.button').addClass('has-active-timer');
 			this.visualTimer = {
 				options: options,
 				startTime: Date.now(),
@@ -189,8 +191,17 @@ app.abstracts.BaseView = (function() {
 			if (this.visualTimer) {
 				clearInterval(this.visualTimer.interval);
 				var options = this.visualTimer.options;
-				options.$timer.text('');
+				options.$timer.text('').removeClass('active');
+				options.$timer.parents('.button').removeClass('has-active-timer');
 				this.visualTimer = null;
+			}
+		},
+
+		log: function() {
+			if (this.debug) {
+				var args = Array.prototype.slice.call(arguments);
+				args.unshift([ 'views', this.debug.prefix ].join('.'));
+				app.log.apply(app, args);
 			}
 		},
 

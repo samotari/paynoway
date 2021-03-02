@@ -8,11 +8,16 @@ app.services.exchangeRates = (function() {
 
 	var service = {
 		defaultOptions: {
+			// Whether to cache the fetched result:
 			cache: true,
+			cacheKeyPrefix: 'services.exchange-rates',
 			currencies: {
 				from: null,
 				to: null,
 			},
+			provider: null,
+			// Whether to force refetching the exchange rate, even if it's cached:
+			refetch: false,
 			retry: {
 				// See https://caolan.github.io/async/v3/docs.html#retry
 				errorFilter: function(error) {
@@ -26,7 +31,6 @@ app.services.exchangeRates = (function() {
 				interval: 5000,
 				times: 3,
 			},
-			provider: null,
 		},
 		get: function(options, done) {
 			if (_.isFunction(options)) {
@@ -34,15 +38,20 @@ app.services.exchangeRates = (function() {
 				options = {};
 			}
 			options = _.defaults(options || {}, this.defaultOptions);
-			if (options.cache) {
-				var cacheKey = this.getCacheKey('services.exchange-rates.rate.'/* prefix */, options);
+			if (!options.refetch || options.cache) {
+				var cacheKey = this.getCacheKey('rate', options);
+			}
+			var log = _.bind(this.log, this);
+			if (!options.refetch) {
 				var fromCache = app.cache.get(cacheKey);
+				log('cache.from', cacheKey, fromCache);
 				if (fromCache) return done(null, fromCache);
 			}
+			log('get', options);
 			this.fetch(options, function(error, result) {
 				if (error || !result) {
 					if (error) {
-						app.log(error);
+						log('get', 'error', error);
 					}
 					error = new Error(app.i18n.t('services.exchange-rates.unsupported-currency-pair', options.currencies));
 					return done(error);
@@ -50,8 +59,10 @@ app.services.exchangeRates = (function() {
 				if (result) {
 					result = result.toString();
 					if (options.cache) {
+						log('cache.save', cacheKey, result);
 						app.cache.set(cacheKey, result);
 					}
+					log('get', options, 'result', result);
 				}
 				done(null, result);
 			});
@@ -80,9 +91,20 @@ app.services.exchangeRates = (function() {
 			if (!_.isString(options.provider)) {
 				return done(new Error('Invalid option ("provider"): String expected'));
 			}
-			this.getRateFromProvider(options.provider, options, done);
+			var log = _.bind(this.log, this);
+			log('fetch', options);
+			this.getRateFromProvider(options.provider, options, function(error, result) {
+				if (error) {
+					log('fetch', options, 'error', error);
+				} else {
+					log('fetch', options, 'result', result);
+				}
+				done(error, result);
+			});
 		},
 		getRateFromProvider: function(providerName, options, done) {
+			var log = _.bind(this.log, this);
+			log('getRateFromProvider', providerName, options);
 			try {
 				var ajaxOptions = this.prepareProviderAjaxOptions(providerName, options);
 			} catch (error) {
@@ -104,7 +126,14 @@ app.services.exchangeRates = (function() {
 				} catch (error) {
 					return next(error);
 				}
-			}, done);
+			}, function(error, result) {
+				if (error) {
+					log('getRateFromProvider', providerName, options, 'error', error);
+				} else {
+					log('getRateFromProvider', providerName, options, 'result', result);
+				}
+				done(error, result);
+			});
 		},
 		prepareProviderAjaxOptions: function(providerName, options) {
 			var provider = this.getProvider(providerName);
@@ -173,11 +202,18 @@ app.services.exchangeRates = (function() {
 		getProvider: function(providerName) {
 			return this.providers[providerName] || null;
 		},
-		getCacheKey: function(prefix, options) {
-			return prefix + JSON.stringify(_.pick(options,
-				'currencies',
-				'provider'
-			));
+		getCacheKey: function(key, options) {
+			options = options || {};
+			var parts = [];
+			if (options.cacheKeyPrefix) {
+				parts.push(options.cacheKeyPrefix);
+			}
+			parts.push(key);
+			if (!_.isEmpty(options)) {
+				parts.push('p:' + options.provider);
+				parts.push('c:' + options.currencies.from + '-' + options.currencies.to);
+			}
+			return parts.join('.');
 		},
 		providers: {
 			binance: {
@@ -251,6 +287,14 @@ app.services.exchangeRates = (function() {
 					data: '{{TO}}_{{FROM}}.last',
 				},
 			},
+		},
+		debug: false,
+		log: function() {
+			if (this.debug) {
+				var args = Array.prototype.slice.call(arguments);
+				args.unshift('services.exchange-rates');
+				app.log.apply(app, args);
+			}
 		},
 	};
 
