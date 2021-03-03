@@ -1,11 +1,9 @@
 const _ = require('underscore');
 const async = require('async');
 const express = require('express');
-const mkdirp = require('mkdirp');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const serveStatic = require('serve-static');
-const WebSocket = require('ws');
 
 let manager = module.exports = {
 
@@ -40,7 +38,9 @@ let manager = module.exports = {
 			slowMo: 0,
 			timeout: 10000,
 		});
-		return puppeteer.launch(options).then(function(browser) {
+		return puppeteer.launch(options).then(browser => {
+			const context = browser.defaultBrowserContext();
+			context.overridePermissions(this.getUrl(), ['clipboard-read']);
 			manager.browser = browser;
 		});
 	},
@@ -49,11 +49,16 @@ let manager = module.exports = {
 		if (!manager.page) {
 			return Promise.reject(new Error('Must load a page before navigating.'));
 		}
+		const pageUrl = this.getUrl(uri);
+		return manager.page.goto(pageUrl);
+	},
+
+	getUrl: function(uri) {
+		uri = uri || '';
 		const host = process.env.HTTP_SERVER_HOST || 'localhost';
 		const port = parseInt(process.env.HTTP_SERVER_PORT || 3000);
 		const baseUrl = 'http://' + host + ':' + port;
-		const pageUrl = baseUrl + uri;
-		return manager.page.goto(pageUrl);
+		return baseUrl + uri;
 	},
 
 	preparePage: function() {
@@ -95,9 +100,12 @@ let manager = module.exports = {
 		const dir = path.join(__dirname, '..', 'build', 'screenshots');
 		const fileName = name + extension;
 		const filePath = path.join(dir, fileName);
-		return mkdirp(dir).then(function() {
-			return manager.page.screenshot({
-				path: filePath,
+		return new Promise(function(resolve, reject) {
+			fs.mkdir(dir, { recursive: true }, function(error) {
+				if (error) return reject(error);
+				return manager.page.screenshot({
+					path: filePath,
+				}).then(resolve).catch(reject);
 			});
 		});
 	},

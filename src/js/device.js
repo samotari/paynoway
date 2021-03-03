@@ -95,6 +95,20 @@ app.device = (function() {
 			}, options);
 		},
 
+		clipboard: {
+			copy: function(text) {
+				var $textarea = $('<textarea/>').css({
+					position: 'absolute',
+					left: '-10000rem',
+					top: 0,
+				}).text(text).appendTo($('body'));
+				$textarea.select();
+				var result = document.execCommand('copy');
+				$textarea.remove();
+				return result;
+			},
+		},
+
 	}, Backbone.Events);
 
 	document.addEventListener('offline', function() {

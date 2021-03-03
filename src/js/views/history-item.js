@@ -84,12 +84,9 @@ app.views.HistoryItem = (function() {
 			var text = this.model.get('rawTx');
 			if (text) {
 				try {
-					cordova.plugins.clipboard.copy(text);
-					cordova.plugins.clipboard.paste(function(fromClipBoard) {
-						if (fromClipBoard === text) {
-							app.mainView.showMessage(app.i18n.t('copy-to-clipboard.success'));
-						}
-					});
+					if (app.device.clipboard.copy(text)) {
+						app.mainView.showMessage(app.i18n.t('copy-to-clipboard.success'));
+					}
 				} catch (error) {
 					app.log(error);
 				}
