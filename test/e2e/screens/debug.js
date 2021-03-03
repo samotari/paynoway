@@ -2,17 +2,14 @@ const { expect } = require('chai');
 const manager = require('../../manager');
 require('../global-hooks');
 
-describe('#receive', function() {
+describe('#debug', function() {
 
 	const selectors = {
-		headerButton: '.header-button.receive',
-		copyButton: '.view.receive .button.copy-to-clipboard',
-		address: '.view.receive .address',
-		addressQRCode: '.view.receive .address-qrcode',
-		addressText: '.view.receive .address-text',
+		headerButton: '.header-button.debug',
+		copyButton: '.view.debug .button.copy-to-clipboard',
+		debugInfo: '.view.debug pre',
 	};
 
-	const address = 'tb1qwlu6vxa96hhppd90xw206y4amla9p0rqu8vnja';
 	beforeEach(function() {
 		return manager.evaluateInPageContext(function() {
 			app.setHasReadDisclaimersFlag();
@@ -31,27 +28,28 @@ describe('#receive', function() {
 		});
 	});
 
-	it('address is shown as QR code and text', function() {
-		return manager.page.waitForSelector(selectors.address).then(function() {
-			return manager.page.waitForSelector(selectors.addressQRCode).then(function() {
-				return manager.page.waitForSelector(selectors.addressText).then(function() {
-					return manager.page.evaluate(function(options) {
-						return document.querySelector(options.selectors.addressText).innerText;
-					}, { selectors }).then(function(text) {
-						expect(text).to.equal(address);
-					});
-				});
+	it('debug info is shown', function() {
+		return manager.page.waitForSelector(selectors.debugInfo).then(function() {
+			return manager.page.evaluate(function(options) {
+				return document.querySelector(options.selectors.debugInfo).innerText;
+			}, { selectors }).then(function(text) {
+				expect(text).to.contain('PayNoWay');
 			});
 		});
 	});
 
-	it('can copy address to clipboard', function() {
+	it('can copy debug info to clipboard', function() {
 		return manager.page.waitForSelector(selectors.copyButton).then(function() {
 			return manager.page.click(selectors.copyButton).then(function() {
 				return manager.page.evaluate(function() {
 					return navigator.clipboard.readText();
 				}).then(function(result) {
-					expect(result).to.equal(address);
+					var data = JSON.parse(result.trim());
+					expect(data).to.be.an('object');
+					expect(data.app).to.equal('PayNoWay');
+					expect(data).to.have.property('repository');
+					expect(data).to.have.property('version');
+					expect(data).to.have.property('commit');
 				});
 			});
 		});

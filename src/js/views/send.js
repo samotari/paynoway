@@ -718,7 +718,7 @@ app.views.Send = (function() {
 					interval: 250,
 					times: 1,
 					errorFilter: function(error) {
-						return /missing inputs|inputs-missingorspent/i.test(error.message);
+						return /missing inputs|inputs-missingorspent|missing reference/i.test(error.message);
 					},
 				}, function(next) {
 					app.wallet.broadcastRawTx(payment.rawTx, { wide: false }, function(error, txid) {

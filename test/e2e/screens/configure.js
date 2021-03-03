@@ -10,6 +10,7 @@ describe('#configure', function() {
 	beforeEach(function() {
 		return manager.evaluateInPageContext(function() {
 			app.setHasReadDisclaimersFlag();
+			app.wallet.saveSetting('wif', null);
 		});
 	});
 
