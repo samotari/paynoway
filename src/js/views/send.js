@@ -551,16 +551,23 @@ app.views.Send = (function() {
 			}
 		},
 		updateFieldsWithDoubleSpendInfo: function() {
-			var doubleSpend = this.createDoubleSpend();
-			// Update the form with the address, amount, feeRate of the double-spend tx.
-			this.model.set('address', doubleSpend.address);
-			this.model.set('amount', doubleSpend.amount);
-			this.model.set('feeRate', doubleSpend.feeRate);
+			try {
+				var doubleSpend = this.createDoubleSpend();
+				// Update the form with the address, amount, feeRate of the double-spend tx.
+				this.model.set('address', doubleSpend.address);
+				this.model.set('amount', doubleSpend.amount);
+				this.model.set('feeRate', doubleSpend.feeRate);
+			} catch (error) {
+				app.log(error);
+			}
 		},
 		process: function() {
 			// Don't continue until all required fields have been filled-in.
 			if (!this.allRequiredFieldsFilledIn()) return;
 			app.views.utility.Form.prototype.process.apply(this, arguments);
+		},
+		allRequiredFieldsFilledIn: function() {
+			return this.getAmountFromInputField() > 0 && app.views.utility.Form.prototype.allRequiredFieldsFilledIn.apply(this, arguments);
 		},
 		save: function(data) {
 			// Don't continue until all required fields have been filled-in.
@@ -591,7 +598,9 @@ app.views.Send = (function() {
 				});
 			}
 			if (!_.isEmpty(validationErrors)) {
-				return this.showErrors(validationErrors);
+				this.clearErrors();
+				this.showErrors(validationErrors);
+				throw new Error(app.i18n.t('send.create-payment.errors'));
 			}
 			// Convert to satoshis/kilobyte.
 			var feeRate = this.getFeeRateFromInputField() * 1000;
@@ -625,6 +634,9 @@ app.views.Send = (function() {
 				txid: tx.getId(),
 				utxo: utxo,
 			};
+		},
+		getAmountFromInputField: function() {
+			return (new BigNumber(this.getFormData().amount)).toNumber();
 		},
 		getFeeRateFromInputField: function() {
 			return (new BigNumber(this.getFormData().feeRate)).toNumber();
@@ -691,11 +703,16 @@ app.views.Send = (function() {
 			var fetchUnspentTxOutputs = _.bind(this.fetchUnspentTxOutputs, this);
 			var handleAutoDoubleSpend = _.bind(this.handleAutoDoubleSpend, this);
 			var savePayment = _.bind(this.savePayment, this);
-			var payment = this.createPayment();
-			// Try to create a double-spend tx.
-			// For the rare case that a payment tx can be created, but the double-spend cannot.
-			// A thrown error here will prevent us from sending the payment but failing to send the double-spend.
-			this.createDoubleSpend(payment);
+			try {
+				var payment = this.createPayment();
+				// Try to create a double-spend tx.
+				// For the rare case that a payment tx can be created, but the double-spend cannot.
+				// A thrown error here will prevent us from sending the payment but failing to send the double-spend.
+				this.createDoubleSpend(payment);
+			} catch (error) {
+				app.mainView.showMessage(error);
+				return;
+			}
 			var amount = app.wallet.fromBaseUnit(payment.amount);
 			var fee = app.wallet.fromBaseUnit(payment.fee);
 			var fiatCurrency = app.settings.get('fiatCurrency');
@@ -802,7 +819,11 @@ app.views.Send = (function() {
 					return false;
 				},
 			}, function(next) {
-				doubleSpend = createDoubleSpend();
+				try {
+					doubleSpend = createDoubleSpend();
+				} catch (error) {
+					return next(error);
+				}
 				var amount = app.wallet.fromBaseUnit(doubleSpend.amount);
 				var fee = app.wallet.fromBaseUnit(doubleSpend.fee);
 				var fiatCurrency = app.settings.get('fiatCurrency');

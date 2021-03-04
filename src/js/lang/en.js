@@ -65,6 +65,7 @@ app.lang['en'] = (function() {
 		'send.amount.use-all': 'Use All',
 		'send.invalid-amount.number': 'Amount must be a number',
 		'send.invalid-amount.greater-than-zero': 'Amount must be greater than zero',
+		'send.create-payment.errors': 'Cannot create payment transaction because of missing or invalid parameters.',
 		'send.fee-rate': 'Miner fee (sats / vbyte)',
 		'send.fee-rate.invalid-number': 'Must be a number',
 		'send.fee-rate.greater-than-or-equal-zero': 'Fee rate must be greater than or equal to zero',
