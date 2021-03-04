@@ -14,7 +14,11 @@ describe('services.coin', function() {
 		{ name: 'smartbit', timeout: 10000 },
 	];
 
-	var tests = [
+	const partialServiceNames = _.chain(services).filter(function(service) {
+		return service.full !== true;
+	}).pluck('name').value();
+
+	const tests = [
 		{
 			description: 'broadcastRawTx - missing inputs',
 			fn: 'broadcastRawTx',
@@ -43,6 +47,101 @@ describe('services.coin', function() {
 					if (!/already in block chain/i.test(error.message)) {
 						throw new Error('Expected error ("Already in blockchain"), but received: ' + error.message);
 					}
+				},
+			},
+		},
+		{
+			fn: 'fetchMinRelayFeeRate',
+			args: [],
+			skip: {
+				services: partialServiceNames,
+			},
+			expected: {
+				result: function(result) {
+					expect(result).to.be.a('number');
+					expect(result > 0).to.equal(true);
+				},
+			},
+		},
+		{
+			description: 'fetchTx - not found',
+			fn: 'fetchTx',
+			args: [
+				'955e3c97db90c17bef8ca9b463ceadfe445e2e6593a28f2f54ad15a3350e1e39',
+			],
+			skip: {
+				services: partialServiceNames,
+			},
+			expected: {
+				error: function(error) {
+					if (!/transaction not found/i.test(error.message)) {
+						throw new Error('Expected error ("Missing inputs"), but received: ' + error.message);
+					}
+				},
+			},
+		},
+		{
+			description: 'fetchTx - found',
+			fn: 'fetchTx',
+			args: [
+				'975008244700195d66dec5c63520adbef4a1707579ef08418e8322ee7721a4b8',
+			],
+			skip: {
+				services: partialServiceNames,
+			},
+			expected: {
+				result: function(result) {
+					expect(result).to.be.an('object');
+					expect(result.txid).to.equal('975008244700195d66dec5c63520adbef4a1707579ef08418e8322ee7721a4b8');
+					expect(result.vin).to.be.an('array');
+					expect(result.vin.length > 0).to.equal(true);
+					expect(result.vout).to.be.an('array');
+					expect(result.vout.length > 0).to.equal(true);
+					expect(result.fee).to.be.a('number');
+					expect(result.status).to.be.an('object');
+					expect(result.status.confirmed).to.equal(true);
+					expect(result.status.block_height).to.be.a('number');
+				},
+			},
+		},
+		{
+			description: 'fetchUnspentTxOutputs - none',
+			fn: 'fetchUnspentTxOutputs',
+			args: [
+				'tb1qwlu6vxa96hhppd90xw206y4amla9p0rqu8vnja',
+			],
+			skip: {
+				services: partialServiceNames,
+			},
+			expected: {
+				result: function(result) {
+					expect(result).to.deep.equal([]);
+				},
+			},
+		},
+		{
+			description: 'fetchUnspentTxOutputs - some',
+			fn: 'fetchUnspentTxOutputs',
+			args: [
+				'tb1qugufglmwszfll8wtz280zn4guj8svtrwhr67a7',
+			],
+			skip: {
+				services: partialServiceNames,
+			},
+			expected: {
+				result: function(result) {
+					expect(result).to.be.an('array');
+					expect(result.length > 0).to.equal(true);
+					_.each(result, function(output) {
+						expect(output.txid).to.be.a('string');
+						expect(output.value).to.be.a('number');
+						expect(output.vout).to.be.a('number');
+						expect(output.status).to.be.an('object');
+						expect(output.status.confirmed).to.be.a('boolean');
+						if (output.status.confirmed) {
+							expect(output.status.block_height).to.be.a('number');
+						}
+					});
 				},
 			},
 		},

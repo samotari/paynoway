@@ -332,7 +332,7 @@ app.views.Send = (function() {
 			var pending = 0;
 			var total = 0;
 			_.each(utxo, function(output) {
-				if (output.height === 0) {
+				if (output.status && output.status.confirmed === false) {
 					pending += output.value;
 				}
 				total += output.value;

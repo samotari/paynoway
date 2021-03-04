@@ -527,7 +527,7 @@ app.wallet = (function() {
 				app.wallet.getTx(txid, function(error, tx) {
 					var updates = {};
 					if (error) {
-						if (/Transaction not found/i.test(error.message)) {
+						if (/transaction not found/i.test(error.message)) {
 							updates.status = 'invalid';
 						}
 					} else if (tx) {
