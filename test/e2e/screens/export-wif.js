@@ -14,7 +14,7 @@ describe('#export-wif', function() {
 	};
 
 	const wif = 'cPTM4uJTjqX7LA9Qa24AeZRNut3s1Vyjm4ovzgp7zS1RjxJNGKMV';
-	beforeEach(function() {
+	before(function() {
 		return manager.evaluateInPageContext(function(wif) {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
@@ -24,7 +24,7 @@ describe('#export-wif', function() {
 		}, [ wif ]);
 	});
 
-	beforeEach(function() {
+	before(function() {
 		return manager.navigate('/').then(function() {
 			return manager.page.waitForSelector(selectors.headerButton).then(function() {
 				return manager.page.click(selectors.headerButton).then(function() {

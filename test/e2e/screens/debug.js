@@ -10,7 +10,7 @@ describe('#debug', function() {
 		debugInfo: '.view.debug pre',
 	};
 
-	beforeEach(function() {
+	before(function() {
 		return manager.evaluateInPageContext(function() {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
@@ -20,7 +20,7 @@ describe('#debug', function() {
 		});
 	});
 
-	beforeEach(function() {
+	before(function() {
 		return manager.navigate('/').then(function() {
 			return manager.page.waitForSelector(selectors.headerButton).then(function() {
 				return manager.page.click(selectors.headerButton);

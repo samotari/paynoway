@@ -7,14 +7,14 @@ describe('#configure', function() {
 		form: '.view.configure form',
 	};
 
-	beforeEach(function() {
+	before(function() {
 		return manager.evaluateInPageContext(function() {
 			app.setHasReadDisclaimersFlag();
 			app.wallet.saveSetting('wif', null);
 		});
 	});
 
-	beforeEach(function() {
+	before(function() {
 		return manager.navigate('/');
 	});
 

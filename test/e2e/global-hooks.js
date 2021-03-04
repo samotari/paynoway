@@ -1,26 +1,21 @@
 const manager = require('../manager');
 require('../global-hooks');
 
-beforeEach(function() {
+before(function() {
 	return manager.preparePage();
 });
 
-beforeEach(function() {
+before(function() {
 	const device = manager.puppeteer.devices['Nexus 5'];
 	return manager.page.emulate(device);
 });
 
-beforeEach(function() {
+before(function() {
 	return manager.onAppLoaded();
 });
 
-beforeEach(function() {
+before(function() {
 	return manager.evaluateInPageContext(function() {
 		app.config.debug = true;
 	});
 });
-
-afterEach(function() {
-	return manager.page.close();
-});
-

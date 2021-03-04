@@ -13,7 +13,7 @@ describe('#receive', function() {
 	};
 
 	const address = 'tb1qwlu6vxa96hhppd90xw206y4amla9p0rqu8vnja';
-	beforeEach(function() {
+	before(function() {
 		return manager.evaluateInPageContext(function() {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
@@ -23,7 +23,7 @@ describe('#receive', function() {
 		});
 	});
 
-	beforeEach(function() {
+	before(function() {
 		return manager.navigate('/').then(function() {
 			return manager.page.waitForSelector(selectors.headerButton).then(function() {
 				return manager.page.click(selectors.headerButton);

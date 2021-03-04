@@ -12,8 +12,18 @@ before(function() {
 });
 
 after(function() {
+	if (manager.page) {
+		return manager.page.close().then(function() {
+			manager.page = null;
+		});
+	}
+});
+
+after(function() {
 	if (manager.browser) {
-		return manager.browser.close();
+		return manager.browser.close().then(function() {
+			manager.browser = null;
+		});
 	}
 });
 

@@ -11,7 +11,7 @@ describe('services.coin', function() {
 		{ name: 'blockcypher' },
 		{ name: 'esplora', full: true },
 		{ name: 'mempool', full: true },
-		{ name: 'smartbit' },
+		{ name: 'smartbit', timeout: 10000 },
 	];
 
 	var tests = [
@@ -63,6 +63,9 @@ describe('services.coin', function() {
 						if (test.skip.services && _.contains(test.skip.services, service.name)) {
 							return this.skip();
 						}
+					}
+					if (service.timeout) {
+						this.timeout(service.timeout);
 					}
 					if (!_.isUndefined(test.expected.result) && !_.isUndefined(test.expected.error)) {
 						throw new Error('Cannot expect both "result" and "error"');
