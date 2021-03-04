@@ -1,5 +1,6 @@
 const _ = require('underscore');
 const async = require('async');
+const { expect } = require('chai');
 const express = require('express');
 const path = require('path');
 const puppeteer = require('puppeteer');
@@ -35,7 +36,7 @@ let manager = module.exports = {
 				'--start-fullscreen',
 			],
 			headless: false,
-			slowMo: 0,
+			slowMo: 50,
 			timeout: 10000,
 		});
 		return puppeteer.launch(options).then(browser => {
@@ -76,14 +77,6 @@ let manager = module.exports = {
 			return Promise.reject(new Error('Invalid argument ("fn"): Function expected'));
 		}
 		return manager.page.evaluate.apply(manager.page, [fn].concat(args));
-	},
-
-	onAppLoaded: function() {
-		return manager.navigate('/').then(function() {
-			return manager.page.waitForFunction(function() {
-				return !!app && !!app.mainView;
-			});
-		});
 	},
 
 	getPageLocationHash: function() {
@@ -192,6 +185,65 @@ let manager = module.exports = {
 				throw new Error(result[0]);
 			}
 			return result[1] || null;
+		});
+	},
+
+	waitForAppLoaded: function() {
+		return manager.navigate('/').then(function() {
+			return manager.page.waitForFunction(function() {
+				return !!app && !!app.mainView;
+			});
+		});
+	},
+
+	waitForMessage: function(expected) {
+		var selector = '#message-content';
+		return manager.page.evaluate(function(options) {
+			return new Promise(function(resolve, reject) {
+				var message;
+				async.until(function(next) {
+					message = $(options.selector).text();
+					next(null, !!message);
+				}, function(next) {
+					_.delay(next, 20);
+				}, function(error) {
+					if (error) return reject(error);
+					resolve(message);
+				});
+			});
+		}, { selector }).then(function(message) {
+			if (_.isUndefined(expected)) {
+				if (_.isRegExp(expected)) {
+					expect(message).to.match(expected);
+				} else if (_.isString(expected)) {
+					expect(message).to.equal(expected);
+				}
+			}
+		});
+	},
+
+	waitForDialog: function(options) {
+		options = _.defaults(options || {}, {
+			timeout: 2000,
+		});
+		let timeout;
+		const cleanup = function() {
+			clearTimeout(timeout);
+			manager.page.removeAllListeners('dialog');
+		};
+		return (new Promise(function(resolve, reject) {
+			timeout = setTimeout(function() {
+				reject(new Error('Timed-out while waiting for dialog'));
+			}, options.timeout);
+			manager.page.on('dialog', function(dialog) {
+				resolve(dialog);
+			});
+		})).then(function(result) {
+			cleanup();
+			return result;
+		}).catch(function(error) {
+			cleanup();
+			throw error;
 		});
 	},
 

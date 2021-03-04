@@ -58,7 +58,6 @@ app.views.utility.List = (function() {
 			this.log('onRender');
 			this.$items = this.getItemContainer();
 			this.$items.on('scroll', this.onScroll);
-			this.$el.toggleClass('has-items', this.hasItems());
 			this.renderItems();
 		},
 
@@ -77,6 +76,7 @@ app.views.utility.List = (function() {
 			_.each(collection.models, function(model) {
 				this.addItem(model, collection);
 			}, this);
+			this.$el.toggleClass('has-items', this.hasItems());
 		},
 
 		addItem: function(model, collection, options) {

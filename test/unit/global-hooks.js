@@ -6,7 +6,7 @@ before(function() {
 });
 
 before(function() {
-	return manager.onAppLoaded();
+	return manager.waitForAppLoaded();
 });
 
 before(function() {
