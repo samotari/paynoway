@@ -206,6 +206,13 @@ app.config = (function() {
 					'bitcoinTestnet': 'https://testnet-api.smartbit.com.au',
 				},
 			},
+			'tokenview': {
+				constructor: app.services.TokenView,
+				defaultUrls: {
+					'bitcoin': 'https://wallet.tokenview.com',
+					'bitcoinTestnet': 'https://wallet.tokenview.com',
+				},
+			},
 		},
 		numberFormats: {
 			default: {

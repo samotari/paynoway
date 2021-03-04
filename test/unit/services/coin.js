@@ -12,6 +12,7 @@ describe('services.coin', function() {
 		{ name: 'esplora', full: true },
 		{ name: 'mempool', full: true },
 		{ name: 'smartbit', timeout: 10000 },
+		{ name: 'tokenview' },
 	];
 
 	const partialServiceNames = _.chain(services).filter(function(service) {
@@ -44,8 +45,8 @@ describe('services.coin', function() {
 			},
 			expected: {
 				error: function(error) {
-					if (!/already in block chain/i.test(error.message)) {
-						throw new Error('Expected error ("Already in blockchain"), but received: ' + error.message);
+					if (!/already in block chain|missing inputs/i.test(error.message)) {
+						throw new Error('Expected error ("Already in blockchain" or "Missing inputs"), but received: ' + error.message);
 					}
 				},
 			},

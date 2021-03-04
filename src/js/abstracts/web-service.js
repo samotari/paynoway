@@ -37,7 +37,14 @@ app.abstracts.WebService = (function() {
 			cb = data;
 			data = null;
 		}
-		var url = this.getUrl() + uri;
+		var log = _.bind(this.log, this);
+		var url = this.getUrl();
+		if (!url) {
+			log('http-request', 'skipped because missing URL');
+			return cb(null, null);
+		}
+		uri = uri || '';
+		url += uri;
 		var ajaxOptions = {
 			method: method.toUpperCase(),
 			url: url,
@@ -50,7 +57,6 @@ app.abstracts.WebService = (function() {
 			ajaxOptions.data = data;
 			ajaxOptions.processData = false;
 		}
-		var log = _.bind(this.log, this);
 		log('http-request', ajaxOptions);
 		$.ajax(ajaxOptions).done(function(responseData) {
 			log('http-response', ajaxOptions, responseData);
