@@ -14,23 +14,23 @@
 				if (typeof json[name] === 'undefined') {
 					json[name] = match[2] ? {} : [];
 				}
-			}
-			if (match) {
-				if (match[2] && !isArray(json[name])) {
+				if (match[2] && !_.isArray(json[name])) {
 					json[name][match[2]] = value;
-				} else if (isArray(json[name])) {
+				} else if (_.isArray(json[name])) {
 					json[name].push(value);
 				}
+			} else if (typeof json[name] !== 'undefined') {
+				if (!_.isArray(json[name])) {
+					var previousValue = json[name];
+					json[name] = [ previousValue ];
+				}
+				json[name].push(value);
 			} else {
 				json[name] = value;
 			}
 		});
 
 		return json;
-	};
-
-	var isArray = function(object) {
-		return Object.prototype.toString.call(object);
 	};
 
 })();

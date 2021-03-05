@@ -10,7 +10,7 @@ app.services.Esplora = (function() {
 	// https://github.com/Blockstream/esplora/blob/master/API.md
 
 	return app.abstracts.WebService.extend({
-		name: 'esplora',
+		type: 'esplora',
 		broadcastRawTx: function(rawTx, cb) {
 			return this.doRequest('POST', '/api/tx', rawTx, function(error, result) {
 				if (error) return cb(error);

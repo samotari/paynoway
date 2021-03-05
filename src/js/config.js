@@ -537,6 +537,32 @@ app.config = (function() {
 					},
 				],
 			},
+			{
+				name: 'txBroadcastServices',
+				label: function() {
+					return app.i18n.t('configure.tx-broadcast-services');
+				},
+				notes: function() {
+					return app.i18n.t('configure.tx-broadcast-services.notes');
+				},
+				type: 'select',
+				multiple: true,
+				default: function() {
+					return app.wallet.getWebServiceTypes({ full: false });
+				},
+				options: function() {
+					var selectedTypes = app.wallet.getSetting('txBroadcastServices');
+					return _.map(app.wallet.getWebServiceTypes({ full: false }), function(type) {
+						var defaultUrl = app.wallet.getWebServiceDefaultUrl(type);
+						var hostname = defaultUrl.split('://')[1].split('/')[0];
+						return {
+							key: type,
+							label: hostname,
+							selected: _.contains(selectedTypes, type),
+						};
+					});
+				},
+			},
 		],
 		touch: {
 			quick: {

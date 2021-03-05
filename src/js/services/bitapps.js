@@ -11,7 +11,7 @@ app.services.BitApps = (function() {
 	// https://tbtc.bitaps.com/broadcast
 
 	return app.abstracts.WebService.extend({
-		name: 'bitapps',
+		type: 'bitapps',
 		broadcastRawTx: function(rawTx, cb) {
 			return this.doRequest('POST', '/native', {
 				jsonrpc: '1.0',

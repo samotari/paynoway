@@ -115,6 +115,7 @@ app.wallet = (function() {
 		},
 
 		getWebServiceDefaultUrl: function(type, network) {
+			network = network || this.getNetwork();
 			var webServiceConfig = this.getWebServiceConfig(type, network);
 			return webServiceConfig && webServiceConfig.defaultUrls[network] || null;
 		},
@@ -277,11 +278,12 @@ app.wallet = (function() {
 				// Whether to broadcast "widely" - ie. to broadcast to all possible web services.
 				wide: false,
 			});
-			var services;
+			var services = [];
 			if (options.wide) {
-				// Push the transaction to all known web services that support it.
-				services = app.services.coin;
-			} else {
+				// Push the transaction to all selected broadcast services.
+				services = _.pick(app.services.coin, app.wallet.getSetting('txBroadcastServices'));
+			}
+			if (!(services.length > 0)) {
 				// Push the transaction to the primary web service only.
 				services = [ this.getWebService() ];
 			}

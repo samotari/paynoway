@@ -10,7 +10,7 @@ app.services.TokenView = (function() {
 	// https://documenter.getpostman.com/view/5728777/SVSEvX8k?version=latest#b755cbc8-32e2-4554-a2b4-4be61347477d
 
 	return app.abstracts.WebService.extend({
-		name: 'tokenview',
+		type: 'tokenview',
 		broadcastRawTx: function(rawTx, cb) {
 			var symbol = app.wallet.getCoinSymbol();
 			var log = _.bind(this.log, this);

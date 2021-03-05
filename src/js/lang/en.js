@@ -25,6 +25,8 @@ app.lang['en'] = (function() {
 		'configure.web-service-url': 'Web Service URL',
 		'configure.web-service-url.notes': 'Use the default web service instance, or use your own. Learn how to self-host this web service <a href="{{projectUrl}}">here</a>.',
 		'configure.web-service-url.test-success': 'Web service test was successful',
+		'configure.tx-broadcast-services': 'Transaction Broadcast Services',
+		'configure.tx-broadcast-services.notes': 'These web services will be used to broadcast double-spend transactions and to manually re-broadcast transactions in your history.',
 		'configure.wif': 'Private Key (WIF)',
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',

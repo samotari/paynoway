@@ -69,8 +69,12 @@
 		font-size: 1.25rem;
 	}
 	.view.send .balance {
-		top: 6.8rem;
+		top: 6.5rem;
 		height: 2.2rem;
+	}
+	.view.send .balance-pending {
+		position: relative;
+		top: -.5rem;
 	}
 	.view.send .form {
 		padding-top: 9.6rem;

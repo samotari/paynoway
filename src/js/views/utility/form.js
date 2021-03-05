@@ -28,7 +28,7 @@ app.views.utility.Form = (function() {
 				'onKeyboardVisible'
 			);
 			this.process = _.throttle(this.process, 500, { leading: false });
-			this.prepareInputs();
+			this.preparedInputs = this.prepareInputs();
 			this.listenTo(app.device, 'keyboard:visible', this.onKeyboardVisible);
 		},
 
@@ -47,10 +47,35 @@ app.views.utility.Form = (function() {
 			}
 		},
 
+		getInputValueOverride: function(name) {
+
+			return app.settings.get(name);
+		},
+
+		getInputDefaultValue: function(name) {
+
+			var input = this.getInputByName(name);
+			return input && _.result(input, 'default') || null;
+		},
+
+		getInputByName: function(name) {
+
+			return _.findWhere(this.getInputs(), { name: name });
+		},
+
+		getPreparedInputByName: function(name) {
+
+			return _.findWhere(this.preparedInputs, { name: name });
+		},
+
+		getInputs: function() {
+
+			return _.result(this, 'inputs') || [];
+		},
+
 		prepareInputs: function() {
 
-			var inputs = _.result(this, 'inputs') || [];
-			this.preparedInputs = _.map(inputs, this.prepareInput, this);
+			return _.map(this.getInputs(), this.prepareInput, this);
 		},
 
 		prepareInput: function(input) {
@@ -67,13 +92,20 @@ app.views.utility.Form = (function() {
 			}
 			switch (input.type) {
 				case 'select':
+					if (input.multiple && _.isString(input.value)) {
+						input.value = input.value.split(',');
+					}
 					input.options = _.result(input, 'options') || [];
 					input.options = _.map(input.options, function(option) {
-						return {
-							key: option.key,
-							label: _.result(option, 'label'),
-							selected: input.value === option.key,
-						};
+						option = _.clone(option);
+						option.selected = false;
+						if (input.multiple) {
+							option.selected = _.contains(input.value, option.key);
+						} else {
+							option.selected = input.value === option.key;
+						}
+						option.label = _.result(option, 'label');
+						return option;
 					});
 					break;
 			}
@@ -100,7 +132,7 @@ app.views.utility.Form = (function() {
 			var $target = $(evt.target);
 			var name = $target.attr('data-input');
 			if (!name) return;
-			var input = this.getInputByName(name);
+			var input = this.getPreparedInputByName(name);
 			if (!input) return;
 			var action = _.findWhere(input.actions || [], { name: $target.attr('data-action') });
 			if (!action || !action.fn) return;
@@ -152,7 +184,7 @@ app.views.utility.Form = (function() {
 		allRequiredFieldsFilledIn: function() {
 
 			var formData = this.getFormData();
-			return _.every(this.inputs, function(input) {
+			return _.every(this.preparedInputs, function(input) {
 				return input.required !== true || !!formData[input.name];
 			});
 		},
@@ -168,7 +200,7 @@ app.views.utility.Form = (function() {
 			var data = this.getFormData();
 
 			// Set defaults.
-			_.each(this.inputs, function(input) {
+			_.each(this.preparedInputs, function(input) {
 				if (_.isUndefined(data[input.name]) && !_.isUndefined(input.default)) {
 					data[input.name] = input.default;
 				}
@@ -185,7 +217,7 @@ app.views.utility.Form = (function() {
 					this.onValidationErrors(validationErrors);
 				} else {
 					// No validation errors.
-					_.each(this.inputs, function(input) {
+					_.each(this.preparedInputs, function(input) {
 						switch (input.type) {
 							case 'checkbox':
 								// Force checkbox fields to have boolean values.
@@ -210,7 +242,7 @@ app.views.utility.Form = (function() {
 		// Execute the callback with no arguments to indicate success.
 		validate: function(data, done) {
 
-			async.map(this.inputs || [], _.bind(function(input, next) {
+			async.map(this.preparedInputs || [], _.bind(function(input, next) {
 
 				var value = data[input.name];
 				var errors = [];
@@ -267,22 +299,6 @@ app.views.utility.Form = (function() {
 
 				done(null, errors);
 			});
-		},
-
-		getInputValueOverride: function(name) {
-
-			return app.settings.get(name);
-		},
-
-		getInputDefaultValue: function(name) {
-
-			var input = this.getInputByName(name);
-			return input && _.result(input, 'default') || null;
-		},
-
-		getInputByName: function(name) {
-
-			return _.findWhere(this.preparedInputs, { name: name });
 		},
 
 		save: function(data) {

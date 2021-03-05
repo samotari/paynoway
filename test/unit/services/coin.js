@@ -6,18 +6,18 @@ require('../global-hooks');
 describe('services.coin', function() {
 
 	const services = [
-		{ name: 'bitapps' },
-		{ name: 'blockchair' },
-		{ name: 'blockcypher' },
-		{ name: 'esplora', full: true },
-		{ name: 'mempool', full: true },
-		{ name: 'smartbit', timeout: 10000 },
-		{ name: 'tokenview' },
+		{ type: 'bitapps' },
+		{ type: 'blockchair' },
+		{ type: 'blockcypher' },
+		{ type: 'esplora', full: true },
+		{ type: 'mempool', full: true },
+		{ type: 'smartbit', timeout: 10000 },
+		{ type: 'tokenview' },
 	];
 
 	const partialServiceNames = _.chain(services).filter(function(service) {
 		return service.full !== true;
-	}).pluck('name').value();
+	}).pluck('type').value();
 
 	const tests = [
 		{
@@ -156,11 +156,11 @@ describe('services.coin', function() {
 	});
 
 	_.each(services, function(service) {
-		describe(service.name, function() {
+		describe(service.type, function() {
 			_.each(tests, function(test) {
 				it(test.description || test.fn, function() {
 					if (test.skip) {
-						if (test.skip.services && _.contains(test.skip.services, service.name)) {
+						if (test.skip.services && _.contains(test.skip.services, service.type)) {
 							return this.skip();
 						}
 					}
@@ -171,7 +171,7 @@ describe('services.coin', function() {
 						throw new Error('Cannot expect both "result" and "error"');
 					}
 					return manager.evaluateFn({
-						fn: ['app.services.coin', service.name, test.fn].join('.'),
+						fn: ['app.services.coin', service.type, test.fn].join('.'),
 						isAsync: true,
 						args: test.args,
 					}).then(function(result) {

@@ -11,8 +11,8 @@ app.abstracts.WebService = (function() {
 			url: null,
 			defaultUrls: null,
 		});
-		if (!this.name) {
-			throw new Error('Missing required prototype property: "name"');
+		if (!this.type) {
+			throw new Error('Missing required prototype property: "type"');
 		}
 		if (!_.isNull(options.url)) {
 			if (!options.url || !_.isString(options.url)) {
@@ -30,7 +30,7 @@ app.abstracts.WebService = (function() {
 		this.options = options;
 	};
 
-	Service.prototype.name = null;
+	Service.prototype.type = null;
 
 	Service.prototype.doRequest = function(method, uri, data, cb) {
 		if (_.isFunction(data)) {
@@ -71,6 +71,9 @@ app.abstracts.WebService = (function() {
 		if (this.options.url) {
 			return this.options.url;
 		}
+		if (this.type === app.wallet.getSetting('webServiceType')) {
+			return app.wallet.getSetting('webServiceUrl');
+		}
 		var network = app.wallet.getNetwork();
 		return this.options.defaultUrls[network] || null;
 	};
@@ -78,9 +81,9 @@ app.abstracts.WebService = (function() {
 	Service.prototype.log = function() {
 		var args = Array.prototype.slice.call(arguments);
 		if (_.isString(args[0])) {
-			args[0] = ['service', this.name, args[0]].join('.');
+			args[0] = ['service', this.type, args[0]].join('.');
 		} else {
-			args.unshift(['service', this.name].join('.'));
+			args.unshift(['service', this.type].join('.'));
 		}
 		app.log.apply(app, args);
 	};

@@ -7,7 +7,7 @@ app.services.BlockChair = (function() {
 	'use strict';
 
 	return app.abstracts.WebService.extend({
-		name: 'blockchair',
+		type: 'blockchair',
 		broadcastRawTx: function(rawTx, cb) {
 			return this.doRequest('POST', '/push/transaction', { data: rawTx }, function(error, result) {
 				if (error) return cb(error);

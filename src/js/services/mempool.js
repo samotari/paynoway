@@ -13,7 +13,7 @@ app.services.Mempool = (function() {
 	// https://github.com/mempool/mempool/blob/master/backend/src/api/websocket-handler.ts
 
 	return app.abstracts.WebService.extend({
-		name: 'mempool',
+		type: 'mempool',
 		broadcastRawTx: function(rawTx, cb) {
 			return this.doRequest('POST', '/api/tx', rawTx, function(error, result) {
 				if (error) return cb(error);

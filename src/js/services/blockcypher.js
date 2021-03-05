@@ -10,7 +10,7 @@ app.services.BlockCypher = (function() {
 	// https://www.blockcypher.com/dev/bitcoin/?javascript
 
 	return app.abstracts.WebService.extend({
-		name: 'blockcypher',
+		type: 'blockcypher',
 		broadcastRawTx: function(rawTx, cb) {
 			return this.doRequest('POST', '/txs/push', { tx: rawTx }, function(error, result) {
 				if (error) return cb(error);
