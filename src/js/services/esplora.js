@@ -36,8 +36,22 @@ app.services.Esplora = (function() {
 		fetchTx: function(txid, cb) {
 			return this.doRequest('GET', '/api/tx/' + txid, cb);
 		},
+		fetchRawTx: function(txid, cb) {
+			return this.doRequest('GET', '/api/tx/' + txid + '/hex', cb);
+		},
 		fetchUnspentTxOutputs: function(address, cb) {
 			return this.doRequest('GET', '/api/address/' + address + '/utxo', cb);
+		},
+		fetchTransactions: function(address, lastSeenTxid, cb) {
+			if (_.isFunction(lastSeenTxid)) {
+				cb = lastSeenTxid;
+				lastSeenTxid = null;
+			}
+			var uri = '/api/address/' + address + '/txs';
+			if (lastSeenTxid) {
+				uri += '/chain/' + lastSeenTxid;
+			}
+			return this.doRequest('GET', uri, cb);
 		},
 	});
 

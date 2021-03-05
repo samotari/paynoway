@@ -585,8 +585,8 @@ app.config = (function() {
 			transactions: {
 				refresh: {
 					concurrency: 1,
-					delay: 1000,
-					interval: 30000,
+					delay: 3000,
+					interval: 60000,
 				},
 			},
 		},

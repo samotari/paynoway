@@ -127,7 +127,7 @@ app.wallet = (function() {
 
 		getWebServiceConfig: function(type, network) {
 			network = network || this.getNetwork();
-			type = type || app.wallet.getSetting('webServiceType', network);
+			type = type || wallet.getSetting('webServiceType', network);
 			return app.config.webServices[type] || null;
 		},
 
@@ -139,7 +139,7 @@ app.wallet = (function() {
 		getBlockExplorers: function(network, addressType) {
 			network = network || this.getNetwork();
 			addressType = addressType || this.getSetting('addressType', network);
-			var networkConfig = app.wallet.getNetworkConfig(network);
+			var networkConfig = wallet.getNetworkConfig(network);
 			if (!addressType) {
 				return networkConfig.blockExplorers;
 			}
@@ -155,7 +155,7 @@ app.wallet = (function() {
 			var blockExplorer = _.findWhere(networkConfig.blockExplorers, { key: key });
 			if (!blockExplorer) {
 				var addressType = this.getSetting('addressType', network);
-				var blockExplorers = app.wallet.getBlockExplorers(network, addressType);
+				var blockExplorers = wallet.getBlockExplorers(network, addressType);
 				blockExplorer = _.first(blockExplorers);
 			}
 			if (!blockExplorer) return '';
@@ -173,7 +173,7 @@ app.wallet = (function() {
 				if (error) {
 					app.log(error);
 				} else {
-					app.wallet.trigger('change:exchangeRate');
+					wallet.trigger('change:exchangeRate');
 				}
 			});
 		},
@@ -281,7 +281,7 @@ app.wallet = (function() {
 			var services = [];
 			if (options.wide) {
 				// Push the transaction to all selected broadcast services.
-				services = _.pick(app.services.coin, app.wallet.getSetting('txBroadcastServices'));
+				services = _.pick(app.services.coin, wallet.getSetting('txBroadcastServices'));
 			}
 			if (!(services.length > 0)) {
 				// Push the transaction to the primary web service only.
@@ -327,9 +327,19 @@ app.wallet = (function() {
 			);
 		},
 
-		getTx: function(txHash, cb) {
+		fetchTx: function(txid, cb) {
 			var webService = this.getWebService();
-			webService.fetchTx(txHash, cb);
+			webService.fetchTx(txid, cb);
+		},
+
+		fetchRawTx: function(txid, cb) {
+			var webService = this.getWebService();
+			webService.fetchRawTx(txid, cb);
+		},
+
+		fetchTransactions: function(address, lastSeenTxid, cb) {
+			var webService = this.getWebService();
+			webService.fetchTransactions(address, lastSeenTxid, cb);
 		},
 
 		buildTx: function(value, receivingAddress, utxo, options) {
@@ -404,7 +414,7 @@ app.wallet = (function() {
 				};
 				switch (addressType) {
 					case 'p2pkh':
-						var outputTxHex = app.wallet.transactions.get(output.txid);
+						var outputTxHex = wallet.transactions.get(output.txid);
 						if (!outputTxHex) {
 							throw new Error('Missing output transaction hash for utxo with txid', output.txid);
 						}
@@ -476,15 +486,111 @@ app.wallet = (function() {
 			return true;
 		},
 
+		scriptToAddress: function(script, network) {
+			var constants = wallet.getNetworkConstants(network);
+			return bitcoin.address.fromOutputScript(script, constants);
+		},
+
+		prepareBroadcastTxMessage: function(rawTx, options) {
+			options = _.defaults(options || {}, {
+				fee: null,
+			});
+			var tx = bitcoin.Transaction.fromHex(rawTx);
+			var fiatCurrency = app.settings.get('fiatCurrency');
+			var displayCurrency = app.settings.get('displayCurrency');
+			var internalAddress = wallet.getAddress();
+			var outputs = _.map(tx.outs, function(output) {
+				var address = wallet.scriptToAddress(output.script);
+				var amount = wallet.fromBaseUnit(output.value);
+				if (displayCurrency === fiatCurrency) {
+					amount = app.util.convertToFiatAmount(amount);
+				}
+				amount = app.util.formatDisplayCurrencyAmount(amount);
+				return {
+					address: address,
+					amount: amount,
+					internal: address === internalAddress,
+					symbol: displayCurrency,
+				};
+			}, this);
+			var outputSums = {
+				internal: _.chain(outputs).filter(function(output) {
+					return output.address === internalAddress;
+				}).reduce(function(memo, output) {
+					return memo + output.value;
+				}, 0).value(),
+				external: _.chain(outputs).filter(function(output) {
+					return output.address !== internalAddress;
+				}).reduce(function(memo, output) {
+					return memo + output.value;
+				}, 0).value(),
+			};
+			var fee = options.fee;
+			if (_.isNull(fee)) {
+				var txid = tx.getId();
+				var model = wallet.transactions.get(txid);
+				if (model && model.has('fee')) {
+					fee = model.get('fee');
+				}
+			}
+			if (fee) {
+				fee = wallet.fromBaseUnit(fee);
+				if (displayCurrency === fiatCurrency) {
+					fee = app.util.convertToFiatAmount(fee);
+				}
+				fee = app.util.formatDisplayCurrencyAmount(fee);	
+			}
+			var direction;
+			if (outputSums.external <= wallet.getDustLimit()) {
+				direction = 'internal';
+			} else if (outputSums.internal <= wallet.getDustLimit()) {
+				direction = 'external';
+			} else {
+				direction = 'mixed';
+			}
+			return app.i18n.t('broadcast-tx.confirm', {
+				fee: fee,
+				label: app.i18n.t('broadcast-tx.transfer.' + direction),
+				outputs: outputs,
+				symbol: displayCurrency,
+			});
+		},
+
+		getDustLimit: function(network) {
+			var networkConfig = this.getNetworkConfig(network);
+			return networkConfig && networkConfig.dustLimit || 1;
+		},
+
+		resetStatistics: function() {
+			var network = wallet.getNetwork();
+			_.chain(app.wallet.transactions.collection.models).filter(function(model) {
+				return model.has('txid') && model.has('type') && model.get('network') === network;
+			}).each(function(model) {
+				var txid = model.get('txid');
+				var type = model.get('model');
+				app.wallet.transactions.save({ txid: txid, type: null });
+			});
+		},
+
 		transactions: {
 			get: function(txid) {
 				return this.collection.findWhere({ txid: txid });
 			},
 			save: function(data) {
-				var model = this.collection.findWhere({ txid: data.txid });
+				app.log('wallet.transactions.save', data);
+				var txid = data.txid || null;
+				if (!txid) {
+					app.log('wallet.transactions.save', 'failed', 'missing txid', data);
+					return;
+				}
+				var model = this.collection.findWhere({ txid: txid });
 				if (model) {
+					if (!model.has('network')) {
+						data.network = wallet.getNetwork();
+					}
 					model.set(data).save();
 				} else {
+					data.network = wallet.getNetwork();
 					this.collection.create(data);
 				}
 			},
@@ -498,52 +604,76 @@ app.wallet = (function() {
 				return this.collection.where(filter).length;
 			},
 			fixup: function() {
+				app.log('wallet.transactions.fixup', this.collection.models);
 				_.each(this.collection.models, function(model) {
 					var updates = {};
 					if (!model.has('network')) {
-						updates.network = app.wallet.getNetwork();
+						updates.network = wallet.getNetwork();
 					}
-					var type = model.get('type');
-					if (type === 'double-spend') {
-						if (!model.has('paymentTxid')) {
-							var payment = model.findDoubleSpentPayment();
-							if (payment) {
-								var paymentTxid = payment.get('txid');
-								updates.paymentTxid = paymentTxid;
-								model.set('paymentTxid', paymentTxid);
-							}
+					_.each(['amount', 'payment'], function(field) {
+						if (model.has(field)) {
+							updates[field] = null;
 						}
-					}
-					if (!model.has('amount')) {
-						updates.amount = model.calculateAmount();
-					}
+					});
 					if (!_.isEmpty(updates)) {
-						model.set(updates);
-						wallet.transactions.save(model.toJSON());
+						updates.txid = model.get('txid');
+						wallet.transactions.save(updates);
 					}
-				});
+				}, this);
 			},
-			refreshTx: function(model, done) {
-				var txid = model.get('txid');
+			refresh: function(done) {
+				var address = wallet.getAddress();
+				var previousResults;
+				async.until(function(next) {
+					next(null, !_.isUndefined(previousResults) && previousResults.length === 0);
+				}, function(next) {
+					var lastSeenTxid;
+					if (previousResults && previousResults.length > 0) {
+						lastSeenTxid = _.last(previousResults).txid;
+					}
+					wallet.fetchTransactions(address, lastSeenTxid, function(error, results) {
+						if (error) return next(error);
+						_.each(results, function(result) {
+							var model = wallet.transactions.get(result.txid);
+							if (!model || model.isMissingInfo() || model.get('status') === 'pending') {
+								wallet.refreshTxQueue.push({ txid: result.txid });
+							}
+						});
+						previousResults = results;
+						next();
+					});
+				}, done);
+			},
+			refreshTx: function(txid, done) {
 				done = done || _.noop;
-				app.wallet.getTx(txid, function(error, tx) {
+				async.parallel({
+					rawTx: _.bind(wallet.fetchRawTx, wallet, txid),
+					tx: _.bind(wallet.fetchTx, wallet, txid),
+				}, function(error, results) {
 					var updates = {};
 					if (error) {
 						if (/transaction not found/i.test(error.message)) {
 							updates.status = 'invalid';
 						}
-					} else if (tx) {
-						var isConfirmed = tx.status && tx.status.confirmed;
-						updates.status = isConfirmed ? 'confirmed' : 'pending';
+					} else {
+						if (results.tx) {
+							var tx = results.tx;
+							var isConfirmed = tx.status && tx.status.confirmed;
+							updates.status = isConfirmed ? 'confirmed' : 'pending';
+						}
+						if (results.rawTx) {
+							updates.rawTx = results.rawTx;
+						}
 					}
 					if (!_.isEmpty(updates)) {
-						model.set(updates);
-						wallet.transactions.save(model.toJSON());
+						updates.txid = txid;
+						wallet.transactions.save(updates);
 					}
-					done(error, tx);
+					done(error);
 				});
 			},
-			load: function(network) {
+			load: function(network, done) {
+				done = done || _.noop;
 				network = network || wallet.getNetwork();
 				app.log('Loading wallet transactions ("' + network + '")');
 				var collection = this.collection;
@@ -555,9 +685,11 @@ app.wallet = (function() {
 						});
 						collection.reset(models);
 						app.log('Wallet transactions loaded ("' + network + '")');
+						done();
 					},
 					error: function(error) {
 						app.log('Failed to load wallet transactions ("' + network + '"): ' + error.message);
+						done(error);
 					},
 				});
 			},
@@ -568,38 +700,27 @@ app.wallet = (function() {
 
 	app.onReady(function() {
 		wallet.transactions.collection = new app.collections.Transactions();
-		wallet.transactions.load();
+		wallet.transactions.load(null, function(error) {
+			if (!error) {
+				wallet.transactions.fixup();
+			}
+		});
 		app.settings.on('change:network', function(network) {
 			wallet.transactions.load(network);
 		});
 	});
 
 	app.onReady(function() {
-		wallet.transactions.fixup();
-	});
-
-	app.onReady(function() {
-		var queue = async.queue(function(task, next) {
-			var txid = task.model.get('txid');
-			if (!txid) return next();
-			var model = app.wallet.transactions.get(txid);
-			if (!model || model.get('status') !== 'pending') return next();
-			app.wallet.transactions.refreshTx(model, function(error) {
+		wallet.refreshTxQueue = async.queue(function(task, next) {
+			wallet.transactions.refreshTx(task.txid, function(error) {
 				if (error) return next(error);
 				_.delay(next, app.config.wallet.transactions.refresh.delay);
 			});
 		}, app.config.wallet.transactions.refresh.concurrency);
-		var addPendingTransactionsToQueue = function() {
-			var models = app.wallet.transactions.collection.where({ status: 'pending' });
-			_.each(models, function(model) {
-				queue.push({ model: model });
-			});
-		};
-		app.wallet.transactions.refreshInterval = setInterval(
-			addPendingTransactionsToQueue,
+		wallet.transactions.refreshInterval = setInterval(
+			wallet.transactions.refresh,
 			app.config.wallet.transactions.refresh.interval
 		);
-		addPendingTransactionsToQueue();
 	});
 
 	_.extend(wallet, Backbone.Events);

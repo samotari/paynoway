@@ -78,13 +78,10 @@ app.lang['en'] = (function() {
 		'send.payment-output.replace-with-dust': 'Replace with dust',
 		'send.scoreboard.payments': 'payments',
 		'send.scoreboard.double-spends': 'double-spends',
-		'send.scoreboard.pending': 'pending',
-		'send.scoreboard.invalid': 'invalid',
-		'send.scoreboard.confirmed': 'confirmed',
+		'send.scoreboard.reset.confirm': 'Are you sure you want to reset your statistics dashboard?',
+		'send.scoreboard.reset.done': 'Your statistics dashboard have been reset.',
 		'send.utxo.empty': 'Your wallet does not have any unspent tx outputs.',
 		'send.utxo.txid': 'txid',
-		'send.utxo.amount': 'amount',
-		'send.confirm-tx-details': 'Are you sure you want to broadcast the following transaction?\n\n({{label}})\n\nADDRESS:\n{{address}}\n\nAMOUNT:\n{{amount}} {{symbol}}\n\nFEE:\n{{fee}} {{symbol}}',
 		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee-rate of {{feeRate}} sats per vbyte?',
 		'send.error-missing-inputs': 'TRANSACTION REJECTED:\nMissing inputs. It is possible that the payment transaction was already confirmed :(',
 		'send.reset-confirm': 'Are you sure you want to reset the form?',
@@ -92,10 +89,21 @@ app.lang['en'] = (function() {
 		'send.return': 'Return',
 		'send.reset': 'Reset',
 
+		'broadcast-tx.confirm': 'Are you sure you want to broadcast the following transaction?\n\n({{label}}){{#each outputs}}\n\n{{amount}} {{symbol}}\n{{#if internal}}(internal){{else}}{{address}}{{/if}}{{/each}}\n\nFEE:\n{{fee}} {{symbol}}',
+		'broadcast-tx.transfer.internal': 'SELF-TRANSFER',
+		'broadcast-tx.transfer.external': 'EXTERNAL TRANSFER',
+		'broadcast-tx.transfer.mixed': 'MIXED TRANSFER',
+		'broadcast-tx.success': 'SUCCESS: Transaction was broadcast successfully.',
+
 		'services.exchange-rates.unsupported-currency-pair': 'Unsupported currency pair: "{{from}}:{{to}}"',
 
-		'tx-broadcast.success': 'SUCCESS: Transaction was broadcast successfully.',
-		'tx-fetch.success': 'Transaction found',
+		'fetch-tx.success': 'Transaction found',
+
+		'tx-status.pending': 'pending',
+		'tx-status.invalid': 'invalid',
+		'tx-status.confirmed': 'confirmed',
+		'tx-type.double-spend': 'double-spend',
+		'tx-type.payment': 'payment',
 
 		'wallet.insuffient-funds': 'Insufficient funds',
 	};

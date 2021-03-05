@@ -10,58 +10,73 @@ app.models.Transaction = (function() {
 		idAttribute: 'txid',
 		defaults: function() {
 			return {
-				amount: null,
 				fee: null,
 				network: null,
 				rawTx: null,
-				paymentTxid: null,
 				status: 'pending',
 				timestamp: Date.now(),
 				type: null,
 			};
 		},
-		calculateAmount: function() {
-			var type = this.get('type');
-			if (type === 'double-spend') {
-				if (!this.has('paymentTxid')) return 0;
-				var paymentTxid = this.get('paymentTxid');
-				var payment = this.collection.findWhere({ txid: paymentTxid });
-				if (!payment) return 0;
-				if (payment.has('amount')) return payment.get('amount');
-				return payment.calculateAmount();
-			}
+		isMissingInfo: function() {
+			return _.some(['rawTx'], function(field) {
+				return !this.has(field);
+			}, this);
+		},
+		getAmount: function() {
+			var amount = this.get('amount') || 0;
+			if (amount) return amount;
 			var tx = this.getDecodedTx();
 			var network = this.get('network');
-			var constants = app.wallet.getNetworkConstants(network);
-			var walletAddress = app.wallet.getAddress(network);
-			return _.chain(tx.outs).filter(function(output) {
-				var address = bitcoin.address.fromOutputScript(output.script, constants);
-				return address !== walletAddress;
-			}).reduce(function(memo, output) {
-				return memo + parseInt(output.value);
-			}, 0).value();
+			var internalAddress = app.wallet.getAddress(network);
+			var outputs;
+			switch (this.get('type')) {
+				case 'payment':
+					// Gather the outputs sent to external addresses.
+					outputs = _.filter(tx.outs, function(out) {
+						var address = app.wallet.scriptToAddress(out.script, network);
+						return address !== internalAddress;
+					});
+					break;
+				case 'double-spend':
+					// Gather the outputs sent to the internal address.
+					outputs = _.filter(tx.outs, function(out) {
+						var address = app.wallet.scriptToAddress(out.script, network);
+						return address === internalAddress;
+					});
+					break;
+			}
+			amount = _.reduce(outputs || [], function(memo, output) {
+				return memo + output.value;
+			}, 0);
+			this.set('amount', amount);
+			return amount;
 		},
-		findDoubleSpentPayment: function() {
-			var tx = this.getDecodedTx();
-			var inputs = _.map(tx.ins, this.txInputToString);
+		getDoubleSpentPayment: function() {
+			var payment = this.get('payment');
+			if (payment) return payment;
+			if (this.get('type') !== 'double-spend') return null;
 			var txid = this.get('txid');
-			return _.find(this.collection.models, function(model) {
-				if (model.get('type') !== 'payment') return false;
-				if (model.get('txid') === txid) return false;
-				var paymentTx = model.getDecodedTx();
-				var paymentInputs = _.map(paymentTx.ins, model.txInputToString);
+			var inputs = this.getTxInputs();
+			var paymentModel = _.chain(this.collection.models).filter(function(model) {
+				return model.get('type') === 'payment' && model.get('txid') !== txid;
+			}).find(function(paymentModel) {
+				var paymentInputs = paymentModel.getTxInputs();
 				return _.some(paymentInputs, function(paymentInput) {
 					return _.contains(inputs, paymentInput);
 				});
-			});
+			}).value();
+			payment = { amount: paymentModel.getAmount() };
+			this.set('payment', payment);
+			return payment;
+		},
+		getTxInputs: function() {
+			var tx = this.getDecodedTx();
+			return _.map(tx.ins, this.txInputToString, this);
 		},
 		getDecodedTx: function() {
 			var rawTx = this.get('rawTx');
 			return bitcoin.Transaction.fromHex(rawTx);
-		},
-		scriptToAddress: function(script, network) {
-			var constants = app.wallet.getNetworkConstants(network);
-			return bitcoin.address.fromOutputScript(script, constants);
 		},
 		txInputToString: function(input) {
 			var txid = Buffer.from(input.hash.reverse()).toString('hex');

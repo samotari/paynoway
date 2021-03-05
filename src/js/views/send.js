@@ -375,8 +375,8 @@ app.views.Send = (function() {
 			var templateHtml = $('#template-send-scoreboard').html();
 			var template = Handlebars.compile(templateHtml);
 			var sums = {
-				payment: this.calculateTxSum('payment'),
-				doubleSpend: this.calculateTxSum('double-spend'),
+				payment: app.wallet.fromBaseUnit(this.calculateTxSum('payment')),
+				doubleSpend: app.wallet.fromBaseUnit(this.calculateTxSum('double-spend')),
 			};
 			var fiatCurrency = app.settings.get('fiatCurrency');
 			var displayCurrency = app.settings.get('displayCurrency');
@@ -417,24 +417,16 @@ app.views.Send = (function() {
 			this.$scoreboard.html(html);
 		},
 		calculateTxSum: function(type) {
-			var models = app.wallet.transactions.collection.models.filter(function(model) {
-				return model.get('type') === type && model.get('status') !== 'invalid';
-			});
-			var sum = _.reduce(models, function(memo, model) {
+			return _.chain(app.wallet.transactions.collection.where({ type: type })).reduce(function(memo, model) {
 				var amount;
-				switch (type) {
-					case 'double-spend':
-						var paymentTxid = model.get('paymentTxid');
-						var payment = app.wallet.transactions.collection.findWhere({ txid: paymentTxid });
-						amount = payment && payment.get('amount') || 0;
-						break;
-					default:
-						amount = model.get('amount') || 0;
-						break;
+				if (type === 'double-spend') {
+					var payment = model.getDoubleSpentPayment();
+					amount = payment && payment.amount || 0;
+				} else {
+					amount = model.getAmount();
 				}
 				return memo + amount;
-			}, 0);
-			return app.wallet.fromBaseUnit(sum);
+			}, 0).value();
 		},
 		updateAddress: function() {
 			if (!this.$inputs) return;
@@ -713,21 +705,7 @@ app.views.Send = (function() {
 				app.mainView.showMessage(error);
 				return;
 			}
-			var amount = app.wallet.fromBaseUnit(payment.amount);
-			var fee = app.wallet.fromBaseUnit(payment.fee);
-			var fiatCurrency = app.settings.get('fiatCurrency');
-			var displayCurrency = app.settings.get('displayCurrency');
-			if (displayCurrency === fiatCurrency) {
-				amount = app.util.convertToFiatAmount(amount);
-				fee = app.util.convertToFiatAmount(fee);
-			}
-			var message = app.i18n.t('send.confirm-tx-details', {
-				label: app.wallet.getAddress() === payment.address ? 'self-transfer' : 'external transfer',
-				address: payment.address,
-				amount: app.util.formatDisplayCurrencyAmount(amount),
-				fee: app.util.formatDisplayCurrencyAmount(fee),
-				symbol: displayCurrency,
-			});
+			var message = app.wallet.prepareBroadcastTxMessage(payment.rawTx, { fee: payment.fee });
 			if (confirm(message)) {
 				// Confirmed - send the payment tx.
 				app.busy(true);
@@ -757,7 +735,7 @@ app.views.Send = (function() {
 						savePayment(payment);
 						handleAutoDoubleSpend();
 						bumpFeeRate();
-						app.mainView.showMessage(app.i18n.t('tx-broadcast.success'));
+						app.mainView.showMessage(app.i18n.t('broadcast-tx.success'));
 					}
 				});
 			} else {
@@ -824,22 +802,7 @@ app.views.Send = (function() {
 				} catch (error) {
 					return next(error);
 				}
-				var amount = app.wallet.fromBaseUnit(doubleSpend.amount);
-				var fee = app.wallet.fromBaseUnit(doubleSpend.fee);
-				var fiatCurrency = app.settings.get('fiatCurrency');
-				var displayCurrency = app.settings.get('displayCurrency');
-				if (displayCurrency === fiatCurrency) {
-					amount = convertToFiatAmount(amount);
-					fee = convertToFiatAmount(fee);
-				}
-				var message = app.i18n.t('send.confirm-tx-details', {
-					label: app.wallet.getAddress() === doubleSpend.address ? 'self-transfer' : 'external transfer',
-					address: doubleSpend.address,
-					amount: formatDisplayCurrencyAmount(amount),
-					fee: formatDisplayCurrencyAmount(fee),
-					symbol: displayCurrency,
-				});
-				if (options.skipConfirmation || confirm(message)) {
+				if (options.skipConfirmation || confirm(app.wallet.prepareBroadcastTxMessage(doubleSpend.rawTx, { fee: doubleSpend.fee }))) {
 					// Confirmed - send double-spend transaction.
 					app.busy(true);
 					app.wallet.broadcastRawTx(doubleSpend.rawTx, { wide: true }, next);
@@ -857,7 +820,7 @@ app.views.Send = (function() {
 				} else if (txid) {
 					// Successfully broadcast double-spend tx.
 					resetForm();
-					app.mainView.showMessage(app.i18n.t('tx-broadcast.success'));
+					app.mainView.showMessage(app.i18n.t('broadcast-tx.success'));
 				}
 			});
 		},
@@ -877,11 +840,10 @@ app.views.Send = (function() {
 			this.saveTransaction(doubleSpend, 'double-spend');
 		},
 		saveTransaction: function(data, type) {
-			var transaction = _.pick(data, 'amount', 'fee', 'rawTx', 'txid');
+			var transaction = _.pick(data, 'fee', 'rawTx', 'txid');
 			transaction.status = 'pending';
 			transaction.type = type;
 			transaction.network = app.wallet.getNetwork();
-			transaction.paymentTxid = data.payment && data.payment.txid || null;
 			app.wallet.transactions.save(transaction);
 		},
 		reset: function() {

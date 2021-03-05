@@ -27,33 +27,14 @@ app.views.HistoryItem = (function() {
 			var data = app.views.utility.ListItem.prototype.serializeData.apply(this, arguments);
 			data.txidShort = data.txid.substr(0, 7);
 			data.url = app.wallet.getBlockExplorerUrl('tx', { txid: data.txid });
+			data.status = data.status && app.i18n.t('tx-status.' + data.status) || '-';
+			data.type = data.type && app.i18n.t('tx-type.' + data.type) || '-';
 			return data;
 		},
 		broadcast: function() {
-			var tx = this.model.getDecodedTx();
-			var network =this.model.get('network');
-			var sortedOutputs = _.sortBy(tx.outs, function(output) {
-				return output.value;
-			});
-			var largestOutput = _.first(sortedOutputs);
-			var address = this.model.scriptToAddress(largestOutput.script, network);
-			var amount = app.wallet.fromBaseUnit(largestOutput.value);
-			var fee = app.wallet.fromBaseUnit(this.model.get('fee'));
-			var fiatCurrency = app.settings.get('fiatCurrency');
-			var displayCurrency = app.settings.get('displayCurrency');
-			if (displayCurrency === fiatCurrency) {
-				amount = app.util.convertToFiatAmount(amount);
-				fee = app.util.convertToFiatAmount(fee);
-			}
-			var message = app.i18n.t('send.confirm-tx-details', {
-				label: app.wallet.getAddress() === address ? 'self-transfer' : 'external transfer',
-				address: address,
-				amount: app.util.formatDisplayCurrencyAmount(amount),
-				fee: app.util.formatDisplayCurrencyAmount(fee),
-				symbol: displayCurrency,
-			});
+			var rawTx = this.model.get('rawTx');
+			var message = app.wallet.prepareBroadcastTxMessage(rawTx);
 			if (confirm(message)) {
-				var rawTx = this.model.get('rawTx');
 				app.busy(true);
 				app.wallet.broadcastRawTx(rawTx, { wide: true }, function(error, txid) {
 					app.busy(false);
@@ -61,7 +42,7 @@ app.views.HistoryItem = (function() {
 						app.log(error);
 						app.mainView.showMessage(error);
 					} else if (txid) {
-						app.mainView.showMessage(app.i18n.t('tx-broadcast.success'));
+						app.mainView.showMessage(app.i18n.t('broadcast-tx.success'));
 					}
 				});
 			} else {
@@ -70,13 +51,13 @@ app.views.HistoryItem = (function() {
 		},
 		refresh: function() {
 			app.busy(true);
-			app.wallet.transactions.refreshTx(this.model, function(error, tx) {
+			app.wallet.transactions.refreshTx(this.model.get('txid'), function(error, tx) {
 				app.busy(false);
 				if (error) {
 					app.log(error);
 					app.mainView.showMessage(error);
 				} else if (tx) {
-					app.mainView.showMessage(app.i18n.t('tx-fetch.success'));
+					app.mainView.showMessage(app.i18n.t('fetch-tx.success'));
 				}
 			});
 		},
