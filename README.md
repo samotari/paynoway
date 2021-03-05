@@ -19,9 +19,10 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
 
 ## Disclaimers
 
-* This project is intended to be used for testing purposes.
+* This app is intended to be used for testing and educational purposes.
 * Please do not use this app to double-spend against merchants without their explicit consent.
 * A successful double-spend is not guaranteed - use at your own risk.
+* You are responsible for creating a backup of your private key(s). Without a backup, if you delete the app or lose your device, your funds will be permanently lost.
 
 
 ## Requirements
