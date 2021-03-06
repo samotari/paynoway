@@ -55,22 +55,7 @@ app.views.Send = (function() {
 					{
 						name: 'camera',
 						fn: function(value, cb) {
-							var $inputs = this.$inputs;
-							app.device.scanQRCodeWithCamera(function(error, data) {
-								if (error) return cb(error);
-								try {
-									if (data.indexOf(':') !== -1) {
-										var parsed = app.util.parsePaymentRequest(data);
-										data = parsed.address;
-										if (parsed.amount) {
-											$inputs.amount.val(parsed.amount);
-										}
-									}
-								} catch (error) {
-									return cb(error);
-								}
-								cb(null, data);
-							});
+							app.device.scanQRCodeWithCamera(this.createScanQRCodeCallbackWrap(cb));
 						},
 					},
 				],
@@ -228,6 +213,45 @@ app.views.Send = (function() {
 			this.updateBalance();
 			this.updateAmount();
 			this.updateScoreboard();
+		},
+		createScanQRCodeCallbackWrap: function(cb) {
+			var model = this.model;
+			var $inputs = this.$inputs;
+			return function(error, data) {
+				if (error) return cb(error);
+				try {
+					if (data.indexOf(':') !== -1) {
+						// Likely BIP21 payment request.
+						var parsed = app.util.parsePaymentRequest(data);
+						if (parsed.address) {
+							if (app.util.isProbableLightningNetworkInvoice(parsed.address)) {
+								// Lightning Network invoice.
+								throw new Error(app.i18n.t('send.qrcode-scan-camera.ln-invoice-not-supported'));
+							}
+							if (parsed.options.amount) {
+								// Amounts specified in BIP21 payment requests are whole coin amounts.
+								var amount = app.wallet.toBaseUnit(parsed.options.amount);
+								model.set('amount', amount);
+							}
+							if (!app.wallet.isValidAddress(parsed.address)) {
+								throw new Error(app.i18n.t('send.qrcode-scan-camera.bip21.invalid-address'));
+							}
+							return cb(null, parsed.address);
+						} else if (parsed.options.r) {
+							// Backwards-incompatible BIP70/71/72 payment request.
+							throw new Error(app.i18n.t('send.qrcode-scan-camera.bip70-not-supported'));
+						}
+					} else if (app.util.isProbableLightningNetworkInvoice(data)) {
+						throw new Error(app.i18n.t('send.qrcode-scan-camera.ln-invoice-not-supported'));
+					} else if (app.wallet.isValidAddress(data)) {
+						// Just an on-chain address.
+						return cb(null, data);
+					}
+					throw new Error(app.i18n.t('send.qrcode-scan-camera.unknown-format'));
+				} catch (error) {
+					return cb(error);
+				}
+			};
 		},
 		refreshBalance: function() {
 			this.refreshUnspentTxOutputs();

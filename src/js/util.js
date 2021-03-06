@@ -110,6 +110,11 @@ app.util = (function() {
 			return app.util.formatNumber(amount, displayCurrency);
 		},
 
+		isProbableLightningNetworkInvoice: function(data) {
+
+			return data.substr(0, 2) === 'ln';
+		},
+
 		parsePaymentRequest: function(payReq) {
 
 			if (!payReq) return null;
@@ -117,21 +122,19 @@ app.util = (function() {
 				throw new Error(app.i18n.t('util.invalid-payment-request'));
 			}
 			var parts = payReq.split(':');
-			var network = parts[0];
-			var address, amount;
+			var address;
+			var options = {};
 			if (parts[1].indexOf('?') !== -1) {
 				var moreParts = parts[1].split('?');
-				var params = querystring.parse(moreParts[1]);
 				address = moreParts[0];
-				amount = params.amount;
+				var params = querystring.parse(moreParts[1]);
+				options = _.extend({}, options, _.pick(params, 'amount', 'label', 'r'));
 			} else {
 				address = parts[1];
-				amount = 0;
 			}
 			var parsed = {
-				network: network,
 				address: address,
-				amount: amount,
+				options: options,
 			};
 			return parsed;
 		},
