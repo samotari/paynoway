@@ -569,7 +569,9 @@ app.config = (function() {
 					return app.i18n.t('configure.locale');
 				},
 				notes: function() {
-					return app.i18n.t('configure.locale.notes');
+					return app.i18n.t('configure.locale.notes', {
+						projectTranslationsUrl: 'https://github.com/samotari/pay-no-way#translations',
+					});
 				},
 				visible: false,
 				type: 'select',
@@ -608,7 +610,7 @@ app.config = (function() {
 				refresh: {
 					concurrency: 1,
 					delay: 3000,
-					interval: 60000,
+					interval: 3 * 60 * 1000,
 				},
 			},
 		},

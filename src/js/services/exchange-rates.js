@@ -167,6 +167,7 @@ app.services.exchangeRates = (function() {
 			var ajaxOptions = {
 				method: 'GET',
 				url: url,
+				cache: false,
 				dataType: 'json',
 				dataFilter: _.bind(function(data) {
 					try {

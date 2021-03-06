@@ -48,6 +48,7 @@ app.abstracts.WebService = (function() {
 		var ajaxOptions = {
 			method: method.toUpperCase(),
 			url: url,
+			cache: false,
 		};
 		if (data) {
 			if (!_.isString(data)) {

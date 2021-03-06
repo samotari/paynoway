@@ -529,8 +529,11 @@ app.wallet = (function() {
 			if (_.isNull(fee)) {
 				var txid = tx.getId();
 				var model = wallet.transactions.get(txid);
-				if (model && model.has('fee')) {
-					fee = model.get('fee');
+				try {
+					fee = model.getFee();
+				} catch (error) {
+					app.log(error);
+					fee = null;
 				}
 			}
 			if (fee) {
@@ -541,9 +544,9 @@ app.wallet = (function() {
 				fee = app.util.formatDisplayCurrencyAmount(fee);	
 			}
 			var direction;
-			if (outputSums.external <= wallet.getDustLimit()) {
+			if (outputSums.external <= wallet.calculateDustLimit()) {
 				direction = 'internal';
-			} else if (outputSums.internal <= wallet.getDustLimit()) {
+			} else if (outputSums.internal <= wallet.calculateDustLimit()) {
 				direction = 'external';
 			} else {
 				direction = 'mixed';
@@ -556,8 +559,10 @@ app.wallet = (function() {
 			});
 		},
 
-		getDustLimit: function(network) {
+		calculateDustLimit: function(network) {
 			var networkConfig = this.getNetworkConfig(network);
+			// Re-visit this.
+			// !!!
 			return networkConfig && networkConfig.dustLimit || 1;
 		},
 

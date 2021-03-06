@@ -23,6 +23,46 @@ app.models.Transaction = (function() {
 				return !this.has(field);
 			}, this);
 		},
+		getFee: function() {
+			var fee = this.get('fee') || 0;
+			if (fee) return fee;
+			var tx = this.getDecodedTx();
+			fee = this.calculateFee(tx.ins, tx.outs);
+			this.set('fee', fee);
+			return fee;
+		},
+		calculateFee: function(ins, outs) {
+			ins = ins || [];
+			outs = outs || [];
+			if (ins.length === 0) {
+				throw new Error('Cannot calculate fee without inputs');
+			}
+			if (outs.length === 0) {
+				throw new Error('Cannot calculate fee without outputs');
+			}
+			var inputs = _.chain(ins).map(function(input) {
+				var txid = Buffer.from(input.hash.reverse()).toString('hex');
+				if (!txid) return;
+				var model = app.wallet.transactions.get(txid);
+				if (!model) return;
+				var tx = model.getDecodedTx();
+				if (!tx) return;
+				var output = tx.outs[input.index];
+				if (!output) return;
+				input.value = output.value;
+				return input;
+			}).compact().value();
+			if (inputs.length !== ins.length) {
+				throw new Error('Unable to find all input funding sources');
+			}
+			var sumInputs = _.reduce(inputs, function(memo, input) {
+				return memo + input.value;
+			}, 0);
+			var sumOutputs = _.reduce(outs, function(memo, output) {
+				return memo + output.value;
+			}, 0);
+			return sumInputs - sumOutputs;
+		},
 		getAmount: function() {
 			var amount = this.get('amount') || 0;
 			if (amount) return amount;

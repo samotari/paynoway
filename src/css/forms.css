@@ -135,9 +135,11 @@
 }
 .form-field-action.undo {
 	background-image: url('../images/undo.svg');
+	background-size: 1.6rem;
 }
 .form-field-action.test {
 	background-image: url('../images/test.svg');
+	background-size: 1.6rem;
 }
 .form-description {
 	font-size: .9rem;

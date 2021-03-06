@@ -32,6 +32,9 @@
 	text-align: center;
 	padding: .4rem;
 }
+.view.history td {
+	padding: .6rem .4rem;
+}
 .view.history th:first-child,
 .view.history td:first-child {
 	text-align: left;

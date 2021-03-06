@@ -12,7 +12,7 @@ app.views.Debug = (function() {
 		events: {
 			'click .copy-to-clipboard': 'copyToClipboard',
 		},
-		serializeData: function() {
+		getDebugInfo: function() {
 			return {
 				app: app.info.name,
 				repository: app.info.repoUrl,
@@ -20,8 +20,15 @@ app.views.Debug = (function() {
 				commit: app.info.commitHash,
 			};
 		},
+		serializeData: function() {
+			return _.extend({}, this.getDebugInfo(), {
+				description: app.i18n.t('debug.description', {
+					projectIssuesUrl: 'https://github.com/samotari/pay-no-way/issues',
+				}),
+			});
+		},
 		copyToClipboard: function() {
-			var text = JSON.stringify(this.serializeData(), null, 4/* indentation */);
+			var text = JSON.stringify(this.getDebugInfo(), null, 4/* indentation */);
 			if (text) {
 				try {
 					if (app.device.clipboard.copy(text)) {

@@ -6,6 +6,7 @@ html, body {
 	font-family: 'OpenSans', sans-serif, arial;
 	background: #fff;
 	overflow: hidden;
+	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
 }

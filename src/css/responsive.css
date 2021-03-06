@@ -96,8 +96,11 @@
 	.view.send .form-row + .form-row.form-row--autoBroadcastDoubleSpendDelay {
 		margin-top: .4rem;
 	}
+	.view.debug {
+		padding-bottom: 4.6rem;
+	}
 	.view.debug pre {
 		font-size: 1rem;
-		line-height: 1.2rem;
+		line-height: 1rem;
 	}
 }
