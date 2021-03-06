@@ -13,6 +13,7 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
     * [Running on Android (VM)](#running-on-android-vm)
     * [Running on Android (Device)](#running-on-android-device)
 * [Tests](#tests)
+* [Translations](#translations)
 * [Changelog](#changelog)
 * [License](#license)
 
@@ -122,6 +123,39 @@ This project includes automated tests. To run them:
 ```bash
 npm test
 ```
+
+
+## Translations
+
+Your help in translating the app into other languages is welcome. To do so please see the following steps:
+
+* Find the app's primary language file [here](https://github.com/samotari/pay-no-way/blob/master/src/js/lang/en.js).
+* Copy the contents of the file to the text editing program of your choice.
+* Change the values only - leave the keys un-translated. The reference keys are used internally in the app. Please see the following example:
+
+```js
+var app = app || {};
+
+app.lang = app.lang || {};
+
+// The lang key here is the ISO_639-1 language code. See:
+// https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+app.lang['es'] = (function() {
+
+	return {
+		'self.label': 'Español'
+		'busy-text': 'Espere por favor...',
+		'close': 'Cerrar',
+		'copy': 'Copiar',
+	};
+
+})();
+```
+
+* Once you've finished the translations, create an issue in this project [here](https://github.com/samotari/pay-no-way/issues) and copy/paste the contents of your translation file into the new issue.
+	* Alternatively, you can fork this project and create a pull-request with the new file.
+
+* Thanks for taking the time to make a translation!
 
 
 ## Changelog
