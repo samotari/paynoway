@@ -563,6 +563,28 @@ app.config = (function() {
 					});
 				},
 			},
+			{
+				name: 'locale',
+				label: function() {
+					return app.i18n.t('configure.locale');
+				},
+				notes: function() {
+					return app.i18n.t('configure.locale.notes');
+				},
+				visible: false,
+				type: 'select',
+				default: function() {
+					return app.config.defaultLocale;
+				},
+				options: function() {
+					return _.map(app.lang, function(strings, locale) {
+						return {
+							key: locale,
+							label: strings['self.label'],
+						};
+					});
+				},
+			},
 		],
 		touch: {
 			quick: {

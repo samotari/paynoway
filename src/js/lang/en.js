@@ -37,6 +37,8 @@ app.lang['en'] = (function() {
 		'configure.exchangeRateProvider': 'Exchange Rate Provider',
 		'configure.network-deprecated': 'The selected network is no longer supported by this app.',
 		'configure.network-deprecated.export-wif': 'Please use the button below to export your private key.',
+		'configure.locale': 'Language',
+		'configure.locale.notes': 'Missing your language or see a wrong translation? Please visit <a href="https://github.com/samotari/pay-no-way#translations">the app\'s project page</a> to learn how to submit new or corrected translations.',
 
 		'debug.title': 'Debug Info',
 		'debug.description': 'Please copy/paste the information shown here when reporting problems to the project\'s issue tracker.',
