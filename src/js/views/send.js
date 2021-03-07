@@ -560,6 +560,18 @@ app.views.Send = (function() {
 			}
 			return value;
 		},
+		getNumberInputValue: function(field) {
+			var formData = this.getFormData();
+			var value = (new BigNumber(formData[field])).toNumber();
+			if (field === 'amount') {
+				var displayCurrency = app.settings.get('displayCurrency');
+				var coinSymbol = app.wallet.getCoinSymbol();
+				if (displayCurrency !== coinSymbol) {
+					return app.wallet.toBaseUnit(app.util.convertToCoinAmount(value));
+				}
+			}
+			return value;
+		},
 		onPaymentChange: function() {
 			this.toggleFlags();
 			if (this.paymentWasSent()) {
@@ -583,7 +595,8 @@ app.views.Send = (function() {
 			app.views.utility.Form.prototype.process.apply(this, arguments);
 		},
 		allRequiredFieldsFilledIn: function() {
-			return this.getAmountFromInputField() > 0 && app.views.utility.Form.prototype.allRequiredFieldsFilledIn.apply(this, arguments);
+			var amount = this.getNumberInputValue('amount');
+			return amount > 0 && app.views.utility.Form.prototype.allRequiredFieldsFilledIn.apply(this, arguments);
 		},
 		save: function(data) {
 			// Don't continue until all required fields have been filled-in.
@@ -594,11 +607,7 @@ app.views.Send = (function() {
 		},
 		createPayment: function() {
 			var formData = this.getFormData();
-			var displayAmount = formData.amount;
-			var displayCurrency = app.settings.get('displayCurrency');
-			var coinSymbol = app.wallet.getCoinSymbol();
-			var coinAmount = displayCurrency === coinSymbol ? displayAmount : app.util.convertToCoinAmount(displayAmount);
-			var amount = app.wallet.toBaseUnit(coinAmount);
+			var amount = this.getNumberInputValue('amount');
 			var validationErrors = [];
 			if (amount <= 0) {
 				validationErrors.push({
@@ -619,7 +628,7 @@ app.views.Send = (function() {
 				throw new Error(app.i18n.t('send.create-payment.errors'));
 			}
 			// Convert to satoshis/kilobyte.
-			var feeRate = this.getFeeRateFromInputField() * 1000;
+			var feeRate = this.getNumberInputValue('feeRate') * 1000;
 			// Need the unspent transaction outputs that will be used as inputs for this tx.
 			var utxo = this.model.get('utxo');
 			// Sequence number for inputs must be less than the maximum.
@@ -651,16 +660,10 @@ app.views.Send = (function() {
 				utxo: utxo,
 			};
 		},
-		getAmountFromInputField: function() {
-			return (new BigNumber(this.getFormData().amount)).toNumber();
-		},
-		getFeeRateFromInputField: function() {
-			return (new BigNumber(this.getFormData().feeRate)).toNumber();
-		},
 		createDoubleSpend: function(payment) {
 			payment = payment || this.model.get('payment');
 			// Convert to satoshis/kilobyte.
-			var feeRate = this.getFeeRateFromInputField() * 1000;
+			var feeRate = this.getNumberInputValue('feeRate') * 1000;
 			var address = app.wallet.getAddress();
 			// Need the unspent transaction outputs that will be used as inputs for this tx.
 			var utxo = payment.utxo;
@@ -677,7 +680,7 @@ app.views.Send = (function() {
 			if (this.getCacheableOptionValue('paymentOutput') === 'replaceWithDust') {
 				extraOutputs.push({
 					address: payment.address,
-					value: 1,
+					value: app.wallet.calculateDustLimit(payment.address),
 				});
 			}
 			// Build a sample tx so that we can calculate the fee.
@@ -688,9 +691,14 @@ app.views.Send = (function() {
 			});
 			// Calculate the size of the sample tx (in kilobytes).
 			var virtualSize = sampleTx.virtualSize() / 1000;
-			// Use the size of the tx to calculate the fee.
-			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(virtualSize * feeRate);
+			var fee = Math.max(
+				// Must pay at least the same fee as the tx to be replaced.
+				// https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#implementation-details
+				payment.fee,
+				// Use the size of the sample tx to calculate the fee.
+				// The fee rate is satoshis/kilobyte.
+				Math.ceil(virtualSize * feeRate),
+			);
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,
 				sequence: sequence,
@@ -858,7 +866,8 @@ app.views.Send = (function() {
 			this.$inputs.feeRate.val(newFeeRate);
 		},
 		calculateBumpedFeeRate: function() {
-			return (new BigNumber(this.getFeeRateFromInputField())).plus(app.wallet.getBumpFeeRate()).toNumber();
+			var feeRate = this.getNumberInputValue('feeRate');
+			return (new BigNumber(feeRate)).plus(app.wallet.getBumpFeeRate()).toNumber();
 		},
 		saveDoubleSpend: function(doubleSpend) {
 			this.saveTransaction(doubleSpend, 'double-spend');
@@ -879,7 +888,7 @@ app.views.Send = (function() {
 		resetForm: function() {
 			if (this.$inputs) {
 				this.$inputs.address.val('');
-				this.$inputs.amount.val(0).trigger('change');
+				this.$inputs.amount.val('0').trigger('change');
 				this.$inputs.feeRate.val(this.model.get('minRelayFeeRate') || 1);
 			}
 			this.clearCache('payment');

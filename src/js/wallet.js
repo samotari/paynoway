@@ -206,10 +206,15 @@ app.wallet = (function() {
 			return app.services.exchangeRates.getCacheKey('rate', options);
 		},
 
-		getOutputScriptHash: function(address, constants) {
-			var outputScript = bitcoin.address.toOutputScript(address, constants);
+		getOutputScriptHash: function(address, network) {
+			var outputScript = this.getOutputScript(address, network);
 			var hash = bitcoin.crypto.sha256(outputScript);
 			return Buffer.from(hash.reverse()).toString('hex');
+		},
+
+		getOutputScript: function(address, network) {
+			var constants = wallet.getNetworkConstants(network);
+			return bitcoin.address.toOutputScript(address, constants);
 		},
 
 		getAddress: function(network, wif) {
@@ -402,6 +407,11 @@ app.wallet = (function() {
 				}).compact().value();
 			}
 			var changeValue = (utxoValueConsumed - value) - fee;
+			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
+				_.each(options.extraOutputs, function(extraOutput) {
+					changeValue -= extraOutput.value;
+				});
+			}
 			if (changeValue < 0) {
 				throw new Error(app.i18n.t('wallet.insuffient-funds'));
 			}
@@ -501,26 +511,31 @@ app.wallet = (function() {
 			var internalAddress = wallet.getAddress();
 			var outputs = _.map(tx.outs, function(output) {
 				var address = wallet.scriptToAddress(output.script);
-				var amount = wallet.fromBaseUnit(output.value);
+				var displayAmount = wallet.fromBaseUnit(output.value);
 				if (displayCurrency === fiatCurrency) {
-					amount = app.util.convertToFiatAmount(amount);
+					displayAmount = app.util.convertToFiatAmount(displayAmount);
 				}
-				amount = app.util.formatDisplayCurrencyAmount(amount);
+				displayAmount = app.util.formatDisplayCurrencyAmount(displayAmount);
 				return {
 					address: address,
-					amount: amount,
+					amount: displayAmount,
+					value: output.value,
 					internal: address === internalAddress,
 					symbol: displayCurrency,
 				};
 			}, this);
-			var outputSums = {
+			var nonDustOutputSums = {
 				internal: _.chain(outputs).filter(function(output) {
-					return output.address === internalAddress;
+					if (output.address !== internalAddress) return false;
+					var dustLimit = wallet.calculateDustLimit(output.address);
+					return output.value >= dustLimit * 2;
 				}).reduce(function(memo, output) {
 					return memo + output.value;
 				}, 0).value(),
 				external: _.chain(outputs).filter(function(output) {
-					return output.address !== internalAddress;
+					if (output.address === internalAddress) return false;
+					var dustLimit = wallet.calculateDustLimit(output.address);
+					return output.value >= dustLimit * 2;
 				}).reduce(function(memo, output) {
 					return memo + output.value;
 				}, 0).value(),
@@ -544,9 +559,9 @@ app.wallet = (function() {
 				fee = app.util.formatDisplayCurrencyAmount(fee);	
 			}
 			var direction;
-			if (outputSums.external <= wallet.calculateDustLimit()) {
+			if (nonDustOutputSums.external === 0) {
 				direction = 'internal';
-			} else if (outputSums.internal <= wallet.calculateDustLimit()) {
+			} else if (nonDustOutputSums.internal === 0) {
 				direction = 'external';
 			} else {
 				direction = 'mixed';
@@ -559,11 +574,32 @@ app.wallet = (function() {
 			});
 		},
 
-		calculateDustLimit: function(network) {
-			var networkConfig = this.getNetworkConfig(network);
-			// Re-visit this.
-			// !!!
-			return networkConfig && networkConfig.dustLimit || 1;
+		isPayToPublicKeyHashAddress: function(address, network) {
+			var testAddress;
+			try {
+				testAddress = bitcoin.payments.p2pkh({
+					network: app.wallet.getNetworkConstants(network),
+					hash: Buffer.from(
+						bitcoin.script.decompile(
+							app.wallet.getOutputScript(app.wallet.getAddress())
+						)[1]
+					),
+				}).address;
+			} catch (error) {
+				app.log(error);
+				return false;
+			}
+			return testAddress === address;
+		},
+
+		// See:
+		// https://github.com/bitcoin/bitcoin/blob/4a540683ec40393d6369da1a9e02e45614db936d/src/policy/policy.cpp#L14-L46
+		calculateDustLimit: function(address, network) {
+			if (address && !wallet.isPayToPublicKeyHashAddress(address, network)) {
+				// Is witness program.
+				return 294;
+			}
+			return 546;
 		},
 
 		resetStatistics: function() {
