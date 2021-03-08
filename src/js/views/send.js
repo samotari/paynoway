@@ -441,7 +441,10 @@ app.views.Send = (function() {
 			this.$scoreboard.html(html);
 		},
 		calculateTxSum: function(type) {
-			return _.chain(app.wallet.transactions.collection.where({ type: type })).reduce(function(memo, model) {
+			return _.chain(app.wallet.transactions.collection.where({
+				type: type,
+				status: 'confirmed',
+			})).reduce(function(memo, model) {
 				var amount;
 				if (type === 'double-spend') {
 					var payment = model.getDoubleSpentPayment();
