@@ -1,6 +1,6 @@
 # Changelog
 
-* TBD:
+* v2.0.0:
   * Easily toggle between fiat currency or coin amounts in send view by clicking any displayed amount
   * Added new config options for fiat currency and exchange rate provider
   * Export WIF as QR code or copy to clipboard
@@ -10,6 +10,7 @@
   * Added button to re-fetch fee rate in send view
   * Most buttons now have both an icon and text
   * Ensure active input field is visible when system keyboard shown
+  * Improved handling of BIP21-style payment requests - includes error messages for BIP70 (not supported) and Lightning Network payment requests.
   * Improvements for smaller screens
   * Removed ElectrumX server communication
   * App now uses a web service API (esplora or mempool) to perform coin-related functions (e.g broadcast raw transactions). Can use default web service instance, or self-host your own.
