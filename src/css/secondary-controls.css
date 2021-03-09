@@ -92,6 +92,9 @@
 .button.secondary-control.reject:before {
 	background-image: url('../images/cancel.svg');
 }
+.button.secondary-control.zero:before {
+	background-image: url('../images/zero.svg');
+}
 .button.secondary-control.back.touchstart {
 	background-color: rgba(200,200,200,0.6);
 }

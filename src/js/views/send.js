@@ -570,7 +570,7 @@ app.views.Send = (function() {
 				var displayCurrency = app.settings.get('displayCurrency');
 				var coinSymbol = app.wallet.getCoinSymbol();
 				if (displayCurrency !== coinSymbol) {
-					return app.util.convertToCoinAmount(value);
+					value = app.util.convertToCoinAmount(value);
 				}
 				value = app.wallet.toBaseUnit(value);
 			}

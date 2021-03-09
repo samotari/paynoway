@@ -103,4 +103,7 @@
 		font-size: 1rem;
 		line-height: 1rem;
 	}
+	.view.history {
+		padding-bottom: 3.6rem;
+	}
 }

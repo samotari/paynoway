@@ -62,6 +62,9 @@ app.lang['en'] = (function() {
 		'history.list-header.status': 'status',
 		'history.list-header.type': 'type',
 		'history.empty': 'No transactions yet for this network.',
+		'history.reset-statistics': 'Reset statistics dashboard',
+		'history.reset-statistics.confirm': 'Are you sure you want to reset your statistics dashboard?',
+		'history.reset-statistics.done': 'Your statistics dashboard has been reset.',
 
 		'receive.title': 'Receiving Address',
 
@@ -86,8 +89,6 @@ app.lang['en'] = (function() {
 		'send.payment-output.replace-with-dust': 'Replace with dust',
 		'send.scoreboard.payments': 'payments',
 		'send.scoreboard.double-spends': 'double-spends',
-		'send.scoreboard.reset.confirm': 'Are you sure you want to reset your statistics dashboard?',
-		'send.scoreboard.reset.done': 'Your statistics dashboard has been reset.',
 		'send.utxo.empty': 'Your wallet does not have any unspent tx outputs.',
 		'send.utxo.txid': 'txid',
 		'send.error-insufficient-fee-confirm-retry': 'TRANSACTION REJECTED:\nInsufficient fee. Do you want to retry with the suggested fee-rate of {{feeRate}} sats per vbyte?',
