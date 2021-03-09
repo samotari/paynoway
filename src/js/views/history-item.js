@@ -56,7 +56,7 @@ app.views.HistoryItem = (function() {
 				if (error) {
 					app.log(error);
 					app.mainView.showMessage(error);
-				} else if (tx) {
+				} else {
 					app.mainView.showMessage(app.i18n.t('fetch-tx.success'));
 				}
 			});

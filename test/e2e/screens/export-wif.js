@@ -15,13 +15,13 @@ describe('#export-wif', function() {
 
 	const wif = 'cPTM4uJTjqX7LA9Qa24AeZRNut3s1Vyjm4ovzgp7zS1RjxJNGKMV';
 	before(function() {
-		return manager.evaluateInPageContext(function(wif) {
+		return manager.page.evaluate(function(options) {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
-			app.wallet.saveSetting('wif', wif);
+			app.wallet.saveSetting('wif', options.wif);
 			app.wallet.saveSetting('addressType', 'p2wpkh');
 			app.wallet.getAddress();
-		}, [ wif ]);
+		}, { wif });
 	});
 
 	before(function() {

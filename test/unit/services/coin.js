@@ -149,7 +149,7 @@ describe('services.coin', function() {
 	];
 
 	before(function() {
-		return manager.evaluateInPageContext(function() {
+		return manager.page.evaluate(function() {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
 		});

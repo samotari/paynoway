@@ -8,7 +8,7 @@ describe('#configure', function() {
 	};
 
 	before(function() {
-		return manager.evaluateInPageContext(function() {
+		return manager.page.evaluate(function() {
 			app.setHasReadDisclaimersFlag();
 			app.wallet.saveSetting('wif', null);
 		});

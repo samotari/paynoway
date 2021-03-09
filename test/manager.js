@@ -6,17 +6,109 @@ const path = require('path');
 const puppeteer = require('puppeteer');
 const serveStatic = require('serve-static');
 
+const fixtures = require('./fixtures');
+
 let manager = module.exports = {
 
 	browser: null,
 	page: null,
 	puppeteer: puppeteer,
+	fixtures,
 
 	prepareStaticWebServer: function() {
 		return new Promise(function(resolve, reject) {
 			try {
 				let app = express();
 				app.use(serveStatic('www'));
+				app.mock = {
+					data: {
+						rate: '50000.00',
+					},
+					endpoints: {
+						// Web / broadcast transaction service:
+						broadcastRawTx: {
+							endpoint: 'POST /api/tx',
+							defaultCallback: function(req, res, next) {
+								res.send('9764082447ef195d66dec5c63520adbef4a1788579ef08418e8322ee7721a4b8');
+							},
+						},
+						// Web service:
+						fetchMinRelayFeeRate: {
+							endpoint: 'GET /api/fee-estimates',
+							defaultCallback: function(req, res, next) {
+								res.json({ '1008': 1 });
+							},
+						},
+						fetchTx: {
+							endpoint: 'GET /api/tx/:txid',
+							defaultCallback: function(req, res, next) {
+								const tx = _.find(fixtures.transactions, function(transaction) {
+									return !!transaction.rawTx;
+								});
+								res.json({
+									txid: tx.txid,
+									status: {
+										confirmed: tx.status === 'confirmed',
+									},
+								});
+							},
+						},
+						fetchRawTx: {
+							endpoint: 'GET /api/tx/:txid/hex',
+							defaultCallback: function(req, res, next) {
+								const tx = _.find(fixtures.transactions, function(transaction) {
+									return !!transaction.rawTx;
+								});
+								res.json(tx.rawTx);
+							},
+						},
+						fetchUnspentTxOutputs: {
+							endpoint: 'GET /api/address/:address/utxo',
+							defaultCallback: function(req, res, next) {
+								res.json(fixtures.utxo);
+							},
+						},
+						fetchTransactions: {
+							endpoint: 'GET /api/address/:address/txs',
+							defaultCallback: function(req, res, next) {
+								res.json([]);
+							},
+						},
+						fetchTransactionsFromLastSeen: {
+							endpoint: 'GET /api/address/:address/txs/chain/:last_seen_txid',
+							defaultCallback: function(req, res, next) {
+								res.json([]);
+							},
+						},
+						// Exchange rate service:
+						fetchExchangeRate: {
+							endpoint: 'GET /api/exchange-rate',
+							defaultCallback: function(req, res, next) {
+								res.json({ result: app.mock.data.rate });
+							},
+						},
+					},
+					overrides: {},
+					setOverride: function(name, callback) {
+						app.mock.overrides[name] = callback;
+					},
+					clearOverride: function(name) {
+						app.mock.setOverride('fetchUnspentTxOutputs', null);
+					},
+				};
+				_.each(app.mock.endpoints, function(info, name) {
+					const { defaultCallback, endpoint } = info;
+					const parts = endpoint.split(' ');
+					const verb = parts[0].toLowerCase();
+					const uri = parts[1];
+					app[verb](uri, function(req, res, next) {
+						if (app.mock.overrides[name]) {
+							app.mock.overrides[name].call(this, req, res, next);
+						} else {
+							defaultCallback.call(this, req, res, next);
+						}
+					});
+				});
 				app.server = app.listen(3000, function(error) {
 					if (error) return reject(error);
 					resolve(app);
@@ -69,14 +161,6 @@ let manager = module.exports = {
 		return manager.browser.newPage().then(function(newPage) {
 			manager.page = newPage;
 		});
-	},
-
-	evaluateInPageContext: function(fn, args) {
-		args = args || [];
-		if (!_.isFunction(fn)) {
-			return Promise.reject(new Error('Invalid argument ("fn"): Function expected'));
-		}
-		return manager.page.evaluate.apply(manager.page, [fn].concat(args));
 	},
 
 	getPageLocationHash: function() {
@@ -212,13 +296,28 @@ let manager = module.exports = {
 				});
 			});
 		}, { selector }).then(function(message) {
-			if (_.isUndefined(expected)) {
+			if (!_.isUndefined(expected)) {
 				if (_.isRegExp(expected)) {
 					expect(message).to.match(expected);
 				} else if (_.isString(expected)) {
 					expect(message).to.equal(expected);
 				}
 			}
+		});
+	},
+
+	dismissMessage: function() {
+		var selector = '#message-content';
+		return manager.page.waitForSelector(selector).then(function() {
+			// If visible, click it to make it disappear.
+			return manager.page.click(selector).then(function() {
+				return manager.page.waitForSelector(selector, { hidden: true });
+			}).catch(function(error) {
+				if (!/not visible/i.test(error.message)) {
+					// Only ignore "not visible" error.
+					throw error;
+				}
+			});
 		});
 	},
 
@@ -244,6 +343,42 @@ let manager = module.exports = {
 		}).catch(function(error) {
 			cleanup();
 			throw error;
+		});
+	},
+
+	waitForText: function(selector, text, options) {
+		options = _.defaults(options || {}, {
+			timeout: 2000,
+		});
+		return manager.page.waitForSelector(selector).then(function() {
+			return manager.page.evaluate(function(options) {
+				var startTime = Date.now();
+				return new Promise(function(resolve, reject) {
+					async.until(function(next) {
+						next(null, document.querySelector(options.selector).innerText === options.text);
+					}, function(next) {
+						if (Date.now() - startTime >= options.timeout) {
+							return next(new Error('Timed-out while waiting for element ("' + options.selector + '") to contain "' + options.text + '"'));
+						}
+						setTimeout(next, 20);
+					}, function(error) {
+						if (error) return reject(error);
+						resolve();
+					});
+				});
+			}, { selector, text, timeout: options.timeout });
+		});
+	},
+
+	waitClick: function(selector) {
+		return manager.page.waitForSelector(selector).then(function() {
+			return manager.page.click(selector);
+		});
+	},
+
+	waitClickThenWaitText: function(waitClickSelector, textSelector, text) {
+		return manager.waitClick(waitClickSelector).then(function() {
+			return manager.waitForText(textSelector, text);
 		});
 	},
 

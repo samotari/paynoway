@@ -92,7 +92,10 @@ app.util = (function() {
 			var rate = app.wallet.getExchangeRateFromCache();
 			if (!rate) return null;
 			var numberFormat = app.util.getNumberFormatConfig(app.settings.get('fiatCurrency'));
-			return (new BigNumber(amount)).times(rate).decimalPlaces(numberFormat.decimals).toString();
+			return (new BigNumber(amount))
+				.times(rate)
+				.decimalPlaces(numberFormat.decimals)
+				.toString();
 		},
 
 		convertToCoinAmount: function(amount) {

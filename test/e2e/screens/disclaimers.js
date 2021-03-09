@@ -13,7 +13,7 @@ describe('#disclaimers', function() {
 	selectors.acceptButtonNotDisabled = selectors.acceptButton + ':not(.disabled)';
 
 	before(function() {
-		return manager.evaluateInPageContext(function() {
+		return manager.page.evaluate(function() {
 			app.unsetHasReadDisclaimersFlag();
 			app.wallet.saveSetting('wif', null);
 		});
@@ -48,7 +48,7 @@ describe('#disclaimers', function() {
 	describe('while accept button is not disabled', function() {
 
 		before(function() {
-			return manager.evaluateInPageContext(function() {
+			return manager.page.evaluate(function() {
 				app.mainView.currentView.restartVisualTimer({ delay: 300 });
 			})
 		});

@@ -168,13 +168,15 @@ app.wallet = (function() {
 			return app.cache.get(cacheKey);
 		},
 
-		refreshCachedExchangeRate: function() {
-			this.getExchangeRate({ refetch: true }, function(error) {
+		refreshCachedExchangeRate: function(done) {
+			done = done || _.noop;
+			this.getExchangeRate({ refetch: true }, function(error, result) {
 				if (error) {
 					app.log(error);
-				} else {
-					wallet.trigger('change:exchangeRate');
+					return done(error);
 				}
+				wallet.trigger('change:exchangeRate');
+				done(null, result);
 			});
 		},
 
@@ -691,24 +693,28 @@ app.wallet = (function() {
 					rawTx: _.bind(wallet.fetchRawTx, wallet, txid),
 					tx: _.bind(wallet.fetchTx, wallet, txid),
 				}, function(error, results) {
-					var updates = {};
-					if (error) {
-						if (/transaction not found/i.test(error.message)) {
-							updates.status = 'invalid';
+					try {
+						var updates = {};
+						if (error) {
+							if (/transaction not found/i.test(error.message)) {
+								updates.status = 'invalid';
+							}
+						} else {
+							if (results.tx) {
+								var tx = results.tx;
+								var isConfirmed = tx.status && tx.status.confirmed;
+								updates.status = isConfirmed ? 'confirmed' : 'pending';
+							}
+							if (results.rawTx) {
+								updates.rawTx = results.rawTx;
+							}
 						}
-					} else {
-						if (results.tx) {
-							var tx = results.tx;
-							var isConfirmed = tx.status && tx.status.confirmed;
-							updates.status = isConfirmed ? 'confirmed' : 'pending';
+						if (!_.isEmpty(updates)) {
+							updates.txid = txid;
+							wallet.transactions.save(updates);
 						}
-						if (results.rawTx) {
-							updates.rawTx = results.rawTx;
-						}
-					}
-					if (!_.isEmpty(updates)) {
-						updates.txid = txid;
-						wallet.transactions.save(updates);
+					} catch (thrownError) {
+						app.log(thrownError);
 					}
 					done(error);
 				});

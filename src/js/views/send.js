@@ -570,8 +570,9 @@ app.views.Send = (function() {
 				var displayCurrency = app.settings.get('displayCurrency');
 				var coinSymbol = app.wallet.getCoinSymbol();
 				if (displayCurrency !== coinSymbol) {
-					return app.wallet.toBaseUnit(app.util.convertToCoinAmount(value));
+					return app.util.convertToCoinAmount(value);
 				}
+				value = app.wallet.toBaseUnit(value);
 			}
 			return value;
 		},
@@ -896,6 +897,7 @@ app.views.Send = (function() {
 			}
 			this.clearCache('payment');
 			this.model.set('payment', null);
+			this.model.set('amount', null);
 		},
 		toggleFlags: function() {
 			if (!this.$buttons) return;

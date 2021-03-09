@@ -4,10 +4,9 @@ before(function() {
 	return manager.prepareBrowser();
 });
 
-let staticWeb;
 before(function() {
 	return manager.prepareStaticWebServer().then(function(app) {
-		staticWeb = app;
+		manager.staticWeb = app;
 	});
 });
 
@@ -28,12 +27,12 @@ after(function() {
 });
 
 after(function() {
-	if (staticWeb) {
+	if (manager.staticWeb) {
 		return new Promise(function(resolve, reject) {
 			// NOTE:
 			// This will be slow if there are still clients connected to the web server.
 			// Close any active clients first.
-			staticWeb.server.close(function(error) {
+			manager.staticWeb.server.close(function(error) {
 				if (error) return reject(error);
 				resolve();
 			});

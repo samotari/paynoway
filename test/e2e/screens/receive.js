@@ -14,7 +14,7 @@ describe('#receive', function() {
 
 	const address = 'tb1qwlu6vxa96hhppd90xw206y4amla9p0rqu8vnja';
 	before(function() {
-		return manager.evaluateInPageContext(function() {
+		return manager.page.evaluate(function() {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
 			app.wallet.saveSetting('wif', 'cPTM4uJTjqX7LA9Qa24AeZRNut3s1Vyjm4ovzgp7zS1RjxJNGKMV');
