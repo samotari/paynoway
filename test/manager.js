@@ -2,6 +2,7 @@ const _ = require('underscore');
 const async = require('async');
 const { expect } = require('chai');
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const serveStatic = require('serve-static');
@@ -12,6 +13,7 @@ let manager = module.exports = {
 
 	browser: null,
 	page: null,
+	device: 'Nexus 5',
 	puppeteer: puppeteer,
 	fixtures,
 
@@ -177,11 +179,18 @@ let manager = module.exports = {
 		const dir = path.join(__dirname, '..', 'build', 'screenshots');
 		const fileName = name + extension;
 		const filePath = path.join(dir, fileName);
+		const device = manager.puppeteer.devices[manager.device];
 		return new Promise(function(resolve, reject) {
 			fs.mkdir(dir, { recursive: true }, function(error) {
 				if (error) return reject(error);
 				return manager.page.screenshot({
 					path: filePath,
+					clip: {
+						x: 0,
+						y: 0,
+						width: device.viewport.width,
+						height: device.viewport.height,
+					},
 				}).then(resolve).catch(reject);
 			});
 		});

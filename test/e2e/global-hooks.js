@@ -6,7 +6,7 @@ before(function() {
 });
 
 before(function() {
-	const device = manager.puppeteer.devices['Nexus 5'];
+	const device = manager.puppeteer.devices[manager.device];
 	return manager.page.emulate(device);
 });
 

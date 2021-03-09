@@ -1,7 +1,9 @@
 const manager = require('./manager');
 
 before(function() {
-	return manager.prepareBrowser();
+	if (!manager.browser) {
+		return manager.prepareBrowser();
+	}
 });
 
 before(function() {

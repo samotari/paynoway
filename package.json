@@ -17,11 +17,12 @@
     "build:dev": "NODE_ENV=dev make clean-light dev",
     "build:prod": "NODE_ENV=prod make clean-light prod",
     "build:test": "NODE_ENV=test make clean-light prod",
+    "build:screenshots": "npm run build:test && ./node_modules/.bin/mocha test/screenshots/ --timeout 2000 --recursive --reporter spec --ui bdd --exit",
     "dev:android": "npm run build:dev && npm run build:apk:debug && npm run android:install",
     "prod:android": "npm run build:prod && npm run build:apk:debug && npm run android:install",
     "prepare:android": "./node_modules/.bin/cordova platform add android",
     "test": "npm run test:unit ; npm run test:e2e",
-    "test:e2e": "npm run build:dev && ./node_modules/.bin/mocha test/e2e/ --timeout 2000 --recursive --reporter spec --ui bdd --exit",
+    "test:e2e": "npm run build:test && ./node_modules/.bin/mocha test/e2e/ --timeout 2000 --recursive --reporter spec --ui bdd --exit",
     "test:unit": "npm run build:test && ./node_modules/.bin/mocha test/unit/ --timeout 5000 --recursive --reporter spec --ui bdd --exit"
   },
   "app": {
