@@ -146,7 +146,7 @@ app.views.Send = (function() {
 					return app.i18n.t('send.auto-broadcast-double-spend');
 				},
 				type: 'checkbox',
-				default: 1,
+				default: 0,
 				visible: true,
 			},
 			{
@@ -155,7 +155,7 @@ app.views.Send = (function() {
 					return app.i18n.t('send.auto-broadcast-double-spend.delay');
 				},
 				type: 'number',
-				default: 10,
+				default: 20,
 				min: 0,
 				step: 1,
 				visible: true,
