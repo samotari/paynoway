@@ -188,6 +188,12 @@ app.services.exchangeRates = (function() {
 					}
 				}, this),
 			};
+			switch (options.provider) {
+				case 'binance':
+					// Binance doesn't like the extra query parameter ("_") set by jQuery when cache = false.
+					ajaxOptions = _.omit(ajaxOptions, 'cache');
+					break;
+			}
 			return ajaxOptions;
 		},
 		getValueAtPath: function(data, path) {

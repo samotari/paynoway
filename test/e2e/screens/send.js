@@ -101,7 +101,7 @@ describe('#send', function() {
 		return manager.page.evaluate(function() {
 			app.mainView.currentView.resetForm();
 		}).then(function() {
-			return waitForText(selectors.inputs.address, '');
+			return manager.waitForText(selectors.inputs.address, '');
 		});
 	};
 
@@ -242,7 +242,7 @@ describe('#send', function() {
 				], function(type) {
 					const selector = selectors.scoreboard[type].total;
 					const text = calculateSum({ type, status: 'confirmed' });
-					return waitForText(selector, text);
+					return manager.waitForText(selector, text);
 				}));
 			});
 		});
@@ -449,28 +449,28 @@ describe('#send', function() {
 			valueType = valueType || 'coin';
 			return Promise.all(_.map([
 				{
-					fn: waitForText,
+					fn: manager.waitForText,
 					args: [
 						selectors.scoreboard['payment'].total,// selector
 						scoreboard['payment'].total[valueType],// text
 					],
 				},
 				{
-					fn: waitForText,
+					fn: manager.waitForText,
 					args: [
 						selectors.scoreboard['double-spend'].total,// selector
 						scoreboard['double-spend'].total[valueType],// text
 					],
 				},
 				{
-					fn: waitForText,
+					fn: manager.waitForText,
 					args: [
 						selectors.balance.value,// selector
 						balance.total[valueType],// text
 					],
 				},
 				{
-					fn: waitForText,
+					fn: manager.waitForText,
 					args: [
 						selectors.pendingBalance.value,// selector
 						balance.pending[valueType],// text
