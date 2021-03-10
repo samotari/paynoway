@@ -607,10 +607,13 @@ app.config = (function() {
 		},
 		wallet: {
 			transactions: {
+				fetch: {
+					interval: 3 * 60 * 1000,
+				},
 				refresh: {
 					concurrency: 1,
 					delay: 3000,
-					interval: 3 * 60 * 1000,
+					interval: 1 * 60 * 1000,
 				},
 			},
 		},

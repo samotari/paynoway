@@ -51,7 +51,7 @@ app.views.HistoryItem = (function() {
 		},
 		refresh: function() {
 			app.busy(true);
-			app.wallet.transactions.refreshTx(this.model.get('txid'), function(error, tx) {
+			app.wallet.transactions.refresh(this.model.get('txid'), function(error, tx) {
 				app.busy(false);
 				if (error) {
 					app.log(error);

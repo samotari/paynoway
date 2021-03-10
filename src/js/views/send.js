@@ -355,7 +355,24 @@ app.views.Send = (function() {
 			var utxo = this.model.get('utxo') || [];
 			var pending = 0;
 			var total = 0;
-			_.each(utxo, function(output) {
+			_.chain(utxo).filter(function(output) {
+				if (output.status && output.status.confirmed === false) {
+					// Unconfirmed UTXO.
+					// Is it the UTXO (change) from a payment that was replaced by a double-spend?
+					var payment = app.wallet.transactions.get(output.txid);
+					if (payment) {
+						var doubleSpend = payment.getDoubleSpend();
+						var doubleSpendOutput = doubleSpend && _.findWhere(utxo, { txid: doubleSpend.txid });
+						if (doubleSpendOutput) {
+							// Double-spend output found.
+							// Do not include the value of the payment output.
+							app.log('Found double-spend output. Ignoring unconfirmed payment output.', output);
+							return false;
+						}
+					}
+				}
+				return true;
+			}).each(function(output) {
 				if (output.status && output.status.confirmed === false) {
 					pending += output.value;
 				}
@@ -445,10 +462,13 @@ app.views.Send = (function() {
 				type: type,
 				status: 'confirmed',
 			})).reduce(function(memo, model) {
-				var amount;
+				var amount = 0;
 				if (type === 'double-spend') {
 					var payment = model.getDoubleSpentPayment();
-					amount = payment && payment.amount || 0;
+					var paymentModel = app.wallet.transactions.get(payment.txid);
+					if (paymentModel) {
+						amount = paymentModel.getAmount();
+					}
 				} else {
 					amount = model.getAmount();
 				}

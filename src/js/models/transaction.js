@@ -64,8 +64,13 @@ app.models.Transaction = (function() {
 			return sumInputs - sumOutputs;
 		},
 		getAmount: function() {
-			var amount = this.get('amount') || 0;
+			var amount = this.get('amount');
 			if (amount) return amount;
+			amount = this.calculateAmount();
+			this.set('amount', amount);
+			return amount;
+		},
+		calculateAmount: function() {
 			var tx = this.getDecodedTx();
 			var network = this.get('network');
 			var internalAddress = app.wallet.getAddress(network);
@@ -86,19 +91,27 @@ app.models.Transaction = (function() {
 					});
 					break;
 			}
-			amount = _.reduce(outputs || [], function(memo, output) {
+			return _.reduce(outputs || [], function(memo, output) {
 				return memo + output.value;
 			}, 0);
-			this.set('amount', amount);
-			return amount;
 		},
 		getDoubleSpentPayment: function() {
 			var payment = this.get('payment');
-			if (payment) return payment;
+			if (payment && payment.txid) return payment;
+			var model = this.findDoubleSpentPayment();
+			if (model) {
+				payment = {
+					txid: model.get('txid'),
+				};
+				this.set('payment', payment);
+			}
+			return payment;
+		},
+		findDoubleSpentPayment: function() {
 			if (this.get('type') !== 'double-spend') return null;
 			var txid = this.get('txid');
 			var inputs = this.getTxInputs();
-			var paymentModel = _.chain(this.collection.models).filter(function(model) {
+			return _.chain(this.collection.models).filter(function(model) {
 				return model.get('type') === 'payment' && model.get('txid') !== txid;
 			}).find(function(paymentModel) {
 				var paymentInputs = paymentModel.getTxInputs();
@@ -106,9 +119,59 @@ app.models.Transaction = (function() {
 					return _.contains(inputs, paymentInput);
 				});
 			}).value();
-			payment = { amount: paymentModel.getAmount() };
-			this.set('payment', payment);
-			return payment;
+		},
+		getDoubleSpend: function() {
+			var doubleSpend = this.get('doubleSpend');
+			if (doubleSpend && doubleSpend.txid) return doubleSpend;
+			var model = this.findDoubleSpend();
+			if (model) {
+				doubleSpend = {
+					txid: model.get('txid'),
+				};
+				this.set('doubleSpend', doubleSpend);
+			}
+			return doubleSpend;
+		},
+		findDoubleSpend: function() {
+			if (this.get('type') !== 'payment') return null;
+			var txid = this.get('txid');
+			var inputs = this.getTxInputs();
+			return _.chain(this.collection.models).filter(function(model) {
+				return model.get('type') === 'double-spend' && model.get('txid') !== txid;
+			}).find(function(doubleSpendModel) {
+				var doubleSpendInputs = doubleSpendModel.getTxInputs();
+				return _.some(doubleSpendInputs, function(doubleSpendInput) {
+					return _.contains(inputs, doubleSpendInput);
+				});
+			}).value();
+		},
+		isAssociatedWithAddressOrPublicKey: function(address, publicKey) {
+			var tx = this.getDecodedTx();
+			return this.hasOutputToAddress(address, tx) || this.hasInputAssociatedWithPublicKey(publicKey, tx);
+		},
+		hasOutputToAddress: function(address, tx) {
+			tx = tx || this.getDecodedTx();
+			var network = this.get('network');
+			return _.some(tx.outs, function(output) {
+				var scriptAddress = app.wallet.scriptToAddress(output.script, network);
+				return scriptAddress === address;
+			});
+		},
+		hasInputAssociatedWithPublicKey: function(publicKey, tx) {
+			tx = tx || this.getDecodedTx();
+			var publicKeyHex = Buffer.from(publicKey).toString('hex');
+			return _.some(tx.ins, function(input) {
+				var inputPublicKey;
+				if (input.script.length > 0) {
+					var decompiled = bitcoin.script.decompile(input.script);
+					inputPublicKey = _.last(decompiled);
+				} else if (input.witness.length > 0) {
+					inputPublicKey = _.last(input.witness);
+				}
+				if (!inputPublicKey) return false;
+				var inputPublicKeyHex = Buffer.from(inputPublicKey).toString('hex');
+				return inputPublicKeyHex === publicKeyHex;
+			});
 		},
 		getTxInputs: function() {
 			var tx = this.getDecodedTx();

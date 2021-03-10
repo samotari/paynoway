@@ -631,6 +631,12 @@ app.wallet = (function() {
 					if (!model.has('network')) {
 						data.network = wallet.getNetwork();
 					}
+					_.each(data, function(value, field) {
+						if (_.isNull(value)) {
+							delete data[field];
+							model.unset(field).save();
+						}
+					});
 					model.set(data).save();
 				} else {
 					data.network = wallet.getNetwork();
@@ -647,47 +653,18 @@ app.wallet = (function() {
 				return this.collection.where(filter).length;
 			},
 			fixup: function() {
-				app.log('wallet.transactions.fixup', this.collection.models);
 				_.each(this.collection.models, function(model) {
 					var updates = {};
-					if (!model.has('network')) {
+					if (!model.get('network')) {
 						updates.network = wallet.getNetwork();
 					}
-					_.each(['amount', 'payment'], function(field) {
-						if (model.has(field)) {
-							updates[field] = null;
-						}
-					});
 					if (!_.isEmpty(updates)) {
 						updates.txid = model.get('txid');
 						wallet.transactions.save(updates);
 					}
 				}, this);
 			},
-			refresh: function(done) {
-				var address = wallet.getAddress();
-				var previousResults;
-				async.until(function(next) {
-					next(null, !_.isUndefined(previousResults) && previousResults.length === 0);
-				}, function(next) {
-					var lastSeenTxid;
-					if (previousResults && previousResults.length > 0) {
-						lastSeenTxid = _.last(previousResults).txid;
-					}
-					wallet.fetchTransactions(address, lastSeenTxid, function(error, results) {
-						if (error) return next(error);
-						_.each(results, function(result) {
-							var model = wallet.transactions.get(result.txid);
-							if (!model || model.isMissingInfo() || model.get('status') === 'pending') {
-								wallet.refreshTxQueue.push({ txid: result.txid });
-							}
-						});
-						previousResults = results;
-						next();
-					});
-				}, done);
-			},
-			refreshTx: function(txid, done) {
+			refresh: function(txid, done) {
 				done = done || _.noop;
 				async.parallel({
 					rawTx: _.bind(wallet.fetchRawTx, wallet, txid),
@@ -719,6 +696,45 @@ app.wallet = (function() {
 					done(error);
 				});
 			},
+			fetchAll: function(done) {
+				var address = wallet.getAddress();
+				app.log('wallet.transactions.fetchAll', address);
+				var previousResults;
+				async.until(function(next) {
+					next(null, !_.isUndefined(previousResults) && previousResults.length === 0);
+				}, function(next) {
+					var lastSeenTxid;
+					if (previousResults && previousResults.length > 0) {
+						lastSeenTxid = _.last(previousResults).txid;
+					}
+					wallet.fetchTransactions(address, lastSeenTxid, function(error, results) {
+						if (error) return next(error);
+						_.each(results, function(result) {
+							var model = wallet.transactions.get(result.txid);
+							if (!model || model.isMissingInfo() || model.get('status') === 'pending') {
+								wallet.transactions.pushToRefreshQueue(result.txid);
+							}
+						});
+						previousResults = results;
+						next();
+					});
+				}, done);
+			},
+			refreshAll: function() {
+				app.log('wallet.transactions.refreshAll');
+				_.chain(wallet.transactions.collection.models).filter(function(model) {
+					return model.isMissingInfo() || model.get('status') === 'pending';
+				}).each(function(model) {
+					wallet.transactions.pushToRefreshQueue(model.get('txid'));
+				});
+			},
+			pushToRefreshQueue: function(txid) {
+				if (!wallet.transactions.refreshQueuedItems[txid]) {
+					app.log('wallet.transactions.pushToRefreshQueue', txid);
+					wallet.transactions.refreshQueuedItems[txid] = true;
+					wallet.transactions.refreshQueue.push({ txid: txid });
+				}
+			},
 			load: function(network, done) {
 				done = done || _.noop;
 				network = network || wallet.getNetwork();
@@ -727,8 +743,11 @@ app.wallet = (function() {
 				collection.fetch({
 					reset: true,
 					success: function() {
+						var address = wallet.getAddress(network);
+						var publicKey = wallet.getKeyPair().publicKey;
 						var models = collection.models.filter(function(model) {
-							return !model.has('network') || model.get('network') === network;
+							if (model.has('network') && model.get('network') !== network) return false;
+							return address && model.isAssociatedWithAddressOrPublicKey(address, publicKey);
 						});
 						collection.reset(models);
 						app.log('Wallet transactions loaded ("' + network + '")');
@@ -758,15 +777,21 @@ app.wallet = (function() {
 	});
 
 	app.onReady(function() {
-		wallet.refreshTxQueue = async.queue(function(task, next) {
-			wallet.transactions.refreshTx(task.txid, function(error) {
+		wallet.transactions.refreshQueuedItems = {};
+		wallet.transactions.refreshQueue = async.queue(function(task, next) {
+			wallet.transactions.refresh(task.txid, function(error) {
+				delete wallet.transactions.refreshQueuedItems[task.txid];
 				if (error) return next(error);
 				_.delay(next, app.config.wallet.transactions.refresh.delay);
 			});
 		}, app.config.wallet.transactions.refresh.concurrency);
 		wallet.transactions.refreshInterval = setInterval(
-			wallet.transactions.refresh,
+			wallet.transactions.refreshAll,
 			app.config.wallet.transactions.refresh.interval
+		);
+		wallet.transactions.fetchInterval = setInterval(
+			wallet.transactions.fetchAll,
+			app.config.wallet.transactions.fetch.interval
 		);
 	});
 
