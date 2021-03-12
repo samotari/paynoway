@@ -12,6 +12,7 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
   * [Android](#android)
     * [Running on Android (VM)](#running-on-android-vm)
     * [Running on Android (Device)](#running-on-android-device)
+    * [Prepare F-Droid Release](#prepare-f-droid-release)
 * [Tests](#tests)
 * [Translations](#translations)
 * [Changelog](#changelog)
@@ -115,6 +116,17 @@ adb install ./platforms/android/app/build/outputs/apk/release/app-release.apk
 ```
 * You may need to run `adb devices` before the above command.
 * And if the app is already installed on the device, you will need to use the `-r` flag to reinstall it.
+
+
+### Prepare F-Droid Release
+
+F-Droid requires the Android platform files (built by Cordova) in order to build an APK. This repository contains a special branch specifically for F-Droid - the branch contains the platform files from the latest, stable release.
+
+After making a release of the app, the F-Droid branch must be updated as well. Run the following script to do this:
+```bash
+npm run release:fdroid
+```
+Note that write access for this repostiory is required.
 
 
 ## Tests
