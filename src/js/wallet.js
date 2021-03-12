@@ -219,34 +219,103 @@ app.wallet = (function() {
 			return bitcoin.address.toOutputScript(address, constants);
 		},
 
+		getOutputScriptAddress: function(outputScript, network) {
+			if (!(outputScript instanceof Buffer)) {
+				outputScript = Buffer.from(outputScript);
+			}
+			var constants = wallet.getNetworkConstants(network);
+			try {
+				return bitcoin.payments.p2pkh({
+					network: constants,
+					output: outputScript,
+				}).address;
+			} catch (error) {}
+			try {
+				return bitcoin.payments.p2sh({
+					network: constants,
+					output: outputScript,
+				}).address;
+			} catch (error) {}
+			try {
+				return bitcoin.payments.p2wpkh({
+					network: constants,
+					output: outputScript,
+				}).address;
+			} catch (error) {}
+			return null;
+		},
+
+		getOutputScriptAddressType: function(outputScript, network) {
+			if (!(outputScript instanceof Buffer)) {
+				outputScript = Buffer.from(outputScript);
+			}
+			var constants = wallet.getNetworkConstants(network);
+			try {
+				bitcoin.payments.p2pkh({
+					network: constants,
+					output: outputScript,
+				});
+				return 'p2pkh';
+			} catch (error) {}
+			try {
+				bitcoin.payments.p2sh({
+					network: constants,
+					output: outputScript,
+				});
+				return 'p2wpkh-p2sh';
+			} catch (error) {}
+			try {
+				bitcoin.payments.p2wpkh({
+					network: constants,
+					output: outputScript,
+				});
+				return 'p2wpkh';
+			} catch (error) {}
+			return null;
+		},
+
+		getTypeFromAddress: function(address, network) {
+			var outputScript = this.getOutputScript(address, network);
+			return this.getOutputScriptAddressType(outputScript, network)
+		},
+
 		getAddress: function(network, wif) {
 			var keyPair = this.getKeyPair(network, wif);
 			if (!keyPair) return null;
-			var type = this.getSetting('addressType', network);
-			switch (type) {
+			var addressType = this.getSetting('addressType', network);
+			return this.getAddressFromPublicKey(keyPair.publicKey, addressType, network);
+		},
+
+		getAddressFromPublicKey: function(publicKey, addressType, network) {
+			network = network || this.getNetwork();
+			addressType = addressType || this.getSetting('addressType', network);
+			var constants = this.getNetworkConstants(network);
+			switch (addressType) {
 				case 'p2wpkh':
-					var p2wpkh = bitcoin.payments.p2wpkh({
-						network: keyPair.network,
-						pubkey: keyPair.publicKey,
-					});
-					return p2wpkh.address;
+					return bitcoin.payments.p2wpkh({
+						network: constants,
+						pubkey: publicKey,
+					}).address;
 				case 'p2wpkh-p2sh':
-					var p2sh = bitcoin.payments.p2sh({
-						network: keyPair.network,
+					return bitcoin.payments.p2sh({
+						network: constants,
 						redeem: bitcoin.payments.p2wpkh({
-							network: keyPair.network,
-							pubkey: keyPair.publicKey,
+							network: constants,
+							pubkey: publicKey,
 						}),
-					});
-					return p2sh.address;
+					}).address;
 				case 'p2pkh':
 				default:
-					var p2pkh = bitcoin.payments.p2pkh({
-						network: keyPair.network,
-						pubkey: keyPair.publicKey,
-					});
-					return p2pkh.address;
+					return bitcoin.payments.p2pkh({
+						network: constants,
+						pubkey: publicKey,
+					}).address;
 			}
+		},
+
+		getSupportedAddressTypes: function() {
+			var setting = _.findWhere(app.config.settings, { name: 'addressType' });
+			return setting && _.pluck(setting.options, 'key');
 		},
 
 		getUnspentTxOutputs: function(cb) {
@@ -255,13 +324,19 @@ app.wallet = (function() {
 			}
 			try {
 				var webService = this.getWebService();
-				var address = this.getAddress();
-				app.log('wallet.getUnspentTxOutputs', address);
-				webService.fetchUnspentTxOutputs(address, function(error, result) {
+				var publicKey = this.getKeyPair().publicKey;
+				var addresses = _.map(wallet.getSupportedAddressTypes(), function(addressType) {
+					return wallet.getAddressFromPublicKey(publicKey, addressType);
+				});
+				app.log('wallet.getUnspentTxOutputs', addresses);
+				async.map(addresses, function(address, next) {
+					webService.fetchUnspentTxOutputs(address, next);
+				}, function(error, results) {
 					if (error) return cb(error);
-					app.log('wallet.getUnspentTxOutputs', address, result);
-					cb(null, result);
-				})
+					results = results && [].concat.apply([], results);
+					app.log('wallet.getUnspentTxOutputs', addresses, results);
+					cb(null, results);
+				});
 			} catch (error) {
 				return cb(error);
 			}
@@ -362,24 +437,7 @@ app.wallet = (function() {
 			});
 			var keyPair = this.getKeyPair();
 			var changeAddress = this.getAddress();
-			var addressType = this.getSetting('addressType');
-			var payment;
-			switch (addressType) {
-				case 'p2wpkh':
-					payment = bitcoin.payments.p2wpkh({
-						network: keyPair.network,
-						pubkey: keyPair.publicKey,
-					});
-					break;
-				case 'p2wpkh-p2sh':
-					payment = bitcoin.payments.p2sh({
-						network: keyPair.network,
-						redeem: p2wpkh,
-					});
-					break;
-			}
 			var fee = Math.ceil(options.fee || 0);
-			var psbt = new bitcoin.Psbt({ network: keyPair.network });
 			var utxoValueConsumed;
 			var utxoToConsume;
 			if (options.inputs) {
@@ -408,70 +466,101 @@ app.wallet = (function() {
 					return output;
 				}).compact().value();
 			}
+			var outputAddresses = [
+				receivingAddress,
+				changeAddress,
+			];
 			var changeValue = (utxoValueConsumed - value) - fee;
-			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
-				_.each(options.extraOutputs, function(extraOutput) {
-					changeValue -= extraOutput.value;
-				});
-			}
+			_.each(options.extraOutputs || [], function(extraOutput) {
+				changeValue -= extraOutput.value;
+				outputAddresses.push(extraOutput.address);
+			});
+			_.each(outputAddresses, function(outputAddress) {
+				if (wallet.getTypeFromAddress(outputAddress) === 'p2pkh') {
+					// Increase fee paid by 1 sat for each p2pkh output.
+					// Decreasing the change value effectively increases the fee paid.
+					changeValue -= 1;
+				}
+			});
 			if (changeValue < 0) {
 				throw new Error(app.i18n.t('wallet.insuffient-funds'));
 			}
+			var outputs = [];
+			if (changeAddress === receivingAddress) {
+				outputs.push({
+					address: receivingAddress,
+					value: value + changeValue
+				});
+			} else {
+				outputs.push({
+					address: receivingAddress,
+					value: value
+				});
+				outputs.push({
+					address: changeAddress,
+					value: changeValue
+				});
+			}
+			_.each(options.extraOutputs || [], function(extraOutput) {
+				outputs.push({
+					address: extraOutput.address,
+					value: extraOutput.value
+				});
+			});
 			// Add unspent outputs as inputs to the new tx.
-			_.each(utxoToConsume, function(output) {
+			var inputs = _.map(utxoToConsume, function(output, index) {
 				var input = {
 					hash: output.txid,
 					index: output.vout,
 					sequence: options.sequence,
 				};
+				var outputTxModel = wallet.transactions.get(output.txid);
+				if (!outputTxModel) {
+					app.log('Failed to build transaction: Missing transaction referenced by output.', output.txid);
+					throw new Error(app.i18n.t('wallet.missing-tx'));
+				}
+				var outputTx = outputTxModel.getDecodedTx();
+				var outputScript = outputTx.outs[output.vout] && outputTx.outs[output.vout].script || null;
+				var addressType = wallet.getOutputScriptAddressType(outputScript, keyPair);
 				switch (addressType) {
 					case 'p2pkh':
-						var outputTxHex = wallet.transactions.get(output.txid);
-						if (!outputTxHex) {
-							throw new Error('Missing output transaction hash for utxo with txid', output.txid);
-						}
-						input.nonWitnessUtxo = Buffer.from(outputTxHex, 'hex');
+						var outputRawTx = outputTxModel && outputTxModel.get('rawTx') || null;
+						input.nonWitnessUtxo = Buffer.from(outputRawTx, 'hex');
 						break;
 					case 'p2wpkh':
-					case 'p2wpkh-p2sh':
 						input.witnessUtxo = {
-							script: payment.output,
+							script: bitcoin.payments.p2wpkh({
+								network: keyPair.network,
+								pubkey: keyPair.publicKey,
+							}).output,
 							value: output.value,
 						};
 						break;
+					case 'p2wpkh-p2sh':
+						var redeem = bitcoin.payments.p2wpkh({
+							network: keyPair.network,
+							pubkey: keyPair.publicKey,
+						});
+						input.witnessUtxo = {
+							script: bitcoin.payments.p2sh({
+								network: keyPair.network,
+								redeem: redeem,
+							}).output,
+							value: output.value,
+						};
+						input.redeemScript = redeem.output;
+						break;
 				}
-				psbt.addInput(input);
+				return input;
 			});
-			if (changeAddress === receivingAddress) {
-				psbt.addOutput({
-					address: receivingAddress,
-					value: value + changeValue
-				});
-			} else {
-				psbt.addOutput({
-					address: receivingAddress,
-					value: value
-				});
-				psbt.addOutput({
-					address: changeAddress,
-					value: changeValue
-				});
-			}
-			if (options.extraOutputs && !_.isEmpty(options.extraOutputs)) {
-				_.each(options.extraOutputs, function(extraOutput) {
-					psbt.addOutput({
-						address: extraOutput.address,
-						value: extraOutput.value
-					});
-				});
-			}
-			// Sign each input.
-			_.each(utxoToConsume, function(output, index) {
+			var psbt = new bitcoin.Psbt({ network: keyPair.network })
+								.addInputs(inputs)
+								.addOutputs(outputs);
+			_.each(inputs, function(input, index) {
 				psbt.signInput(index, keyPair);
 				psbt.validateSignaturesOfInput(index);
 			});
-			psbt.finalizeAllInputs();
-			return psbt.extractTransaction();
+			return psbt.finalizeAllInputs().extractTransaction();
 		},
 
 		toBaseUnit: function(value) {
@@ -510,6 +599,7 @@ app.wallet = (function() {
 			var tx = bitcoin.Transaction.fromHex(rawTx);
 			var fiatCurrency = app.settings.get('fiatCurrency');
 			var displayCurrency = app.settings.get('displayCurrency');
+			// !!! Don't use address here. Use publicKey instead. See models/transaction.js.
 			var internalAddress = wallet.getAddress();
 			var outputs = _.map(tx.outs, function(output) {
 				var address = wallet.scriptToAddress(output.script);
@@ -743,11 +833,10 @@ app.wallet = (function() {
 				collection.fetch({
 					reset: true,
 					success: function() {
-						var address = wallet.getAddress(network);
 						var publicKey = wallet.getKeyPair().publicKey;
 						var models = collection.models.filter(function(model) {
 							if (model.has('network') && model.get('network') !== network) return false;
-							return address && model.isAssociatedWithAddressOrPublicKey(address, publicKey);
+							return model.isAssociatedWithPublicKey(publicKey);
 						});
 						collection.reset(models);
 						app.log('Wallet transactions loaded ("' + network + '")');
@@ -762,7 +851,7 @@ app.wallet = (function() {
 		},
 	};
 
-	wallet.transactions.load = _.debounce(wallet.transactions.load, 100);
+	wallet.transactions.load = _.debounce(wallet.transactions.load, 200);
 
 	app.onReady(function() {
 		wallet.transactions.collection = new app.collections.Transactions();
@@ -771,8 +860,13 @@ app.wallet = (function() {
 				wallet.transactions.fixup();
 			}
 		});
-		app.settings.on('change:network', function(network) {
-			wallet.transactions.load(network);
+		app.settings.on('change', function(key, value) {
+			if (
+				key === 'network' ||
+				key === wallet.getSettingKeyPath('wif')
+			) {
+				wallet.transactions.load();
+			}
 		});
 	});
 

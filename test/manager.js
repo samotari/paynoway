@@ -1,11 +1,11 @@
 const _ = require('underscore');
 const async = require('async');
+const bitcoin = require('bitcoinjs-lib');
 const { expect } = require('chai');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const serveStatic = require('serve-static');
 
 const fixtures = require('./fixtures');
 
@@ -16,12 +16,25 @@ let manager = module.exports = {
 	device: 'Nexus 5',
 	puppeteer: puppeteer,
 	fixtures,
+	addressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
+	constants: {
+		bech32: 'tb',
+		bip32: {
+			public: 70617039,
+			private: 70615956
+		},
+		messagePrefix: '\u0018Bitcoin Signed Message:\n',
+		pubKeyHash: 111,
+		scriptHash: 196,
+		wif: 239,
+	},
 
 	prepareStaticWebServer: function() {
 		return new Promise(function(resolve, reject) {
 			try {
 				let app = express();
-				app.use(serveStatic('www'));
+				app.use(express.static('www'));
+				app.use(express.urlencoded());
 				app.mock = {
 					data: {
 						rate: '50000.00',
@@ -31,7 +44,10 @@ let manager = module.exports = {
 						broadcastRawTx: {
 							endpoint: 'POST /api/tx',
 							defaultCallback: function(req, res, next) {
-								res.send('9764082447ef195d66dec5c63520adbef4a1788579ef08418e8322ee7721a4b8');
+								const rawTx = _.chain(req.body).keys().first().value();
+								const tx = bitcoin.Transaction.fromHex(rawTx);
+								const txid = tx.getId();
+								res.send(txid);
 							},
 						},
 						// Web service:
@@ -67,19 +83,52 @@ let manager = module.exports = {
 						fetchUnspentTxOutputs: {
 							endpoint: 'GET /api/address/:address/utxo',
 							defaultCallback: function(req, res, next) {
-								res.json(fixtures.utxo);
+								// Filter UTXO by address.
+								const address = req.params.address;
+								const utxo = _.filter(fixtures.utxo, function(output) {
+									const transaction = _.findWhere(fixtures.transactions, { txid: output.txid });
+									if (!transaction) return false;
+									const tx = bitcoin.Transaction.fromHex(transaction.rawTx);
+									return _.some(tx.outs, function(out) {
+										const outAddress = bitcoin.address.fromOutputScript(out.script, manager.constants);
+										return outAddress === address;
+									});
+								});
+								res.json(utxo);
 							},
 						},
 						fetchTransactions: {
 							endpoint: 'GET /api/address/:address/txs',
 							defaultCallback: function(req, res, next) {
-								res.json([]);
+								const transactions = _.map(fixtures.transactions, function(transaction) {
+									return {
+										txid: transaction.txid,
+										fee: transaction.fee,
+										status: { confirmed: transaction.status === 'confirmed' },
+									};
+								});
+								res.json(transactions);
 							},
 						},
 						fetchTransactionsFromLastSeen: {
 							endpoint: 'GET /api/address/:address/txs/chain/:last_seen_txid',
 							defaultCallback: function(req, res, next) {
-								res.json([]);
+								const { last_seen_txid } = req.params;
+								const index = _.findIndex(fixtures.transactions, function(transaction) {
+									return transaction.txid === last_seen_txid;
+								});
+								let transactions = [];
+								if (!_.isNull(index)) {
+									transactions = fixtures.transactions.slice(index + 1);
+								}
+								transactions = _.map(transactions, function(transaction) {
+									return {
+										txid: transaction.txid,
+										fee: transaction.fee,
+										status: { confirmed: transaction.status === 'confirmed' },
+									};
+								});
+								res.json(transactions);
 							},
 						},
 						// Exchange rate service:

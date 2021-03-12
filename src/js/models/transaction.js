@@ -145,16 +145,20 @@ app.models.Transaction = (function() {
 				});
 			}).value();
 		},
-		isAssociatedWithAddressOrPublicKey: function(address, publicKey) {
+		isAssociatedWithPublicKey: function(publicKey) {
 			var tx = this.getDecodedTx();
-			return this.hasOutputToAddress(address, tx) || this.hasInputAssociatedWithPublicKey(publicKey, tx);
+			return this.hasOutputAssociatedWithPublicKey(publicKey, tx) || this.hasInputAssociatedWithPublicKey(publicKey, tx);
 		},
-		hasOutputToAddress: function(address, tx) {
+		hasOutputAssociatedWithPublicKey: function(publicKey, tx) {
 			tx = tx || this.getDecodedTx();
-			var network = this.get('network');
+			var isAssociated = _.chain(app.wallet.getSupportedAddressTypes()).map(function(addressType) {
+				var address = app.wallet.getAddressFromPublicKey(publicKey, addressType);
+				if (!address) return null;
+				return [ address, true ];
+			}).compact().object().value();
 			return _.some(tx.outs, function(output) {
-				var scriptAddress = app.wallet.scriptToAddress(output.script, network);
-				return scriptAddress === address;
+				var address = app.wallet.getOutputScriptAddress(output.script);
+				return address && isAssociated[address];
 			});
 		},
 		hasInputAssociatedWithPublicKey: function(publicKey, tx) {

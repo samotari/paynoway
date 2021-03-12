@@ -193,8 +193,8 @@ app.views.Send = (function() {
 				'updateBalance',
 				'updateScoreboard'
 			);
-			this.refreshUnspentTxOutputs = _.throttle(this.refreshUnspentTxOutputs, 200);
-			this.precalculateMaximumAmount = _.throttle(this.precalculateMaximumAmount, 200);
+			this.refreshUnspentTxOutputs = _.debounce(this.refreshUnspentTxOutputs, 500);
+			this.precalculateMaximumAmount = _.debounce(this.precalculateMaximumAmount, 500);
 			this.toggleDisplayCurrency = _.debounce(this.toggleDisplayCurrency, 100);
 			this.model = new Backbone.Model;
 			this.listenTo(this.model, 'change:utxo', this.updateBalance);
@@ -936,29 +936,33 @@ app.views.Send = (function() {
 			}, this));
 		},
 		calculateMaximumAmount: function() {
-			// Need the unspent transaction outputs that will be used as inputs for this tx.
-			var utxo = this.model.get('utxo') || [];
-			if (!utxo || !(utxo.length > 0)) return 0;
-			var formData = this.getFormData();
-			var address = formData.address || app.wallet.getAddress();
-			// Convert to satoshis/kilobyte.
-			var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
-			// A zero amount here will send all the funds (less fees) as change to the given address.
-			var amount = 1;
-			// Build a sample tx so that we can calculate the fee.
-			var sampleTx = app.wallet.buildTx(amount, address, utxo, {
-				fee: 0,
-			});
-			// Calculate the size of the sample tx (in kilobytes).
-			var virtualSize = sampleTx.virtualSize() / 1000;
-			// Use the size of the tx to calculate the fee.
-			// The fee rate is satoshis/kilobyte.
-			var fee = Math.ceil(virtualSize * feeRate);
-			var sumOfUnspentOutputs = _.reduce(utxo, function(memo, output) {
-				return memo + output.value;
-			}, 0);
-			var maxAmount = sumOfUnspentOutputs - fee;
-			return app.wallet.fromBaseUnit(maxAmount);
+			try {
+				// Need the unspent transaction outputs that will be used as inputs for this tx.
+				var utxo = this.model.get('utxo') || [];
+				if (!utxo || !(utxo.length > 0)) return 0;
+				var formData = this.getFormData();
+				var address = formData.address || app.wallet.getAddress();
+				// Convert to satoshis/kilobyte.
+				var feeRate = (new BigNumber(formData.feeRate)).times(1000).toNumber();
+				// A zero amount here will send all the funds (less fees) as change to the given address.
+				var amount = 1;
+				// Build a sample tx so that we can calculate the fee.
+				var sampleTx = app.wallet.buildTx(amount, address, utxo, {
+					fee: 0,
+				});
+				// Calculate the size of the sample tx (in kilobytes).
+				var virtualSize = sampleTx.virtualSize() / 1000;
+				// Use the size of the tx to calculate the fee.
+				// The fee rate is satoshis/kilobyte.
+				var fee = Math.ceil(virtualSize * feeRate);
+				var sumOfUnspentOutputs = _.reduce(utxo, function(memo, output) {
+					return memo + output.value;
+				}, 0);
+				var maxAmount = sumOfUnspentOutputs - fee;
+				return app.wallet.fromBaseUnit(maxAmount);
+			} catch (error) {
+				app.log(error);
+			}
 		},
 	});
 

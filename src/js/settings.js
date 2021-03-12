@@ -80,8 +80,9 @@ app.settings = (function() {
 			settings.collection.on('add change', function(model) {
 				var key = model.get('key');
 				var value = model.get('value');
-				settings.trigger('change:' + key, value);
-				settings.trigger('change', key, value);
+				var oldValue = model.previous('value');
+				settings.trigger('change:' + key, value, oldValue);
+				settings.trigger('change', key, value, oldValue);
 			});
 			settings.collection.fetch({
 				success: function() {

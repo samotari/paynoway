@@ -54,21 +54,24 @@ describe('#send', function() {
 
 	const doubleSpentPaymentLookup = {
 		// double-spend txid : payment txid
-		'975008244700195d66dec5c63520adbef4a1707579ef08418e8322ee7721a4b8': '955e3c97db90c17bef8ca9b463ceadfe445e2e6593a28f2f54ad15a3350e1e39',
+		'29ce50a1a9645fe39a10683d6bd3cc5de4c8dcff503368e32a3848b94f5d543b': 'a246ddb22922146f7511d00238d3a2ade32f4f36eeb62090d11c2323d6dc9e39',
 	};
 
-	const calculateSum = function(filter) {
+	const calculateScoreboardSum = function(filter, options) {
 		const sum = _.chain(transactions).where(filter).reduce(function(memo, transaction) {
-			if (transaction.type === 'double-spend') {
-				const payment = _.findWhere(transactions, { txid: doubleSpentPaymentLookup[transaction.txid] });
-				if (!payment) {
-					throw new Error('Could not find payment associated with double-spend ("' + transaction.txid + '")');
-				}
-				return memo + payment.amount;
+			let { amount, txid, type } = transaction;
+			switch (type) {
+				case 'double-spend':
+					const payment = doubleSpentPaymentLookup[txid] && _.findWhere(transactions, { txid: doubleSpentPaymentLookup[txid] });
+					if (!payment) {
+						throw new Error('Could not find payment associated with double-spend ("' + txid + '")');
+					}
+					amount = payment.amount;
+					break;
 			}
-			return memo + transaction.amount;
+			return memo + amount;
 		}, 0).value();
-		return fromBaseUnit(sum);
+		return fromBaseUnit(sum, options);
 	};
 
 	const waitForFormFieldValue = function(field, value, options) {
@@ -113,10 +116,16 @@ describe('#send', function() {
 		}, { inputs });
 	};
 
+	const setDisplayCurrency = function(symbol) {
+		return manager.page.evaluate(function(options) {
+			app.settings.set('displayCurrency', options.symbol);
+		}, { symbol });
+	};
+
 	const sendPayment = function(address, amount) {
 		return setInputValues({ address, amount }).then(function() {
 			return Promise.all([
-				manager.waitForDialog().then(function(dialog) {
+				manager.waitForDialog({ timeout: 5000000 }).then(function(dialog) {
 					const message = dialog.message();
 					expect(message).to.match(/are you sure you want to broadcast/i);
 					expect(message).to.contain('MIXED TRANSFER');
@@ -138,21 +147,31 @@ describe('#send', function() {
 		return (new BigNumber(amount)).dividedBy(1e8).toFormat(options.decimals).toString();
 	};
 
-	const calculateBalanceTotal = function(utxo, options) {
-		options = _.defaults(options || {}, {
-			pending: false,
-			decimals: 8,
-		});
-		options.pending = options.pending === true;
-		const total = _.chain(utxo).filter(function(output) {
-			if (options.pending) {
-				return output.status && output.status.confirmed === false;
+	const paymentToDoubleSpendLookup = _.invert(doubleSpentPaymentLookup);
+	const calculateBalance = function(utxo, options) {
+		let pending = 0;
+		let total = 0;
+		_.chain(utxo).filter(function(output) {
+			if (output.status && output.status.confirmed === false) {
+				// Unconfirmed UTXO.
+				// Is it the UTXO (change) from a payment that was replaced by a double-spend?
+				if (paymentToDoubleSpendLookup[output.txid]) {
+					// Double-spend output found.
+					// Do not include the value of the payment output.
+					return false;
+				}
 			}
 			return true;
-		}).reduce(function(memo, output) {
-			return memo + output.value;
-		}, 0);
-		return fromBaseUnit(total, options);
+		}).each(function(output) {
+			if (output.status && output.status.confirmed === false) {
+				pending += output.value;
+			}
+			total += output.value;
+		});
+		return {
+			pending: fromBaseUnit(pending, options),
+			total: fromBaseUnit(total, options),
+		};
 	};
 
 	const convertToFiatAmount = function(amount, rate, options) {
@@ -175,12 +194,11 @@ describe('#send', function() {
 	});
 
 	const coinSymbol = 'BTC';
-	const address = 'tb1qwlu6vxa96hhppd90xw206y4amla9p0rqu8vnja';
 	before(function() {
 		return manager.page.evaluate(function() {
 			app.setHasReadDisclaimersFlag();
 			app.settings.set('network', 'bitcoinTestnet');
-			app.wallet.saveSetting('wif', 'cPTM4uJTjqX7LA9Qa24AeZRNut3s1Vyjm4ovzgp7zS1RjxJNGKMV');
+			app.wallet.saveSetting('wif', 'cMjpFp5Dn8YZgfkxeiQ23S2PLcP8iNXzYDFrbjSEdCvh2KCHYrQC');
 			app.wallet.saveSetting('addressType', 'p2wpkh');
 			app.wallet.getAddress();
 		});
@@ -224,9 +242,7 @@ describe('#send', function() {
 		describe('with transaction history', function() {
 
 			before(function() {
-				return manager.page.evaluate(function(options) {
-					app.settings.set('displayCurrency', options.coinSymbol);
-				}, { coinSymbol });
+				return setDisplayCurrency(coinSymbol);
 			});
 
 			before(function() {
@@ -241,7 +257,7 @@ describe('#send', function() {
 					'double-spend',
 				], function(type) {
 					const selector = selectors.scoreboard[type].total;
-					const text = calculateSum({ type, status: 'confirmed' });
+					const text = calculateScoreboardSum({ type, status: 'confirmed' });
 					return manager.waitForText(selector, text);
 				}));
 			});
@@ -265,15 +281,12 @@ describe('#send', function() {
 	describe('with some unspent tx outputs', function() {
 
 		before(function() {
-			manager.staticWeb.mock.clearOverride('fetchUnspentTxOutputs');;
+			manager.staticWeb.mock.clearOverride('fetchUnspentTxOutputs');
 		});
 
 		let balance;
 		before(function() {
-			balance = {
-				total: calculateBalanceTotal(utxo, { pending: false, decimals: 8 }),
-				pending: calculateBalanceTotal(utxo, { pending: true, decimals: 8 }),
-			};
+			balance = calculateBalance(utxo, { decimals: 8 });
 		});
 
 		it('shows non-zero balance after clicking refresh balance button', function() {
@@ -304,11 +317,9 @@ describe('#send', function() {
 		describe('with address and amount fields filled-in', function() {
 
 			before(function() {
-				return manager.waitClickThenWaitText(
-					selectors.balance.refreshButton,
-					selectors.balance.value,
-					balance.total
-				);
+				return manager.page.evaluate(function(options) {
+					app.wallet.transactions.collection.reset(options.transactions);
+				}, { transactions });
 			});
 
 			afterEach(function() {
@@ -323,9 +334,34 @@ describe('#send', function() {
 				return manager.page.waitForSelector(selectors.resetButton + '.disabled');
 			});
 
-			const paymentAddress = 'mu1ShSrNu2FkDEQYqCHEmPV9i123qrnHDu';
-			it('can send a payment', function() {
-				return sendPayment(paymentAddress, '0.0003').then(function() {
+			_.each(manager.addressTypes, function(addressType) {
+
+				describe(addressType, function() {
+
+					before(function() {
+						return manager.page.evaluate(function(options) {
+							app.wallet.saveSetting('addressType', options.addressType);
+						}, { addressType });
+					});
+
+					before(function() {
+						return resetForm();
+					});
+
+					before(function() {
+						return setDisplayCurrency(coinSymbol);
+					});
+
+					it('can send payment', function() {
+						return sendPayment('mu1ShSrNu2FkDEQYqCHEmPV9i123qrnHDu', '0.0002').then(function() {
+							return manager.dismissMessage();
+						});
+					});
+				});
+			});
+
+			it('can send payment', function() {
+				return sendPayment('mu1ShSrNu2FkDEQYqCHEmPV9i123qrnHDu', '0.0003').then(function() {
 					return manager.dismissMessage();
 				});
 			});
@@ -333,7 +369,7 @@ describe('#send', function() {
 			describe('after sending a payment', function() {
 
 				beforeEach(function() {
-					return sendPayment(paymentAddress, '0.00025').then(function() {
+					return sendPayment('mu1ShSrNu2FkDEQYqCHEmPV9i123qrnHDu', '0.00025').then(function() {
 						return manager.dismissMessage();
 					});
 				});
@@ -385,112 +421,127 @@ describe('#send', function() {
 	describe('fiat currency', function() {
 
 		before(function() {
-			return resetForm();
-		});
-
-		before(function() {
-			return manager.page.evaluate(function(options) {
-				app.settings.set('displayCurrency', options.coinSymbol);
-			}, { coinSymbol });
-		});
-
-		before(function() {
-			return manager.page.evaluate(function(options) {
-				app.wallet.transactions.collection.reset(options.transactions);
-			}, { transactions });
-		});
-
-		let inputs = {};
-		before(function() {
-			inputs.amount = {
-				coin: '0.00001',
-			};
-			inputs.amount.fiat = convertToFiatAmount(inputs.amount.coin, rate, { decimals: 2, format: false });
-			return setInputValues({ amount: inputs.amount.coin });
-		});
-
-		before(function() {
 			manager.staticWeb.mock.clearOverride('fetchUnspentTxOutputs');
 			return manager.page.evaluate(function() {
 				app.mainView.currentView.refreshUnspentTxOutputs();
 			});
 		});
 
-		let balance;
-		let scoreboard;
-		before(function() {
-			balance = {
-				total: {
-					coin: calculateBalanceTotal(utxo, { pending: false, decimals: 8 }),
-				},
-				pending: {
-					coin: calculateBalanceTotal(utxo, { pending: true, decimals: 8 }),
-				},
-			};
-			balance.total.fiat = convertToFiatAmount(balance.total.coin, rate, { decimals: 2 });
-			balance.pending.fiat = convertToFiatAmount(balance.pending.coin, rate, { decimals: 2 });
-			scoreboard = {
-				'payment': {
-					total: {
-						coin: calculateSum({ type: 'payment', status: 'confirmed' }),
-					},
-				},
-				'double-spend': {
-					total: {
-						coin: calculateSum({ type: 'double-spend', status: 'confirmed' }),
-					},
-				},
-			};
-			scoreboard['payment'].total.fiat = convertToFiatAmount(scoreboard['payment'].total.coin, rate, { decimals: 2 });
-			scoreboard['double-spend'].total.fiat = convertToFiatAmount(scoreboard['double-spend'].total.coin, rate, { decimals: 2 });
-		});
+		describe('as the display currency', function() {
 
-		const checkAmounts = function(valueType) {
-			valueType = valueType || 'coin';
-			return Promise.all(_.map([
-				{
-					fn: manager.waitForText,
-					args: [
-						selectors.scoreboard['payment'].total,// selector
-						scoreboard['payment'].total[valueType],// text
-					],
-				},
-				{
-					fn: manager.waitForText,
-					args: [
-						selectors.scoreboard['double-spend'].total,// selector
-						scoreboard['double-spend'].total[valueType],// text
-					],
-				},
-				{
-					fn: manager.waitForText,
-					args: [
-						selectors.balance.value,// selector
-						balance.total[valueType],// text
-					],
-				},
-				{
-					fn: manager.waitForText,
-					args: [
-						selectors.pendingBalance.value,// selector
-						balance.pending[valueType],// text
-					],
-				},
-				{
-					fn: waitForFormFieldValue,
-					args: [
-						'amount',// field
-						inputs.amount[valueType],// value
-					],
-				},
-			], function(check) {
-				return check.fn.apply(undefined, check.args);
-			}));
-		};
+			before(function() {
+				return resetForm();
+			});
+
+			before(function() {
+				return setDisplayCurrency(fiatCurrency);
+			});
+
+			it('can send payment', function() {
+				return sendPayment('mu1ShSrNu2FkDEQYqCHEmPV9i123qrnHDu', '2.50').then(function() {
+					return manager.dismissMessage();
+				});
+			});
+		});
 
 		describe('toggle display currency by clicking', function() {
 
-			this.timeout(10000);
+			before(function() {
+				return resetForm();
+			});
+
+			before(function() {
+				return setDisplayCurrency(coinSymbol);
+			});
+
+			before(function() {
+				return manager.page.evaluate(function(options) {
+					app.wallet.transactions.collection.reset(options.transactions);
+				}, { transactions });
+			});
+
+			let inputs = {};
+			before(function() {
+				inputs.amount = {
+					coin: '0.00001',
+				};
+				inputs.amount.fiat = convertToFiatAmount(inputs.amount.coin, rate, { decimals: 2, format: false });
+				return setInputValues({ amount: inputs.amount.coin });
+			});
+
+			let balance;
+			let scoreboard;
+			before(function() {
+				const balanceCoin = calculateBalance(utxo, { decimals: 8 });
+				balance = {
+					total: {
+						coin: balanceCoin.total,
+						fiat: convertToFiatAmount(balanceCoin.total, rate, { decimals: 2 }),
+					},
+					pending: {
+						coin: balanceCoin.pending,
+						fiat: convertToFiatAmount(balanceCoin.pending, rate, { decimals: 2 }),
+					},
+				};
+				scoreboard = {
+					'payment': {
+						total: {
+							coin: calculateScoreboardSum({ type: 'payment', status: 'confirmed' }),
+						},
+					},
+					'double-spend': {
+						total: {
+							coin: calculateScoreboardSum({ type: 'double-spend', status: 'confirmed' }),
+						},
+					},
+				};
+				scoreboard['payment'].total.fiat = convertToFiatAmount(scoreboard['payment'].total.coin, rate, { decimals: 2 });
+				scoreboard['double-spend'].total.fiat = convertToFiatAmount(scoreboard['double-spend'].total.coin, rate, { decimals: 2 });
+			});
+
+			const checkAmounts = function(valueType) {
+				valueType = valueType || 'coin';
+				return Promise.all(_.map([
+					{
+						fn: manager.waitForText,
+						args: [
+							selectors.scoreboard['payment'].total,// selector
+							scoreboard['payment'].total[valueType],// text
+						],
+					},
+					{
+						fn: manager.waitForText,
+						args: [
+							selectors.scoreboard['double-spend'].total,// selector
+							scoreboard['double-spend'].total[valueType],// text
+						],
+					},
+					{
+						fn: manager.waitForText,
+						args: [
+							selectors.balance.value,// selector
+							balance.total[valueType],// text
+						],
+					},
+					{
+						fn: manager.waitForText,
+						args: [
+							selectors.pendingBalance.value,// selector
+							balance.pending[valueType],// text
+						],
+					},
+					{
+						fn: waitForFormFieldValue,
+						args: [
+							'amount',// field
+							inputs.amount[valueType],// value
+						],
+					},
+				], function(check) {
+					return check.fn.apply(undefined, check.args);
+				}));
+			};
+
 			_.each([].concat(
 				selectors.currency.values,
 				selectors.currency.symbols

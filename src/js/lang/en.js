@@ -114,6 +114,7 @@ app.lang['en'] = (function() {
 		'tx-type.payment': 'payment',
 
 		'wallet.insuffient-funds': 'Insufficient funds',
+		'wallet.missing-tx': 'Failed to build transaction: Missing transaction referenced by output.',
 	};
 
 })();
