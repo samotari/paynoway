@@ -274,11 +274,6 @@ app.wallet = (function() {
 			return null;
 		},
 
-		getTypeFromAddress: function(address, network) {
-			var outputScript = this.getOutputScript(address, network);
-			return this.getOutputScriptAddressType(outputScript, network)
-		},
-
 		getAddress: function(network, wif) {
 			var keyPair = this.getKeyPair(network, wif);
 			if (!keyPair) return null;
@@ -316,6 +311,20 @@ app.wallet = (function() {
 		getSupportedAddressTypes: function() {
 			var setting = _.findWhere(app.config.settings, { name: 'addressType' });
 			return setting && _.pluck(setting.options, 'key');
+		},
+
+		getInternalAddresses: function(network) {
+			var addressTypes = wallet.getSupportedAddressTypes();
+			var publicKey = wallet.getKeyPair(network).publicKey;
+			return _.map(addressTypes, function(addressType) {
+				return wallet.getAddressFromPublicKey(publicKey, addressType);
+			});
+		},
+
+		getInternalAddressLookupTable: function(network) {
+			return _.chain(wallet.getInternalAddresses(network)).map(function(address) {
+				return [ address, true ];
+			}).object().value();
 		},
 
 		getUnspentTxOutputs: function(cb) {
@@ -476,7 +485,7 @@ app.wallet = (function() {
 				outputAddresses.push(extraOutput.address);
 			});
 			_.each(outputAddresses, function(outputAddress) {
-				if (wallet.getTypeFromAddress(outputAddress) === 'p2pkh') {
+				if (wallet.isPayToPublicKeyHashAddress(outputAddress)) {
 					// Increase fee paid by 1 sat for each p2pkh output.
 					// Decreasing the change value effectively increases the fee paid.
 					changeValue -= 1;
@@ -599,8 +608,7 @@ app.wallet = (function() {
 			var tx = bitcoin.Transaction.fromHex(rawTx);
 			var fiatCurrency = app.settings.get('fiatCurrency');
 			var displayCurrency = app.settings.get('displayCurrency');
-			// !!! Don't use address here. Use publicKey instead. See models/transaction.js.
-			var internalAddress = wallet.getAddress();
+			var isAssociated = wallet.getInternalAddressLookupTable();
 			var outputs = _.map(tx.outs, function(output) {
 				var address = wallet.scriptToAddress(output.script);
 				var displayAmount = wallet.fromBaseUnit(output.value);
@@ -612,20 +620,20 @@ app.wallet = (function() {
 					address: address,
 					amount: displayAmount,
 					value: output.value,
-					internal: address === internalAddress,
+					internal: address && isAssociated[address],
 					symbol: displayCurrency,
 				};
 			}, this);
 			var nonDustOutputSums = {
 				internal: _.chain(outputs).filter(function(output) {
-					if (output.address !== internalAddress) return false;
+					if (!output.internal) return false;
 					var dustLimit = wallet.calculateDustLimit(output.address);
 					return output.value >= dustLimit * 2;
 				}).reduce(function(memo, output) {
 					return memo + output.value;
 				}, 0).value(),
 				external: _.chain(outputs).filter(function(output) {
-					if (output.address === internalAddress) return false;
+					if (output.internal) return false;
 					var dustLimit = wallet.calculateDustLimit(output.address);
 					return output.value >= dustLimit * 2;
 				}).reduce(function(memo, output) {

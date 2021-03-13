@@ -124,7 +124,7 @@ describe('services.coin', function() {
 			description: 'fetchUnspentTxOutputs - some',
 			fn: 'fetchUnspentTxOutputs',
 			args: [
-				'tb1qugufglmwszfll8wtz280zn4guj8svtrwhr67a7',
+				'tb1qywldz8v2qq0kqmsnjpv78syxyywx4j5ljyx597',
 			],
 			skip: {
 				services: partialServiceNames,

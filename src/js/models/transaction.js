@@ -73,21 +73,21 @@ app.models.Transaction = (function() {
 		calculateAmount: function() {
 			var tx = this.getDecodedTx();
 			var network = this.get('network');
-			var internalAddress = app.wallet.getAddress(network);
+			var isAssociated = app.wallet.getInternalAddressLookupTable(network);
 			var outputs;
 			switch (this.get('type')) {
 				case 'payment':
 					// Gather the outputs sent to external addresses.
 					outputs = _.filter(tx.outs, function(out) {
 						var address = app.wallet.scriptToAddress(out.script, network);
-						return address !== internalAddress;
+						return !address || !isAssociated[address];
 					});
 					break;
 				case 'double-spend':
-					// Gather the outputs sent to the internal address.
+					// Gather the outputs sent to an internal address.
 					outputs = _.filter(tx.outs, function(out) {
 						var address = app.wallet.scriptToAddress(out.script, network);
-						return address === internalAddress;
+						return address && isAssociated[address];
 					});
 					break;
 			}
@@ -151,11 +151,8 @@ app.models.Transaction = (function() {
 		},
 		hasOutputAssociatedWithPublicKey: function(publicKey, tx) {
 			tx = tx || this.getDecodedTx();
-			var isAssociated = _.chain(app.wallet.getSupportedAddressTypes()).map(function(addressType) {
-				var address = app.wallet.getAddressFromPublicKey(publicKey, addressType);
-				if (!address) return null;
-				return [ address, true ];
-			}).compact().object().value();
+			var network = this.get('network');
+			var isAssociated = app.wallet.getInternalAddressLookupTable(network);
 			return _.some(tx.outs, function(output) {
 				var address = app.wallet.getOutputScriptAddress(output.script);
 				return address && isAssociated[address];

@@ -12,34 +12,20 @@ app.views.Receive = (function() {
 		events: {
 			'click .copy-to-clipboard': 'copyToClipboard',
 		},
-		initialize: function() {
-			this.address = this.generateAddress();
-		},
-		generateAddress: function() {
-			return app.wallet.getAddress();
-		},
 		serializeData: function() {
 			var data = {
-				address: this.address,
+				address: app.wallet.getAddress(),
 			};
 			return data;
 		},
 		onRender: function() {
 			this.$addressQRCode = this.$('.address-qrcode');
 			this.$addressText = this.$('.address-text');
-			this.$addressText.text(this.address);
-			this.$addressHiddenTextArea = $('<textarea>')
-				.css({
-					position: 'absolute',
-					left: '-99999rem',
-					top: 0,
-				})
-				.text(this.$addressText.text())
-				.appendTo(this.$el);
+			this.$addressText.text(app.wallet.getAddress());
 			this.renderQRCode();
 		},
 		renderQRCode: function() {
-			app.util.renderQrCode(this.$addressQRCode, this.address, {
+			app.util.renderQrCode(this.$addressQRCode, app.wallet.getAddress(), {
 				width: Math.min(
 					this.$addressQRCode.width(),
 					this.$addressQRCode.height()
@@ -50,7 +36,7 @@ app.views.Receive = (function() {
 			this.renderQRCode();
 		},
 		copyToClipboard: function() {
-			var text = this.$addressHiddenTextArea.text();
+			var text = app.wallet.getAddress();
 			if (text) {
 				try {
 					if (app.device.clipboard.copy(text)) {

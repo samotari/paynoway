@@ -14,7 +14,18 @@ let manager = module.exports = {
 	browser: null,
 	page: null,
 	device: 'Nexus 5',
-	puppeteer: puppeteer,
+	defaultBrowserOptions: {
+		args: [
+			// To prevent CORS errors:
+			'--disable-web-security',
+			// Set full-screen to prevent styling issues:
+			'--start-fullscreen',
+		],
+		headless: true,
+		slowMo: 30,
+		timeout: 10000,
+	},
+	puppeteer,
 	fixtures,
 	addressTypes: ['p2pkh', 'p2wpkh-p2sh', 'p2wpkh'],
 	constants: {
@@ -34,7 +45,7 @@ let manager = module.exports = {
 			try {
 				let app = express();
 				app.use(express.static('www'));
-				app.use(express.urlencoded());
+				app.use(express.urlencoded({ extended: false }));
 				app.mock = {
 					data: {
 						rate: '50000.00',
@@ -171,17 +182,7 @@ let manager = module.exports = {
 	},
 
 	prepareBrowser: function(options) {
-		options = _.defaults({}, options || {}, {
-			args: [
-				// To prevent CORS errors:
-				'--disable-web-security',
-				// Set full-screen to prevent styling issues:
-				'--start-fullscreen',
-			],
-			headless: false,
-			slowMo: 50,
-			timeout: 10000,
-		});
+		options = _.defaults({}, options || {}, manager.defaultBrowserOptions);
 		return puppeteer.launch(options).then(browser => {
 			const context = browser.defaultBrowserContext();
 			context.overridePermissions(this.getUrl(), ['clipboard-read']);
