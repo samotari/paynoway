@@ -23,7 +23,7 @@ app.views.Debug = (function() {
 		serializeData: function() {
 			return _.extend({}, this.getDebugInfo(), {
 				description: app.i18n.t('debug.description', {
-					projectIssuesUrl: 'https://github.com/samotari/pay-no-way/issues',
+					projectIssuesUrl: app.info.repoUrl + '/issues',
 				}),
 			});
 		},

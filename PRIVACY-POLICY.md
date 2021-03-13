@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Below we describe our privacy policy. We have tried to make it as clear and concise as possible, but if anything is confusing or unclear please do not hesitate to contact us. You can reach out to us by [creating an issue](https://github.com/samotari/pay-no-way/issues/new) in this GitHub repository.
+Below we describe our privacy policy. We have tried to make it as clear and concise as possible, but if anything is confusing or unclear please do not hesitate to contact us. You can reach out to us by [creating an issue](https://github.com/samotari/paynoway/issues/new) in this GitHub repository.
 
 * [Data Collection And Usage](#data-collection-and-usage)
 * [Device Permissions and Usage](#device-permissions-and-usage)

@@ -1,5 +1,5 @@
 {
-  "name": "pay-no-way",
+  "name": "paynoway",
   "version": "2.0.0",
   "description": "A mobile app for testing payment systems against double-spend attacks.",
   "private": true,
@@ -40,12 +40,12 @@
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/samotari/pay-no-way.git"
+    "url": "git+https://github.com/samotari/paynoway.git"
   },
   "bugs": {
-    "url": "https://github.com/samotari/pay-no-way/issues"
+    "url": "https://github.com/samotari/paynoway/issues"
   },
-  "homepage": "https://github.com/samotari/pay-no-way",
+  "homepage": "https://github.com/samotari/paynoway",
   "cordova": {
     "platforms": [
       "android"

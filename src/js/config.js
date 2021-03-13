@@ -570,7 +570,7 @@ app.config = (function() {
 				},
 				notes: function() {
 					return app.i18n.t('configure.locale.notes', {
-						projectTranslationsUrl: 'https://github.com/samotari/pay-no-way#translations',
+						projectTranslationsUrl: app.info.repoUrl + '#translations',
 					});
 				},
 				visible: false,

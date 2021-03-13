@@ -44,13 +44,13 @@ Before continuing, be sure you already have the project's [requirements](#requir
 
 Download the project files via git:
 ```bash
-git clone https://github.com/samotari/pay-no-way.git
+git clone https://github.com/samotari/paynoway.git
 ```
 
 Install the project's dependencies:
 ```bash
-cd pay-no-way
-npm install
+cd paynoway
+npm ci
 ```
 
 Build the application files:
@@ -141,7 +141,7 @@ npm test
 
 Your help in translating the app into other languages is welcome. To do so please see the following steps:
 
-* Find the app's primary language file [here](https://github.com/samotari/pay-no-way/blob/master/src/js/lang/en.js).
+* Find the app's primary language file [here](https://github.com/samotari/paynoway/blob/master/src/js/lang/en.js).
 * Copy the contents of the file to the text editing program of your choice.
 * Change the values only - leave the keys un-translated. The reference keys are used internally in the app. Please see the following example:
 
@@ -164,7 +164,7 @@ app.lang['es'] = (function() {
 })();
 ```
 
-* Once you've finished the translations, create an issue in this project [here](https://github.com/samotari/pay-no-way/issues) and copy/paste the contents of your translation file into the new issue.
+* Once you've finished the translations, create an issue in this project [here](https://github.com/samotari/paynoway/issues) and copy/paste the contents of your translation file into the new issue.
 	* Alternatively, you can fork this project and create a pull-request with the new file.
 
 * Thanks for taking the time to make a translation!
@@ -172,7 +172,7 @@ app.lang['es'] = (function() {
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/samotari/pay-no-way/blob/master/CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/samotari/paynoway/blob/master/CHANGELOG.md)
 
 
 ## License
