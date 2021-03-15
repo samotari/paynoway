@@ -94,7 +94,7 @@ $(BUILD)/css/*.min.css: $(CSS)/*.css
 	$(BIN)/postcss $^ --ext .min.css --dir $(BUILD)/css
 
 $(BUILD)/css/**/*.min.css: $(CSS)/**/*.css
-	for input in $^; do \
+	@for input in $^; do \
 		dir=$$(dirname $(BUILD)/$${input#src/}); \
 		output="$$dir/$$(basename $$input .css).min.css"; \
 		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
@@ -119,7 +119,7 @@ APP_CSS_MIN_FILES=$(addprefix $(BUILD)/, $(subst $(SRC), , $(patsubst %.css, %.m
 $(BUILD_ALL_CSS): $(CSS)/*.css $(CSS)/**/*.css
 	mkdir -p $$(dirname $@)
 	rm -f $(BUILD_ALL_CSS)
-	for file in $(APP_CSS_FILES); do \
+	@for file in $(APP_CSS_FILES); do \
 		cat $$file >> $(BUILD_ALL_CSS); \
 		echo "" >> $(BUILD_ALL_CSS); \
 	done
@@ -127,7 +127,7 @@ $(BUILD_ALL_CSS): $(CSS)/*.css $(CSS)/**/*.css
 $(BUILD_ALL_MIN_CSS): $(BUILD)/css/*.min.css $(BUILD)/css/**/*.min.css
 	mkdir -p $$(dirname $@)
 	rm -f $(BUILD_ALL_MIN_CSS)
-	for file in $(APP_CSS_MIN_FILES); do \
+	@for file in $(APP_CSS_MIN_FILES); do \
 		cat $$file >> $(BUILD_ALL_MIN_CSS); \
 		echo "" >> $(BUILD_ALL_MIN_CSS); \
 	done
@@ -190,7 +190,7 @@ $(BUILD_DEPS)/js/QRCode.js\
 $(BUILD_DEPS)/js/querystring.js
 $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	rm -f $(BUILD_DEPS_JS)
-	for file in $(DEPS_JS_FILES); do \
+	@for file in $(DEPS_JS_FILES); do \
 		cat $$file >> $(BUILD_DEPS_JS); \
 		echo "" >> $(BUILD_DEPS_JS); \
 	done
@@ -209,13 +209,13 @@ $(BUILD_DEPS)/js/QRCode.min.js\
 $(BUILD_DEPS)/js/querystring.min.js
 $(BUILD_DEPS_MIN_JS): $(DEPS_MIN_JS_FILES)
 	rm -f $(BUILD_DEPS_MIN_JS)
-	for file in $(DEPS_MIN_JS_FILES); do \
+	@for file in $(DEPS_MIN_JS_FILES); do \
 		cat $$file >> $(BUILD_DEPS_MIN_JS); \
 		echo "" >> $(BUILD_DEPS_MIN_JS); \
 	done
 
 $(BUILD)/js/*.min.js:$(JS)/*.js
-	for input in $^; do \
+	@for input in $^; do \
 		dir=$$(dirname $(BUILD)/$${input#src/}); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
 		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
@@ -226,7 +226,7 @@ $(BUILD)/js/*.min.js:$(JS)/*.js
 	done
 
 $(BUILD)/js/**/*.min.js:$(JS)/**/*.js
-	for input in $^; do \
+	@for input in $^; do \
 		dir=$$(dirname $(BUILD)/$${input#src/}); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
 		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
@@ -237,7 +237,7 @@ $(BUILD)/js/**/*.min.js:$(JS)/**/*.js
 	done
 
 $(BUILD)/js/**/**/*.min.js:$(JS)/**/**/*.js
-	for input in $^; do \
+	@for input in $^; do \
 		dir=$$(dirname $(BUILD)/$${input#src/}); \
 		output="$$dir/$$(basename $$input .js).min.js"; \
 		if [ ! -f $$output ] || [ $$output -ot $$input ]; then \
@@ -273,7 +273,7 @@ APP_JS_MIN_FILES=$(addprefix $(BUILD)/, $(subst $(SRC), , $(patsubst %.js, %.min
 JS_FILES=$(BUILD_DEPS_JS) $(APP_JS_FILES)
 $(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
 	rm -f $(BUILD_ALL_JS)
-	for file in $(JS_FILES); do \
+	@for file in $(JS_FILES); do \
 		cat $$file >> $(BUILD_ALL_JS); \
 		echo "" >> $(BUILD_ALL_JS); \
 	done
@@ -281,7 +281,7 @@ $(BUILD_ALL_JS): $(BUILD_DEPS_JS) $(JS)/*.js $(JS)/**/*.js $(JS)/**/**/*.js
 JS_MIN_FILES=$(BUILD_DEPS_MIN_JS) $(APP_JS_MIN_FILES)
 $(BUILD_ALL_MIN_JS): $(BUILD_DEPS_MIN_JS) $(BUILD)/js/*.min.js $(BUILD)/js/**/*.min.js $(BUILD)/js/**/**/*.min.js
 	rm -f $(BUILD_ALL_MIN_JS)
-	for file in $(JS_MIN_FILES); do \
+	@for file in $(JS_MIN_FILES); do \
 		cat $$file >> $(BUILD_ALL_MIN_JS); \
 		echo "" >> $(BUILD_ALL_MIN_JS); \
 	done

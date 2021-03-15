@@ -193,9 +193,9 @@ app.views.Send = (function() {
 				'updateBalance',
 				'updateScoreboard'
 			);
-			this.refreshUnspentTxOutputs = _.debounce(this.refreshUnspentTxOutputs, 500);
-			this.precalculateMaximumAmount = _.debounce(this.precalculateMaximumAmount, 500);
-			this.toggleDisplayCurrency = _.debounce(this.toggleDisplayCurrency, 100);
+			this.refreshUnspentTxOutputs = _.debounce(this.refreshUnspentTxOutputs, app.config.send.debounce.refreshUnspentTxOutputs);
+			this.precalculateMaximumAmount = _.debounce(this.precalculateMaximumAmount, app.config.send.debounce.precalculateMaximumAmount);
+			this.toggleDisplayCurrency = _.debounce(this.toggleDisplayCurrency, app.config.send.debounce.toggleDisplayCurrency);
 			this.model = new Backbone.Model;
 			this.listenTo(this.model, 'change:utxo', this.updateBalance);
 			this.listenTo(this.model, 'change:amount', this.updateAmount);

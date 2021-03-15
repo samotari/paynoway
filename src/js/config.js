@@ -617,6 +617,13 @@ app.config = (function() {
 				},
 			},
 		},
+		send: {
+			debounce: {
+				refreshUnspentTxOutputs: 500,
+				precalculateMaximumAmount: 500,
+				toggleDisplayCurrency: 100,
+			},
+		},
 	};
 
 	return config;

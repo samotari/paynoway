@@ -4,7 +4,7 @@ require('../global-hooks');
 describe('#debug', function() {
 
 	before(function() {
-		return manager.navigate('/#debug');
+		return manager.navigate('#debug');
 	});
 
 	it('debug', function() {

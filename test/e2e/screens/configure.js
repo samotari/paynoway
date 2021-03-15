@@ -15,7 +15,7 @@ describe('#configure', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/');
+		return manager.refreshApp();
 	});
 
 	it('configuration form exists', function() {

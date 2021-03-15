@@ -14,7 +14,3 @@ before(function() {
 		app.config.debug = true;
 	});
 });
-
-before(function() {
-	return manager.navigate('/');
-});

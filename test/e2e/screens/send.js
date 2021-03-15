@@ -205,7 +205,7 @@ describe('#send', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/').then(function() {
+		return manager.refreshApp().then(function() {
 			return manager.page.waitForSelector(selectors.headerButton).then(function() {
 				return manager.page.click(selectors.headerButton);
 			});

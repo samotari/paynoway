@@ -1,6 +1,33 @@
 const manager = require('../manager');
 require('../global-hooks');
 
+manager.refreshApp = function() {
+	return manager.navigate('/').then(function() {
+		return manager.waitForAppLoaded().then(function() {
+			return manager.page.evaluate(function() {
+				app.onDeviceReady(function() {
+					app.config.debug = true;
+					app.config.wallet.transactions.refresh.concurrency = 3;
+					app.config.wallet.transactions.refresh.delay = 10;
+					app.config.send.debounce = {
+						refreshUnspentTxOutputs: 50,
+						precalculateMaximumAmount: 50,
+						toggleDisplayCurrency: 10,
+					};
+					app.services.exchangeRates.providers['test'] = {
+						label: 'TEST',
+						url: 'http://localhost:3000/api/exchange-rate?symbol={{FROM}}{{TO}}',
+						jsonPath: {
+							error: 'error',
+							data: 'result',
+						},
+					};
+				});
+			});
+		});
+	});
+};
+
 before(function() {
 	return manager.preparePage();
 });
@@ -16,7 +43,6 @@ before(function() {
 
 before(function() {
 	return manager.page.evaluate(function() {
-		app.config.debug = true;
 		app.settings.set('network', 'bitcoinTestnet');
 	});
 });
@@ -35,14 +61,6 @@ before(function() {
 	manager.fiatCurrency = fiatCurrency;
 	// Use mock exchange rate server.
 	return manager.page.evaluate(function(options) {
-		app.services.exchangeRates.providers['test'] = {
-			label: 'TEST',
-			url: 'http://localhost:3000/api/exchange-rate?symbol={{FROM}}{{TO}}',
-			jsonPath: {
-				error: 'error',
-				data: 'result',
-			},
-		};
 		app.settings.set('exchangeRateProvider', 'test');
 		app.settings.set('fiatCurrency', options.fiatCurrency);
 	}, { fiatCurrency });

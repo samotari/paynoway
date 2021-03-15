@@ -11,7 +11,7 @@ describe('#configure', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/');
+		return manager.navigate('#configure');
 	});
 
 	it('configure', function() {

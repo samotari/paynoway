@@ -36,7 +36,7 @@ describe('#history', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/').then(function() {
+		return manager.refreshApp().then(function() {
 			return manager.page.waitForSelector(selectors.headerButton).then(function() {
 				return manager.page.click(selectors.headerButton);
 			});
@@ -62,6 +62,10 @@ describe('#history', function() {
 			return manager.page.evaluate(function(options) {
 				app.wallet.transactions.collection.reset(options.transactions);
 			}, { transactions });
+		});
+
+		beforeEach(function() {
+			return manager.dismissMessage();
 		});
 
 		it('does not show empty message', function() {
@@ -102,7 +106,6 @@ describe('#history', function() {
 		});
 
 		it('can re-broadcast transaction to web service', function() {
-			this.timeout(30000);
 			return manager.page.waitForSelector(selectors.items[0].broadcastButton).then(function() {
 				return Promise.all([
 					manager.waitForDialog().then(function(dialog) {

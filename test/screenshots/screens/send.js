@@ -6,7 +6,7 @@ describe('#send', function() {
 	before(function() {
 		return manager.page.evaluate(function() {
 			app.setHasReadDisclaimersFlag();
-			app.wallet.saveSetting('wif', 'cPTM4uJTjqX7LA9Qa24AeZRNut3s1Vyjm4ovzgp7zS1RjxJNGKMV');
+			app.wallet.saveSetting('wif', 'cMjpFp5Dn8YZgfkxeiQ23S2PLcP8iNXzYDFrbjSEdCvh2KCHYrQC');
 			app.wallet.saveSetting('addressType', 'p2wpkh');
 			app.settings.set('displayCurrency', 'EUR');
 			app.wallet.getAddress();
@@ -14,10 +14,21 @@ describe('#send', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/#send');
+		return manager.navigate('#send');
+	});
+
+	before(function() {
+		return manager.page.evaluate(function() {
+			return new Promise(function(resolve, reject) {
+				app.wallet.refreshCachedExchangeRate(function(error) {
+					if (error) return reject(error);
+					resolve();
+				});
+			});
+		});
 	});
 
 	it('send', function() {
-		return manager.page.waitForSelector('.view.send');
+		return manager.waitForText('.view.send .balance .currency-value', '134.96');
 	});
 });

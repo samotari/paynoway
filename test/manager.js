@@ -23,7 +23,7 @@ let manager = module.exports = {
 		],
 		headless: true,
 		slowMo: 30,
-		timeout: 10000,
+		timeout: 5000,
 	},
 	puppeteer,
 	fixtures,
@@ -155,7 +155,7 @@ let manager = module.exports = {
 						app.mock.overrides[name] = callback;
 					},
 					clearOverride: function(name) {
-						app.mock.setOverride('fetchUnspentTxOutputs', null);
+						app.mock.setOverride(name, null);
 					},
 				};
 				_.each(app.mock.endpoints, function(info, name) {
@@ -334,7 +334,7 @@ let manager = module.exports = {
 	waitForAppLoaded: function() {
 		return manager.navigate('/').then(function() {
 			return manager.page.waitForFunction(function() {
-				return !!app && !!app.mainView;
+				return typeof app !== 'undefined';
 			});
 		});
 	},

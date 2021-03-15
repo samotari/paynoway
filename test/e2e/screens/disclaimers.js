@@ -20,7 +20,7 @@ describe('#disclaimers', function() {
 	});
 
 	before(function() {
-		return manager.navigate('/');
+		return manager.refreshApp();
 	});
 
 	it('disclaimer text exists', function() {
