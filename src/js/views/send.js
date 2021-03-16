@@ -261,17 +261,28 @@ app.views.Send = (function() {
 			this.fetchUnspentTxOutputs();
 		},
 		getCacheKey: function(field) {
-			switch (field) {
-				case 'minRelayFeeRate':
-				case 'autoBroadcastDoubleSpend':
-				case 'autoBroadcastDoubleSpendDelay':
-				case 'paymentOutput':
-					return field + ':' + app.wallet.getNetwork();
-				case 'utxo':
-					return field + ':' + app.wallet.getAddress();
-				default:
-					return field;
+			var cacheKeyParts = [ field ];
+			if (
+				_.contains([
+					'minRelayFeeRate',
+					'autoBroadcastDoubleSpend',
+					'autoBroadcastDoubleSpendDelay',
+					'paymentOutput',
+					'maxAmount',
+					'utxo',
+				], field)
+			) {
+				cacheKeyParts.push(app.wallet.getNetwork());
 			}
+			if (
+				_.contains([
+					'maxAmount',
+					'utxo',
+				], field)
+			) {
+				cacheKeyParts.push(app.wallet.getPublicKeyHex());
+			}
+			return cacheKeyParts.join(':');
 		},
 		getCache: function(field) {
 			var cacheKey = this.getCacheKey(field);
@@ -290,6 +301,7 @@ app.views.Send = (function() {
 		},
 		updateModelFromCache: function() {
 			_.each([
+				'maxAmount',
 				'minRelayFeeRate',
 				'payment',
 				'utxo',

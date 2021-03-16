@@ -308,6 +308,11 @@ app.wallet = (function() {
 			}
 		},
 
+		getPublicKeyHex: function(network) {
+			var keyPair = this.getKeyPair(network);
+			return Buffer.from(keyPair.publicKey).toString('hex');
+		},
+
 		getSupportedAddressTypes: function() {
 			var setting = _.findWhere(app.config.settings, { name: 'addressType' });
 			return setting && _.pluck(setting.options, 'key');
