@@ -219,6 +219,8 @@ app.views.Send = (function() {
 			var $inputs = this.$inputs;
 			return function(error, data) {
 				if (error) return cb(error);
+				// Do nothing when no data received from camera.
+				if (!data) return cb();
 				try {
 					if (data.indexOf(':') !== -1) {
 						// Likely BIP21 payment request.
