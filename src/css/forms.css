@@ -108,7 +108,7 @@
 	height: 100%;
 	background-position: center center;
 	background-repeat: no-repeat;
-	background-size: 1.2rem;
+	background-size: 60%;
 	box-sizing: border-box;
 	padding: 0 1.2rem;
 }
@@ -122,24 +122,23 @@
 	background-image: url('../images/camera.svg');
 }
 .form-field-action.cycle {
-	background-size: .8rem;
+	background-size: 40%;
 	background-image: url('../images/cycle.svg');
 }
 .form-field-action.select-all {
-	background-size: .8rem;
 	background-image: url('../images/select-all.svg');
 }
 .form-field-action.visibility {
-	background-size: 1.5rem;
+	background-size: 75%;
 	background-image: url('../images/visibility.svg');
 }
 .form-field-action.undo {
+	background-size: 70%;
 	background-image: url('../images/undo.svg');
-	background-size: 1.6rem;
 }
 .form-field-action.test {
+	background-size: 70%;
 	background-image: url('../images/test.svg');
-	background-size: 1.6rem;
 }
 .form-description {
 	font-size: .9rem;
