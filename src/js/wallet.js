@@ -686,7 +686,7 @@ app.wallet = (function() {
 					network: app.wallet.getNetworkConstants(network),
 					hash: Buffer.from(
 						bitcoin.script.decompile(
-							app.wallet.getOutputScript(app.wallet.getAddress())
+							app.wallet.getOutputScript(address)
 						)[1]
 					),
 				}).address;
@@ -800,8 +800,14 @@ app.wallet = (function() {
 				});
 			},
 			fetchAll: function(done) {
-				var address = wallet.getAddress();
-				app.log('wallet.transactions.fetchAll', address);
+				app.log('wallet.transactions.fetchAll');
+				done = done || _.noop;
+				var addresses = wallet.getInternalAddresses();
+				var fetchAllForAddress = _.bind(this.fetchAllForAddress, this);
+				async.each(addresses, fetchAllForAddress, done);
+			},
+			fetchAllForAddress: function(address, done) {
+				app.log('wallet.transactions.fetchAllForAddress', address);
 				var previousResults;
 				async.until(function(next) {
 					next(null, !_.isUndefined(previousResults) && previousResults.length === 0);
