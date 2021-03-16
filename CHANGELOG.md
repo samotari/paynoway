@@ -14,6 +14,8 @@
   * Improvements for smaller screens
   * Removed ElectrumX server communication
   * App now uses a web service API (esplora or mempool) to perform coin-related functions (e.g broadcast raw transactions). Can use default web service instance, or self-host your own.
+  * Can now spend UTXOs from all supported address types - e.g Legacy, Segwit (backwards compat.), Segwit (bech32).
+  * App will now periodically fetch (and update) the full transaction history for the currently configured WIF using its public key to generate all possible internal addresses.
   * Added button to copy the raw transaction (hex) to device clipboard in the history view
   * Added button to easily re-broadcast transactions in the history view
   * Multiple web service APIs used simultaneously to broadcast double-spend transactions and to re-broadcast a transaction in the history view
