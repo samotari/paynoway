@@ -852,12 +852,14 @@ app.wallet = (function() {
 				collection.fetch({
 					reset: true,
 					success: function() {
-						var publicKey = wallet.getKeyPair().publicKey;
-						var models = collection.models.filter(function(model) {
-							if (model.has('network') && model.get('network') !== network) return false;
-							return model.isAssociatedWithPublicKey(publicKey);
-						});
-						collection.reset(models);
+						var keyPair = wallet.getKeyPair();
+						if (keyPair) {
+							var models = collection.models.filter(function(model) {
+								if (model.has('network') && model.get('network') !== network) return false;
+								return model.isAssociatedWithPublicKey(keyPair.publicKey);
+							});
+							collection.reset(models);
+						}
 						app.log('Wallet transactions loaded ("' + network + '")');
 						done();
 					},
@@ -880,11 +882,14 @@ app.wallet = (function() {
 			}
 		});
 		app.settings.on('change', function(key, value) {
-			if (
-				key === 'network' ||
-				key === wallet.getSettingKeyPath('wif')
-			) {
+			if (key === 'network') {
 				wallet.transactions.load();
+			} else if (key === wallet.getSettingKeyPath('wif')) {
+				wallet.transactions.fetchAll(function(error) {
+					if (!error) {
+						wallet.transactions.load();
+					}
+				});
 			}
 		});
 	});
