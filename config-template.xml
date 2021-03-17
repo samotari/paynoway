@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.github.samotari.paynoway" version="{{version}}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.github.samotari.paynoway" version="{{version}}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name short="{{shortName}}">{{name}}</name>
     <description>{{description}}</description>
     <access origin="*" />
@@ -44,5 +44,12 @@
     <plugin name="cordova-android-support-gradle-release" spec="3.0.0">
         <variable name="ANDROID_SUPPORT_VERSION" value="26.+" />
     </plugin>
+    <!-- https://cordova.apache.org/docs/en/10.x/plugin_ref/spec.html#edit-config -->
+    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
+        <manifest android:hardwareAccelerated="false" />
+    </edit-config>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
+        <application android:hardwareAccelerated="false" />
+    </edit-config>
     <engine name="android" spec="9.0.0" />
 </widget>
