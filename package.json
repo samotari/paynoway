@@ -60,7 +60,8 @@
         "ANDROID_SUPPORT_VERSION": "26.+"
       },
       "cordova-plugin-ionic-keyboard": {},
-      "cordova-plugin-network-information": {}
+      "cordova-plugin-network-information": {},
+      "cordova-clipboard": {}
     }
   },
   "dependencies": {
@@ -79,6 +80,7 @@
     "cordova": "10.0.0",
     "cordova-android": "9.0.0",
     "cordova-android-support-gradle-release": "3.0.1",
+    "cordova-clipboard": "1.3.0",
     "cordova-plugin-inappbrowser": "5.0.0",
     "cordova-plugin-ionic-keyboard": "2.2.0",
     "cordova-plugin-network-information": "2.0.2",

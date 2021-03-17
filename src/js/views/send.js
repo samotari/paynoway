@@ -12,9 +12,7 @@ app.views.Send = (function() {
 		events: {
 			'change :input[name="address"]': 'onChangeInputs',
 			'change :input[name="amount"]': 'onChangeInputs',
-			'change :input[name="feeRate"]': 'onChangeInputs',
 			'change :input[name="feeRate"]': 'onChangeFeeRate',
-			'change :input[name="feeRate"]': 'onChangeCacheableOption',
 			'change :input[name="autoBroadcastDoubleSpend"]': 'onChangeCacheableOption',
 			'change :input[name="autoBroadcastDoubleSpendDelay"]': 'onChangeCacheableOption',
 			'change :input[name="paymentOutput"]': 'onChangeCacheableOption',
@@ -213,6 +211,10 @@ app.views.Send = (function() {
 			this.updateBalance();
 			this.updateAmount();
 			this.updateScoreboard();
+		},
+		onChangeFeeRate: function() {
+			this.onChangeCacheableOption();
+			this.onChangeInputs();
 		},
 		createScanQRCodeCallbackWrap: function(cb) {
 			var model = this.model;
@@ -735,7 +737,7 @@ app.views.Send = (function() {
 				payment.fee,
 				// Use the size of the sample tx to calculate the fee.
 				// The fee rate is satoshis/kilobyte.
-				Math.ceil(virtualSize * feeRate),
+				Math.ceil(virtualSize * feeRate)
 			);
 			var tx = app.wallet.buildTx(amount, address, utxo, {
 				fee: fee,

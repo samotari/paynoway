@@ -105,6 +105,12 @@ app.device = (function() {
 				$textarea.select();
 				var result = document.execCommand('copy');
 				$textarea.remove();
+				if (!result) {
+					if (app.isCordova() && cordova.plugins.clipboard) {
+						cordova.plugins.clipboard.copy(text);
+						result = true;
+					}
+				}
 				return result;
 			},
 		},

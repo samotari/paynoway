@@ -19,7 +19,7 @@ app.abstracts.BaseView = (function() {
 				'render',
 				'onResize',
 				'onChangeLocale',
-				'doVisualTimerTick',
+				'doVisualTimerTick'
 			);
 
 			Backbone.View.prototype.constructor.apply(this, arguments);

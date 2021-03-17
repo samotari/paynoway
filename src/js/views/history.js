@@ -22,7 +22,7 @@ app.views.History = (function() {
 		initialize: function() {
 			app.views.utility.List.prototype.initialize.apply(this, arguments);
 			_.bindAll(this,
-				'toggleResetStatisticsButton',
+				'toggleResetStatisticsButton'
 			);
 			var collection = _.result(this, 'collection');
 			this.listenTo(collection, 'add remove reset change', this.toggleResetStatisticsButton);

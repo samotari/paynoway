@@ -29,6 +29,7 @@
 	}
 	.secondary-controls {
 		height: 3.6rem;
+		line-height: 3.2rem;
 		padding: .2rem;
 	}
 	.button.secondary-control:before,

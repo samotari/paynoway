@@ -905,11 +905,15 @@ app.wallet = (function() {
 			});
 		}, app.config.wallet.transactions.refresh.concurrency);
 		wallet.transactions.refreshInterval = setInterval(
-			wallet.transactions.refreshAll,
+			function() {
+				wallet.transactions.refreshAll();
+			},
 			app.config.wallet.transactions.refresh.interval
 		);
 		wallet.transactions.fetchInterval = setInterval(
-			wallet.transactions.fetchAll,
+			function() {
+				wallet.transactions.fetchAll();
+			},
 			app.config.wallet.transactions.fetch.interval
 		);
 	});

@@ -140,13 +140,21 @@ $(PUBLIC_ALL_MIN_CSS): $(BUILD_ALL_MIN_CSS)
 	mkdir -p $$(dirname $@)
 	cp $(BUILD_ALL_MIN_CSS) $(PUBLIC_ALL_MIN_CSS)
 
+$(BUILD_DEPS)/js/async.js: node_modules/async/dist/async.js
+	mkdir -p $$(dirname $@)
+	$(BIN)/browserify \
+		--entry $^ \
+		--standalone $$(basename $@ .js) \
+		--transform [ babelify --presets [ @babel/preset-env ] --plugins [ @babel/plugin-transform-runtime ] ] \
+		--outfile $@
+
 $(BUILD_DEPS)/js/bitcoin.js: node_modules/bitcoinjs-lib/src/index.js
 	mkdir -p $$(dirname $@)
 	$(BIN)/browserify \
-		--entry node_modules/bitcoinjs-lib/src/index.js \
-		--standalone bitcoin \
+		--entry $^ \
+		--standalone $$(basename $@ .js) \
 		--transform [ babelify --presets [ @babel/preset-env ] ] \
-		--outfile $(BUILD_DEPS)/js/bitcoin.js
+		--outfile $@
 
 $(BUILD_DEPS)/js/Buffer.js: exports/buffer.js
 	mkdir -p $$(dirname $@)
@@ -164,6 +172,9 @@ $(BUILD_DEPS)/js/querystring.js: exports/querystring.js
 	mkdir -p $$(dirname $@)
 	$(BIN)/browserify --entry $^ --standalone $$(basename $@ .js) --outfile $@
 
+$(BUILD_DEPS)/js/async.min.js: $(BUILD_DEPS)/js/async.js
+	$(BIN)/uglifyjs $^ -o $@
+
 $(BUILD_DEPS)/js/bitcoin.min.js: $(BUILD_DEPS)/js/bitcoin.js
 	$(BIN)/uglifyjs $^ --mangle reserved=['BigInteger','ECPair','Point'] -o $@
 
@@ -177,7 +188,7 @@ $(BUILD_DEPS)/js/querystring.min.js: $(BUILD_DEPS)/js/querystring.js
 	$(BIN)/uglifyjs $^ -o $@
 
 DEPS_JS_FILES=node_modules/core-js-bundle/index.js\
-node_modules/async/dist/async.js\
+$(BUILD_DEPS)/js/async.js\
 node_modules/bignumber.js/bignumber.js\
 node_modules/jquery/dist/jquery.js\
 node_modules/underscore/underscore.js\
@@ -196,7 +207,7 @@ $(BUILD_DEPS_JS): $(DEPS_JS_FILES)
 	done
 
 DEPS_MIN_JS_FILES=node_modules/core-js-bundle/minified.js\
-node_modules/async/dist/async.min.js\
+$(BUILD_DEPS)/js/async.min.js\
 node_modules/bignumber.js/bignumber.min.js\
 node_modules/jquery/dist/jquery.min.js\
 node_modules/underscore/underscore-min.js\

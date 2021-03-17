@@ -18,7 +18,6 @@ html.theme-dark .button.disabled {
 }
 html.theme-dark .secondary-controls {
 	background: #222;
-	box-shadow: none;
 }
 html.theme-dark .menu {
 	background: #222;
@@ -90,7 +89,6 @@ html.theme-dark #cover {
 }
 html.theme-dark.loaded.busy #cover-image {
 	background-color: transparent;
-	box-shadow: none;
 }
 html.theme-dark .view-display-payment-address .address-qr-code-cover {
 	background-color: rgba(0, 0, 0, .7);

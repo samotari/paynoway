@@ -69,9 +69,7 @@ app.abstracts.WebService = (function() {
 				return cb(new Error(app.i18n.t('http-request-failed.no-connection')));
 			}
 			var errorText;
-			if (jqXHR.responseJSON) {
-				errorText = jqXHR.responseJSON;
-			} else if (jqXHR.responseText) {
+			if (jqXHR.responseText) {
 				errorText = jqXHR.responseText;
 			} else {
 				errorText = app.i18n.t('http-request-failed.generic');

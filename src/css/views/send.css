@@ -186,10 +186,9 @@
 .view.send .form-input[type="text"],
 .view.send .form-input[type="password"],
 .view.send .form-input[type="number"] {
-	height: 1.4rem;
-	line-height: 1.4rem;
+	height: 1.5rem;
+	line-height: 1.5rem;
 	border-top: .1rem solid #222;
-	padding: .2rem .4rem;
 }
 .view.send input[name="address"] {
 	font-family: 'Courier';
