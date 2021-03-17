@@ -44,5 +44,5 @@
     <plugin name="cordova-android-support-gradle-release" spec="3.0.0">
         <variable name="ANDROID_SUPPORT_VERSION" value="26.+" />
     </plugin>
-    <engine name="android" spec="7.1.4" />
+    <engine name="android" spec="9.0.0" />
 </widget>
