@@ -319,10 +319,11 @@ app.wallet = (function() {
 		},
 
 		getInternalAddresses: function(network) {
+			var keyPair = wallet.getKeyPair(network);
+			if (!keyPair) return [];
 			var addressTypes = wallet.getSupportedAddressTypes();
-			var publicKey = wallet.getKeyPair(network).publicKey;
 			return _.map(addressTypes, function(addressType) {
-				return wallet.getAddressFromPublicKey(publicKey, addressType);
+				return wallet.getAddressFromPublicKey(keyPair.publicKey, addressType);
 			});
 		},
 
