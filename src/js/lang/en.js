@@ -66,6 +66,9 @@ app.lang['en'] = (function() {
 		'history.reset-statistics.confirm': 'Are you sure you want to reset your statistics dashboard?',
 		'history.reset-statistics.done': 'Your statistics dashboard has been reset.',
 
+		'http-request-failed.no-connection': 'HTTP Request Failed: Is your device connected to the internet?',
+		'http-request-failed.generic': 'HTTP Request Failed',
+
 		'receive.title': 'Receiving Address',
 
 		'send.address': 'Payment Address',

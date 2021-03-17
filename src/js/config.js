@@ -459,6 +459,10 @@ app.config = (function() {
 					});
 				},
 				validateAsync: function(value, data, cb) {
+					if (app.device.offline) {
+						// Do not validate when device is offline.
+						return cb();
+					}
 					var exchangeRateProvider = value;
 					var fiatCurrency = data.fiatCurrency || app.settings.get('fiatCurrency');
 					var network = data.network || app.settings.get('network');

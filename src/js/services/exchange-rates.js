@@ -52,8 +52,9 @@ app.services.exchangeRates = (function() {
 				if (error || !result) {
 					if (error) {
 						log('get', 'error', error);
+					} else if (!result) {
+						error = new Error(app.i18n.t('services.exchange-rates.unsupported-currency-pair', options.currencies));
 					}
-					error = new Error(app.i18n.t('services.exchange-rates.unsupported-currency-pair', options.currencies));
 					return done(error);
 				}
 				if (result) {
@@ -117,11 +118,20 @@ app.services.exchangeRates = (function() {
 							return next(new Error(data.error));
 						}
 						next(null, data.result);
-					}).fail(function(error) {
-						if (error.responseJSON) {
-							return next(new Error(JSON.stringify(error.responseJSON)));
+					}).fail(function(jqXHR, textStatus, errorThrown) {
+						if (jqXHR.readyState === 0 && app.device.offline) {
+							// Unsent request and device is offline.
+							return next(new Error(app.i18n.t('http-request-failed.no-connection')));
 						}
-						next(error);
+						var errorText;
+						if (jqXHR.responseJSON) {
+							errorText = jqXHR.responseJSON;
+						} else if (jqXHR.responseText) {
+							errorText = jqXHR.responseText;
+						} else {
+							errorText = app.i18n.t('http-request-failed.generic');
+						}
+						next(new Error(errorText));
 					});
 				} catch (error) {
 					return next(error);

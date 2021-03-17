@@ -64,7 +64,19 @@ app.abstracts.WebService = (function() {
 			cb(null, responseData);
 		}).fail(function(jqXHR, textStatus, errorThrown) {
 			log('http-error', jqXHR, textStatus, errorThrown);
-			cb(new Error(jqXHR.responseText))
+			if (jqXHR.readyState === 0 && app.device.offline) {
+				// Unsent request and device is offline.
+				return cb(new Error(app.i18n.t('http-request-failed.no-connection')));
+			}
+			var errorText;
+			if (jqXHR.responseJSON) {
+				errorText = jqXHR.responseJSON;
+			} else if (jqXHR.responseText) {
+				errorText = jqXHR.responseText;
+			} else {
+				errorText = app.i18n.t('http-request-failed.generic');
+			}
+			cb(new Error(errorText));
 		});
 	};
 
