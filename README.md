@@ -12,6 +12,7 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
   * [Android](#android)
     * [Running on Android (VM)](#running-on-android-vm)
     * [Running on Android (Device)](#running-on-android-device)
+    * [Re-Generate Drawable Icons and Splash Images](#re-generate-drawable-icons-and-splash-images)
     * [Prepare F-Droid Release](#prepare-f-droid-release)
 * [Tests](#tests)
 * [Translations](#translations)
@@ -116,6 +117,15 @@ adb install ./platforms/android/app/build/outputs/apk/release/app-release.apk
 ```
 * You may need to run `adb devices` before the above command.
 * And if the app is already installed on the device, you will need to use the `-r` flag to reinstall it.
+
+
+#### Re-Generate Drawable Icons and Splash Images
+
+The following script uses the SVG images found in `./assets/android` to generate all sizes for icons and splash images for the Android platform:
+```bash
+./scripts/build-android-drawable-icons-and-splash.sh
+```
+Output files are written to `./src/images/android`.
 
 
 ### Prepare F-Droid Release
