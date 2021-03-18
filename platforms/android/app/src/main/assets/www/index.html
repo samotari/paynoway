@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="no-js theme-dark">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,user-scalable=no">
+	<title>PayNoWay</title>
+
+	<link href="css/all.min.css" rel="stylesheet">
+
+	<!-- favicon -->
+	<link rel="apple-touch-icon-precomposed" sizes="57x57" href="apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon-precomposed" sizes="60x60" href="apple-touch-icon-60x60.png">
+	<link rel="apple-touch-icon-precomposed" sizes="120x120" href="apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon-precomposed" sizes="76x76" href="apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon-precomposed" sizes="152x152" href="apple-touch-icon-152x152.png">
+	<meta name="application-name" content="&nbsp;"/>
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="mstile-144x144.png">
+	<meta name="msapplication-square70x70logo" content="mstile-70x70.png">
+	<meta name="msapplication-square150x150logo" content="mstile-150x150.png">
+	<meta name="msapplication-wide310x150logo" content="mstile-310x150.png">
+	<meta name="msapplication-square310x310logo" content="mstile-310x310.png">
+</head>
+<body>
+
+	<div id="cover">
+		<div id="cover-image"></div>
+		<div id="cover-text"></div>
+	</div>
+	<div id="header">
+		<a class="header-button receive" href="#receive"></a>
+		<a class="header-button send" href="#send"></a>
+		<a class="header-button history" href="#history"></a>
+		<a class="header-button configure" href="#configure"></a>
+		<a class="header-button debug" href="#debug"></a>
+	</div>
+	<div id="view">
+		<div id="view-content"></div>
+	</div>
+	<div id="message">
+		<div id="message-inner">
+			<div id="message-content"></div>
+		</div>
+	</div>
+
+	<noscript>
+		<!-- This language string is hard-coded because handlebars requires JavaScript. -->
+		<p class="page-description">This app requires JavaScript to function.</p>
+	</noscript>
+
+	<script type="text/html" id="template-configure">
+		<h2 class="page-title">{{i18n "configure.title"}}</h2>
+		<p class="page-description network-deprecated-notice">{{i18n "configure.network-deprecated"}}</p>
+		<p class="page-description network-deprecated-notice-export-wif">{{i18n "configure.network-deprecated.export-wif"}}</p>
+		<div class="form">
+			<form>
+		{{#each inputs}}
+			{{> formFieldRow .}}
+		{{/each}}
+			</form>
+	</script>
+
+	<script type="text/html" id="template-receive">
+		<h2 class="page-title">{{i18n "receive.title"}}</h2>
+		<div class="address">
+			<div class="address-qrcode"></div>
+			<div class="address-text"></div>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button copy-to-clipboard has-text">{{i18n "copy-to-clipboard"}}</a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-send">
+		<div class="scoreboard-and-balance">
+			<div class="scoreboard"></div>
+			<div class="balance">
+				<div class="balance-total currency-amount">
+					<div class="balance-value currency-value"></div>
+					<div class="balance-symbol currency-symbol"></div>
+					<a class="button balance-refresh"></a>
+				</div>
+				<div class="balance-pending">
+					<span class="balance-value"></span>
+					<span class="balance-symbol currency-symbol"></span>
+				</div>
+			</div>
+		</div>
+		<div class="form">
+			<form>
+		{{#each inputs}}
+			{{> formFieldRow .}}
+		{{/each}}
+			</form>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button payment disabled has-text">{{i18n "send.pay"}}</a>
+			<a class="secondary-control button double-spend disabled has-text"><b class="timer"></b>{{i18n "send.return"}}</a>
+			<a class="secondary-control button reset disabled has-text">{{i18n "send.reset"}}</a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-send-scoreboard">
+		<table>
+			<thead>
+				<tr>
+					<th class="scoreboard-1st payments" colspan="3">{{i18n "send.scoreboard.payments"}}</th>
+					<th class="scoreboard-1st double-spends" colspan="3">{{i18n "send.scoreboard.double-spends"}}</th>
+				</tr>
+				<tr>
+					<th class="scoreboard-2nd payments pending"></th>
+					<th class="scoreboard-2nd payments invalid"></th>
+					<th class="scoreboard-2nd payments confirmed"></th>
+					<th class="scoreboard-2nd double-spends pending"></th>
+					<th class="scoreboard-2nd double-spends invalid"></th>
+					<th class="scoreboard-2nd double-spends confirmed"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td class="scoreboard-3rd payments pending">{{payments.pending.count}}</td>
+					<td class="scoreboard-3rd payments invalid">{{payments.invalid.count}}</td>
+					<td class="scoreboard-3rd payments confirmed">{{payments.confirmed.count}}</td>
+					<td class="scoreboard-3rd double-spends pending">{{doubleSpends.pending.count}}</td>
+					<td class="scoreboard-3rd double-spends invalid">{{doubleSpends.invalid.count}}</td>
+					<td class="scoreboard-3rd double-spends confirmed">{{doubleSpends.confirmed.count}}</td>
+				</tr>
+				<tr>
+					<td class="scoreboard-4th payments confirmed currency-amount" colspan="3">
+						<span class="sum currency-value">{{payments.confirmed.sum}}</span>
+						<span class="symbol currency-symbol">{{symbol}}</span>
+					</td>
+					<td class="scoreboard-4th double-spends confirmed currency-amount" colspan="3">
+						<span class="sum currency-value">{{doubleSpends.confirmed.sum}}</span>
+						<span class="symbol currency-symbol">{{symbol}}</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</script>
+
+	<script type="text/html" id="template-history">
+		<table>
+			<thead>
+				<tr>
+					<th>txid</th>
+					<th>{{i18n "history.list-header.type"}}</th>
+					<th>{{i18n "history.list-header.status"}}</th>
+					<th colspan="3"></th>
+				</tr>
+			</thead>
+			<tbody class="history-items"></tbody>
+		</table>
+		<div class="history-empty">
+			<p>{{i18n "history.empty"}}</p>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button zero reset-statistics disabled has-text">{{i18n "history.reset-statistics"}}</a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-history-item">
+		<td><a href="{{url}}">{{txidShort}}</a></td>
+		<td>{{type}}</td>
+		<td><span class="tx-status {{status}}"></span></td>
+		<td><a class="button broadcast"></a></td>
+		<td>{{#if rawTx}}<a class="button copy-to-clipboard"></a>{{/if}}</td>
+		<td><a class="button refresh"></a></td>
+	</script>
+
+	<script type="text/html" id="template-form-field">
+		{{#switch type}}
+			{{#case "select" break=true}}
+			<select class="form-input" id="{{id}}" name="{{name}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}{{#if multiple}} multiple{{/if}}>
+				{{#each options}}
+				<option{{#if selected}} selected{{/if}}{{#if disabled}} disabled{{/if}}{{#if key}} value="{{key}}"{{/if}}>{{label}}</option>
+				{{/each}}
+			</select>
+			{{/case}}
+			{{#case "checkbox" break=true}}
+			<label class="form-switch" for="{{id}}">
+				<input type="checkbox" name="{{name}}" id="{{id}}"{{#if value}} checked{{/if}} value="1">
+				<span class="form-switch-slider"></span>
+			</label>
+			{{/case}}
+			{{#case "number" break=true}}
+			<input class="form-input" type="number"{{#if min includeZero=true}} min="{{min}}"{{/if}}{{#if step}} step="{{step}}"{{/if}} id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#case "integer" break=true}}
+			<input class="form-input" type="number"{{#if min includeZero=true}} min="{{min}}"{{/if}} step="1" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#case "password" break=true}}
+			<input class="form-input" type="password" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/case}}
+			{{#default}}
+			<input class="form-input" type="text" id="{{id}}" name="{{name}}" value="{{value}}"{{#if readonly}} readonly{{/if}}{{#if disabled}} disabled{{/if}}>
+			{{/default}}
+		{{/switch}}
+			<div class="form-error"></div>
+		{{#if actions}}
+			<div class="form-field-actions">
+			{{#each actions}}
+				<a class="form-field-action button {{name}}" data-action="{{name}}" data-input="{{../name}}">{{label}}</a>
+			{{/each}}
+			</div>
+		{{/if}}
+	</script>
+
+	<script type="text/html" id="template-form-field-row">
+	{{#if visible}}
+		<div class="form-row form-row--{{name}} form-row-key--{{key}} form-row-type--{{type}}">
+			<div class="form-label">
+				<label for="{{id}}">{{label}}</label>
+			</div>{{#if description}}
+			<div class="form-description">{{description}}</div>{{/if}}
+			<div class="form-field id-{{id}} has-{{actions.length}}-actions">
+				{{> formField .}}
+			</div>
+			{{#if notes}}
+			<div class="form-notes">{{{ notes }}}</div>
+			{{/if}}
+		</div>
+	{{/if}}
+	</script>
+
+	<script type="text/html" id="template-disclaimers">
+		<h2 class="page-title">{{i18n "disclaimers.title"}}</h2>
+		<ul>
+			<li>{{i18n "disclaimers.testing-and-educational-purposes"}}</li>
+			<li>{{i18n "disclaimers.explicit-consent"}}</li>
+			<li>{{i18n "disclaimers.double-spend-not-guaranteed"}}</li>
+			<li>{{i18n "disclaimers.private-key-backup"}}</li>
+		</ul>
+		<div class="secondary-controls">
+			<a class="secondary-control button accept disabled has-text"><b class="timer"></b>{{i18n "ok"}}</a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-debug">
+		<h2 class="page-title">{{i18n "debug.title"}}</h2>
+		<p class="page-description">{{{description}}}</p>
+		<pre><b>{{i18n "debug.app"}}:</b>
+{{app}}
+<b>{{i18n "debug.repository"}}:</b>
+{{repository}}
+<b>{{i18n "debug.version"}}:</b>
+{{version}}
+<b>{{i18n "debug.commit"}}:</b>
+{{commit}}</pre>
+		<div class="secondary-controls">
+			<a class="secondary-control button copy-to-clipboard has-text">{{i18n "copy-to-clipboard"}}</a>
+		</div>
+	</script>
+
+	<script type="text/html" id="template-export-wif">
+		<h2 class="page-title">{{i18n "export-wif.title"}}</h2>
+		<div class="wif">
+			<div class="wif-qrcode"></div>
+			<div class="wif-text"></div>
+		</div>
+		<div class="secondary-controls">
+			<a class="secondary-control button copy-to-clipboard has-text">{{i18n "copy"}}</a>
+			<a class="secondary-control button close has-text">{{i18n "close"}}</a>
+		</div>
+	</script>
+
+	<script type="text/json" id="json-info">{"description":"A mobile app for testing payment systems against double-spend attacks.","version":"2.0.0","name":"PayNoWay","repoUrl":"https://github.com/samotari/paynoway","commitHash":"7c2717b9c4d6875f158a4d570e701995972c730f"}</script>
+	<script src="cordova.js"></script>
+
+	<script src="js/all.min.js"></script>
+
+
+</body>
+</html>
