@@ -85,6 +85,12 @@ $BIN/cordova prepare android
 # add files required by fdroid
 git add -f 	$PLATFORMS/android/
 
+read -p "Ready to commit changes to fdroid branch? (y/n) " ANSWER
+if [ "$ANSWER" != "y" ]; then
+	echo "Canceled"
+	exit
+fi
+
 # commit
 git commit -m "fdroid release $VERSION"
 
