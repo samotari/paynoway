@@ -1,0 +1,1 @@
+Bitcoin wallet app made to test payment systems against double-spend attacks.

@@ -1,0 +1,6 @@
+* Easily toggle between fiat currency or coin amounts by clicking any displayed amount.
+* Export WIF as QR code or copy to clipboard.
+* Many UI improvements - e.g more buttons, icons, text, etc.
+* Improved handling of BIP21-style payment requests.
+* Removed Electrum server communication. Replaced with web service API to broadcast and fetch transactions. Use the default instance, or self-host your own.
+* Dropped support for Litecoin. Can export private key.
