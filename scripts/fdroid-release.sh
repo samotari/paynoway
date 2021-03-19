@@ -96,12 +96,12 @@ git commit -m "fdroid release $VERSION"
 
 # (force) push changes to remote fdroid branch
 echo "Pushing changes to fdroid remote branch..."
-# git push -f -u $GIT_REMOTE fdroid
+git push -f -u $GIT_REMOTE fdroid
 
 # create fdroid release tag
 echo "Creating fdroid release tag..."
 git tag -a $FDROID_VERSION -m "fdroid release $VERSION"
-# git push $GIT_REMOTE $FDROID_VERSION
+git push $GIT_REMOTE $FDROID_VERSION
 
 cleanup
 echo "Done!"
