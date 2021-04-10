@@ -109,6 +109,11 @@ app.views.utility.Form = (function() {
 					});
 					break;
 			}
+			// This properties might be a function or just a value.
+			_.each(['disabled', 'readonly', 'visible'], function(key) {
+				input[key] = _.result(input, key);
+			});
+			// The 'visible' property should be TRUE unless explicitly set to FALSE.
 			input.visible = input.visible !== false;
 			return input;
 		},

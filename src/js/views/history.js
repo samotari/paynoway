@@ -11,6 +11,7 @@ app.views.History = (function() {
 		template: '#template-history',
 		itemContainer: '.history-items',
 		events: {
+			'click .button.refresh-transactions': 'refreshTransactions',
 			'click .button.reset-statistics': 'resetStatistics',
 		},
 		collection: function() {
@@ -38,6 +39,9 @@ app.views.History = (function() {
 				return type === 'payment' || type === 'double-spend';
 			});
 			this.$('.button.reset-statistics').toggleClass('disabled', !hasPaymentsOrDoubleSpends);
+		},
+		refreshTransactions: function() {
+			app.wallet.transactions.refreshAll();
 		},
 		resetStatistics: function() {
 			if (confirm(app.i18n.t('history.reset-statistics.confirm'))) {

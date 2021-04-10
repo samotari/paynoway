@@ -31,6 +31,7 @@ app.wallet = (function() {
 			network = network || this.getNetwork();
 			var pathParts = [];
 			switch (key) {
+				case 'useFiat':
 				case 'exchangeRateProvider':
 				case 'fiatCurrency':
 				case 'network':

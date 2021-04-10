@@ -161,6 +161,7 @@
 			<p>{{i18n "history.empty"}}</p>
 		</div>
 		<div class="secondary-controls">
+			<a class="secondary-control button refresh refresh-transactions has-text">{{i18n "history.refresh-transactions"}}</a>
 			<a class="secondary-control button zero reset-statistics disabled has-text">{{i18n "history.reset-statistics"}}</a>
 		</div>
 	</script>
@@ -214,7 +215,7 @@
 
 	<script type="text/html" id="template-form-field-row">
 	{{#if visible}}
-		<div class="form-row form-row--{{name}} form-row-key--{{key}} form-row-type--{{type}}">
+		<div class="form-row form-row--{{name}} form-row-key--{{key}} form-row-type--{{type}}{{#if disabled}} disabled{{/if}}">
 			<div class="form-label">
 				<label for="{{id}}">{{label}}</label>
 			</div>{{#if description}}

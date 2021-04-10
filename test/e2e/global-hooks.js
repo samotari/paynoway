@@ -22,6 +22,7 @@ manager.refreshApp = function() {
 							data: 'result',
 						},
 					};
+					app.settings.set('useFiat', true);
 				});
 			});
 		});

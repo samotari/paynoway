@@ -259,7 +259,9 @@ app.views.Send = (function() {
 		},
 		refreshBalance: function() {
 			this.refreshUnspentTxOutputs();
-			app.wallet.refreshCachedExchangeRate();
+			if (app.settings.get('useFiat')) {
+				app.wallet.refreshCachedExchangeRate();
+			}
 		},
 		refreshUnspentTxOutputs: function() {
 			this.fetchUnspentTxOutputs();
@@ -321,8 +323,10 @@ app.views.Send = (function() {
 			if (!this.hasCache('minRelayFeeRate')) {
 				this.fetchMinRelayFeeRate();
 			}
-			if (!app.wallet.getExchangeRateFromCache()) {
-				app.wallet.refreshCachedExchangeRate();
+			if (app.settings.get('useFiat')) {
+				if (!app.wallet.getExchangeRateFromCache()) {
+					app.wallet.refreshCachedExchangeRate();
+				}
 			}
 			this.$inputs = {
 				address: this.$(':input[name="address"]'),
@@ -354,10 +358,6 @@ app.views.Send = (function() {
 			}
 			this.loadCacheableOptions();
 			this.toggleAutoDoubleSpendDelay();
-		},
-		updateAutoBroadcastDoubleSpend: function() {
-			var state = this.model.get('autoBroadcastDoubleSpend');
-			this.$inputs.autoBroadcastDoubleSpend.prop()
 		},
 		toggleAutoDoubleSpendDelay: function() {
 			var $checkbox = this.$(':input[name=autoBroadcastDoubleSpend]');
@@ -422,10 +422,12 @@ app.views.Send = (function() {
 			this.$balance.symbol.text(displayCurrency);
 		},
 		toggleDisplayCurrency: function() {
-			var coinSymbol = app.wallet.getCoinSymbol();
-			var fiatCurrency = app.settings.get('fiatCurrency');
-			var newDisplayCurrency = app.settings.get('displayCurrency') !== coinSymbol ? coinSymbol : fiatCurrency;
-			app.settings.set('displayCurrency', newDisplayCurrency);
+			if (app.settings.get('useFiat')) {
+				var coinSymbol = app.wallet.getCoinSymbol();
+				var fiatCurrency = app.settings.get('fiatCurrency');
+				var newDisplayCurrency = app.settings.get('displayCurrency') !== coinSymbol ? coinSymbol : fiatCurrency;
+				app.settings.set('displayCurrency', newDisplayCurrency);
+			}
 		},
 		updateScoreboard: function() {
 			if (!this.$scoreboard) return;

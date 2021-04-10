@@ -160,15 +160,6 @@ app.config = (function() {
 			},
 		},
 		webServices: {
-			'mempool': {
-				full: true,
-				constructor: app.services.Mempool,
-				projectUrl: 'https://github.com/mempool/mempool',
-				defaultUrls: {
-					'bitcoin': 'https://mempool.space',
-					'bitcoinTestnet': 'https://mempool.space/testnet',
-				},
-			},
 			'esplora': {
 				full: true,
 				constructor: app.services.Esplora,
@@ -176,6 +167,15 @@ app.config = (function() {
 				defaultUrls: {
 					'bitcoin': 'https://blockstream.info',
 					'bitcoinTestnet': 'https://blockstream.info/testnet',
+				},
+			},
+			'mempool': {
+				full: true,
+				constructor: app.services.Mempool,
+				projectUrl: 'https://github.com/mempool/mempool',
+				defaultUrls: {
+					'bitcoin': 'https://mempool.space',
+					'bitcoinTestnet': 'https://mempool.space/testnet',
 				},
 			},
 			'bitapps': {
@@ -426,6 +426,15 @@ app.config = (function() {
 				},
 			},
 			{
+				name: 'useFiat',
+				label: function() {
+					return app.i18n.t('configure.useFiat');
+				},
+				type: 'checkbox',
+				default: 0,
+				visible: true,
+			},
+			{
 				name: 'fiatCurrency',
 				label: function() {
 					return app.i18n.t('configure.fiatCurrency');
@@ -433,6 +442,9 @@ app.config = (function() {
 				type: 'select',
 				default: 'EUR',
 				required: true,
+				disabled: function() {
+					return app.settings.get('useFiat') === false;
+				},
 				options: function() {
 					return _.map(app.fiatCurrencies, function(name, symbol) {
 						return {
@@ -450,6 +462,9 @@ app.config = (function() {
 				type: 'select',
 				required: true,
 				default: 'coinbase',
+				disabled: function() {
+					return app.settings.get('useFiat') === false;
+				},
 				options: function() {
 					return _.map(app.services.exchangeRates.providers, function(provider, key) {
 						return {
@@ -461,6 +476,10 @@ app.config = (function() {
 				validateAsync: function(value, data, cb) {
 					if (app.device.offline) {
 						// Do not validate when device is offline.
+						return cb();
+					}
+					if (!app.settings.get('useFiat')) {
+						// Do not validate when not using fiat exchange rate service.
 						return cb();
 					}
 					var exchangeRateProvider = value;

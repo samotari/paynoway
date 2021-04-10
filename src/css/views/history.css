@@ -95,3 +95,13 @@
 	opacity: .7;
 	background-image: url(../images/cycle.svg);
 }
+.view.history .button.secondary-control {
+	font-size: 1rem;
+}
+.view.history .button.secondary-control:before {
+	width: 2rem;
+	background-size: 2rem;
+}
+.view.history .button.secondary-control.has-text:before {
+	margin-right: .5rem;
+}

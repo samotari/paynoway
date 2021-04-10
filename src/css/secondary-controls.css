@@ -81,6 +81,9 @@
 .button.secondary-control.copy-to-clipboard:before {
 	background-image: url('../images/copy.svg');
 }
+.button.secondary-control.refresh:before {
+	background-image: url('../images/cycle.svg');
+}
 .button.secondary-control.accept:before,
 .button.secondary-control.done:before,
 .button.secondary-control.submit:before {

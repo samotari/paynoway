@@ -33,6 +33,7 @@ app.lang['en'] = (function() {
 		'configure.wif.invalid': 'Invalid private key',
 		'configure.wif.segwit-uncompressed-invalid': 'WIF provided can be used with legacy addresses only.',
 		'configure.wif.confirm-change': 'Do you really want to change the private key? (cannot be undone)',
+		'configure.useFiat': 'Use fiat exchange rate service',
 		'configure.fiatCurrency': 'Fiat Currency',
 		'configure.exchangeRateProvider': 'Exchange Rate Provider',
 		'configure.network-deprecated': 'The selected network is no longer supported by this app.',
@@ -62,7 +63,8 @@ app.lang['en'] = (function() {
 		'history.list-header.status': 'status',
 		'history.list-header.type': 'type',
 		'history.empty': 'No transactions yet for this network.',
-		'history.reset-statistics': 'Reset statistics dashboard',
+		'history.refresh-transactions': 'Refresh History',
+		'history.reset-statistics': 'Reset Statistics',
 		'history.reset-statistics.confirm': 'Are you sure you want to reset your statistics dashboard?',
 		'history.reset-statistics.done': 'Your statistics dashboard has been reset.',
 

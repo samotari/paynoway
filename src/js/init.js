@@ -28,15 +28,28 @@ app.onDeviceReady(function() {
 
 	app.onReady(function() {
 		app.settings.on('change:fiatCurrency', function() {
-			app.wallet.refreshCachedExchangeRate();
-			var displayCurrency = app.settings.get('displayCurrency');
-			var fiatCurrency = app.settings.get('fiatCurrency');
-			var coinSymbol = app.wallet.getCoinSymbol();
-			if (displayCurrency !== coinSymbol) {
-				app.settings.set('displayCurrency', fiatCurrency);
+			if (app.settings.get('useFiat')) {
+				app.wallet.refreshCachedExchangeRate();
+				var displayCurrency = app.settings.get('displayCurrency');
+				var fiatCurrency = app.settings.get('fiatCurrency');
+				var coinSymbol = app.wallet.getCoinSymbol();
+				if (displayCurrency !== coinSymbol) {
+					app.settings.set('displayCurrency', fiatCurrency);
+				}
 			}
 		});
-		app.wallet.refreshCachedExchangeRate();
+		app.settings.on('change:useFiat', function() {
+			if (app.settings.get('useFiat')) {
+				app.wallet.getExchangeRate(_.noop);
+			} else {
+				app.settings.set('displayCurrency', app.wallet.getCoinSymbol());
+			}
+		});
+		if (app.settings.get('useFiat')) {
+			app.wallet.refreshCachedExchangeRate();
+		} else {
+			app.settings.set('displayCurrency', app.wallet.getCoinSymbol());
+		}
 	});
 
 	app.onReady(function() {

@@ -39,6 +39,10 @@ app.views.Configure = (function() {
 			return inputs;
 		},
 		initialize: function() {
+			_.bindAll(this,
+				'updateFiatRelatedFields',
+				'updateInputs'
+			);
 			this.listenTo(app.settings, 'change', function(key, value) {
 				if (key.indexOf('.') !== -1) {
 					var parts = key.split('.');
@@ -58,6 +62,7 @@ app.views.Configure = (function() {
 				}
 			});
 			this.listenTo(app.settings, 'change:network', this.updateInputs);
+			this.listenTo(app.settings, 'change:useFiat', this.updateFiatRelatedFields);
 			var oldNetwork = app.settings.get('network');
 			this.listenTo(app.settings, 'change:network', _.bind(function() {
 				var newNetwork = app.settings.get('network');
@@ -76,6 +81,8 @@ app.views.Configure = (function() {
 				network: this.$(':input[name="network"]'),
 				wif: this.$(':input[name="wif"]'),
 				webServiceUrl: this.$(':input[name="webServiceUrl"]'),
+				fiatCurrency: this.$(':input[name="fiatCurrency"]'),
+				exchangeRateProvider: this.$(':input[name="exchangeRateProvider"]'),
 			};
 			app.views.utility.Form.prototype.onRender.apply(this, arguments);
 		},
@@ -92,6 +99,7 @@ app.views.Configure = (function() {
 					return app.wallet.getAddress(network);
 				case 'network':
 					return network;
+				case 'useFiat':
 				case 'exchangeRateProvider':
 				case 'fiatCurrency':
 					return app.settings.get(key);
@@ -106,6 +114,7 @@ app.views.Configure = (function() {
 			this.updateBlockExplorerOptions();
 			this.updateWebServiceTypeOptions();
 			this.updateTxBroadcastServicesOptions();
+			this.updateFiatRelatedFields();
 		},
 		updateAddress: function(network) {
 			this.$inputs.address.val(this.getValue('address', network));
@@ -128,6 +137,18 @@ app.views.Configure = (function() {
 		},
 		updateTxBroadcastServicesOptions: function() {
 			this.updateSelectFieldOptions('txBroadcastServices');
+		},
+		updateFiatRelatedFields: function() {
+			var useFiat = app.settings.get('useFiat') === true;
+			if (useFiat) {
+				this.$inputs.fiatCurrency.removeAttr('disabled').removeProp('disabled');
+				this.$inputs.exchangeRateProvider.removeAttr('disabled').removeProp('disabled');
+			} else {
+				this.$inputs.fiatCurrency.prop('disabled', true);
+				this.$inputs.exchangeRateProvider.prop('disabled', true);
+			}
+			this.$inputs.fiatCurrency.parents('.form-row').first().toggleClass('disabled', !useFiat);
+			this.$inputs.exchangeRateProvider.parents('.form-row').first().toggleClass('disabled', !useFiat);
 		},
 		updateSelectFieldOptions: function(name) {
 			var input = this.getInputByName(name);
