@@ -1,6 +1,6 @@
 {
   "name": "paynoway",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A mobile app for testing payment systems against double-spend attacks.",
   "private": true,
   "main": "index.js",

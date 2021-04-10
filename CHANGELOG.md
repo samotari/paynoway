@@ -1,5 +1,9 @@
 # Changelog
 
+* v2.1.0:
+  * New configuration to toggle use of fiat currency, default state disabled
+  * Changed default web service type to esplora
+  * New "Refresh History" button in history view
 * v2.0.0:
   * Easily toggle between fiat currency or coin amounts in send view by clicking any displayed amount
   * Added new config options for fiat currency and exchange rate provider
