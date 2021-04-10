@@ -431,7 +431,7 @@ app.config = (function() {
 					return app.i18n.t('configure.useFiat');
 				},
 				type: 'checkbox',
-				default: 0,
+				default: false,
 				visible: true,
 			},
 			{
@@ -443,7 +443,7 @@ app.config = (function() {
 				default: 'EUR',
 				required: true,
 				disabled: function() {
-					return app.settings.get('useFiat') === false;
+					return !app.settings.get('useFiat');
 				},
 				options: function() {
 					return _.map(app.fiatCurrencies, function(name, symbol) {
@@ -463,7 +463,7 @@ app.config = (function() {
 				required: true,
 				default: 'coinbase',
 				disabled: function() {
-					return app.settings.get('useFiat') === false;
+					return !app.settings.get('useFiat');
 				},
 				options: function() {
 					return _.map(app.services.exchangeRates.providers, function(provider, key) {

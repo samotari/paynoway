@@ -139,7 +139,7 @@ app.views.Configure = (function() {
 			this.updateSelectFieldOptions('txBroadcastServices');
 		},
 		updateFiatRelatedFields: function() {
-			var useFiat = app.settings.get('useFiat') === true;
+			var useFiat = !!app.settings.get('useFiat');
 			if (useFiat) {
 				this.$inputs.fiatCurrency.removeAttr('disabled').removeProp('disabled');
 				this.$inputs.exchangeRateProvider.removeAttr('disabled').removeProp('disabled');
