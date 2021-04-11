@@ -6,6 +6,12 @@ A mobile app for testing payment systems against double-spend attacks.
 
 Double-spending is no longer a theoretical possibility but a practical reality. Most of the end-user applications used widely today leave their users vulnerable to being defrauded via double-spend attacks. PayNoWay is a tool that you can use to test the applications that you, or your business, depend on to accept on-chain cryptocurrency payments. If you would like to learn more about how double-spending works: [Double-Spending Made Easy](https://degreesofzero.com/talks/double-spending-made-easy/).
 
+The PayNoWay app is available from the following sources:
+* [F-Droid](https://f-droid.org/en/packages/com.github.samotari.paynoway)
+* [Google Play](https://play.google.com/store/apps/details?id=com.github.samotari.paynoway)
+* [Latest Release APK](https://github.com/samotari/paynoway/releases/tag/v2.1.0)
+
+Find more information about this project here:
 * [Disclaimers](#disclaimers)
 * [How to test a payment system](#how-to-test-a-payment-system)
 * [How does a double-spend work?](#how-does-a-double-spend-work)
@@ -53,6 +59,8 @@ This app uses the Replace-by-fee (RBF) feature of Bitcoin to replace (ie. double
 
 
 ## Requirements
+
+This section lists the software requirements needed to build the app from source.
 
 * [nodejs](https://nodejs.org/) - For Linux and Mac install node via [nvm](https://github.com/creationix/nvm).
 * [make](https://www.gnu.org/software/make/)
