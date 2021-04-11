@@ -7,6 +7,10 @@ A mobile app for testing payment systems against double-spend attacks.
 Double-spending is no longer a theoretical possibility but a practical reality. Most of the end-user applications used widely today leave their users vulnerable to being defrauded via double-spend attacks. PayNoWay is a tool that you can use to test the applications that you, or your business, depend on to accept on-chain cryptocurrency payments. If you would like to learn more about how double-spending works: [Double-Spending Made Easy](https://degreesofzero.com/talks/double-spending-made-easy/).
 
 * [Disclaimers](#disclaimers)
+* [How to test a payment system](#how-to-test-a-payment-system)
+* [How does a double-spend work?](#how-does-a-double-spend-work)
+
+The remaining topics consist of technical documentation. This information is useful if you would like to build the app from source or to fork and extend it:
 * [Requirements](#requirements)
 * [Getting Started](#getting-started)
   * [Android](#android)
@@ -15,7 +19,7 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
     * [Re-Generate Drawable Icons and Splash Images](#re-generate-drawable-icons-and-splash-images)
     * [Prepare F-Droid Release](#prepare-f-droid-release)
 * [Tests](#tests)
-* [Translations](#translations)
+* [Translations](#translations) - Pull-requests that translate the app into other languages are welcome!
 * [Changelog](#changelog)
 * [License](#license)
 
@@ -26,6 +30,26 @@ Double-spending is no longer a theoretical possibility but a practical reality. 
 * Please do not use this app to double-spend against merchants without their explicit consent.
 * A successful double-spend is not guaranteed - use at your own risk.
 * You are responsible for creating a backup of your private key(s). Without a backup, if you delete the app or lose your device, your funds will be permanently lost.
+
+
+## How to test a payment system
+
+Follow these steps to test a payment system against a double-spend:
+* Open the send view in the app
+* Scan a QR code that contains either a payment request (e.g "bitcoin:ADDRESS?amount=0.00000123") or just an address
+* If just an address was scanned above, then enter a non-zero amount to send
+* Choose your fee rate (number of sats per vbyte)
+* Press the blue "Pay" button to send a payment transaction
+* Wait for the target merchant PoS to receive the unconfirmed transaction
+* Press the red "Return" button to send the double-spend transaction
+* Wait for one of the above transactions to confirm
+
+Please consider adding the results of your double-spending tests to the [Double-spending results](https://github.com/chill117/double-spending) repository.
+
+
+## How does a double-spend work?
+
+This app uses the Replace-by-fee (RBF) feature of Bitcoin to replace (ie. double-spend) unconfirmed transactions. First, a payment transaction is sent with the target merchant's payment system as the recipient. Then a second, double-spend transaction is created and sent. This second transaction invalidates the first transaction by consuming at least one of the first transaction's inputs. The recipient of the double-spend transaction is your internal wallet address in the PayNoWay app. For more information about double-spending, please see [Double-Spending Made Easy](https://degreesofzero.com/talks/double-spending-made-easy/) - the slides used during a presentation about this topic.
 
 
 ## Requirements
