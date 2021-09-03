@@ -1,0 +1,3 @@
+* New configuration to toggle use of fiat currency, default state disabled
+* Changed default web service type to esplora
+* New "Refresh History" button in history view
