@@ -16,6 +16,7 @@ app.models.Transaction = (function() {
 				status: 'pending',
 				timestamp: Date.now(),
 				type: null,
+				label: '',
 			};
 		},
 		isMissingInfo: function() {

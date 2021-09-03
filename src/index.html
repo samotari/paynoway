@@ -150,7 +150,8 @@
 			<thead>
 				<tr>
 					<th>txid</th>
-					<th>{{i18n "history.list-header.type"}}</th>
+					<th>{{i18n "history.list-header.label"}}</th>
+					<th></th>
 					<th>{{i18n "history.list-header.status"}}</th>
 					<th colspan="3"></th>
 				</tr>
@@ -168,10 +169,11 @@
 
 	<script type="text/html" id="template-history-item">
 		<td><a href="{{url}}">{{txidShort}}</a></td>
-		<td>{{type}}</td>
+		<td><span class="tx-label">{{#if label}}{{label}}{{else}}-{{/if}}</span></td>
+		<td><span class="tx-type {{type}}"></span></td>
 		<td><span class="tx-status {{status}}"></span></td>
 		<td><a class="button broadcast"></a></td>
-		<td>{{#if rawTx}}<a class="button copy-to-clipboard"></a>{{/if}}</td>
+		<td><a class="button copy-to-clipboard{{#if rawTx}}{{else}} disabled{{/if}}"></a></td>
 		<td><a class="button refresh"></a></td>
 	</script>
 

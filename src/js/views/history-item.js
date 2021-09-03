@@ -11,12 +11,17 @@ app.views.HistoryItem = (function() {
 		className: 'history-item',
 		template: '#template-history-item',
 		events: {
+			'click .tx-label': 'editLabel',
 			'click .broadcast': 'broadcast',
-			'click .copy-to-clipboard': 'copyToClipboard',
+			'click .copy-to-clipboard:not(.disabled)': 'copyToClipboard',
 			'click .refresh': 'refresh',
 		},
 		initialize: function() {
-			_.bindAll(this, 'refresh');
+			_.bindAll(this,
+				'onDocumentClick',
+				'refresh'
+			);
+			$(document).on('click', this.onDocumentClick);
 			this.refresh = _.throttle(this.refresh, 200);
 		},
 		onRender: function() {
@@ -25,7 +30,8 @@ app.views.HistoryItem = (function() {
 		},
 		serializeData: function() {
 			var data = app.views.utility.ListItem.prototype.serializeData.apply(this, arguments);
-			data.txidShort = data.txid.substr(0, 7);
+			data.txidShort = data.txid.substr(0, 6);
+			data.label = data.label.substr(0, 20);
 			data.url = app.wallet.getBlockExplorerUrl('tx', { txid: data.txid });
 			data.status = data.status && app.i18n.t('tx-status.' + data.status) || '-';
 			data.type = data.type && app.i18n.t('tx-type.' + data.type) || '-';
@@ -72,6 +78,34 @@ app.views.HistoryItem = (function() {
 					app.log(error);
 				}
 			}
+		},
+		editLabel: function(evt) {
+			var model = this.model;
+			_.defer(function() {
+				var $target = $(evt.target);
+				var $historyItems = $target.parents('.history-items').first();
+				var editingOtherLabel = $historyItems.find('.tx-label.editing').length > 0;
+				if (!editingOtherLabel && !$target.hasClass('editing')) {
+					$target.addClass('editing');
+					var label = model.get('label');
+					var $input = $('<input/>').addClass('form-input').val(label);
+					$target.html($input);
+					$target.find(':input').focus();
+				}
+			});
+		},
+		saveLabel: function() {
+			var $txLabel = this.$('.tx-label');
+			if ($txLabel.hasClass('editing')) {
+				var $input = $txLabel.find(':input');
+				var newLabel = $input.val();
+				this.model.set('label', newLabel).save();
+				$txLabel.html('').text(newLabel);
+				$txLabel.removeClass('editing');
+			}
+		},
+		onDocumentClick: function() {
+			this.saveLabel();
 		},
 	});
 })();

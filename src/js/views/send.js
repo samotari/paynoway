@@ -105,6 +105,15 @@ app.views.Send = (function() {
 				],
 			},
 			{
+				name: 'label',
+				label: function() {
+					return app.i18n.t('send.label');
+				},
+				type: 'text',
+				default: '',
+				visible: true,
+			},
+			{
 				name: 'feeRate',
 				label: function() {
 					return app.i18n.t('send.fee-rate');
@@ -213,7 +222,6 @@ app.views.Send = (function() {
 			this.updateScoreboard();
 		},
 		onChangeFeeRate: function() {
-			this.onChangeCacheableOption();
 			this.onChangeInputs();
 		},
 		createScanQRCodeCallbackWrap: function(cb) {
@@ -626,6 +634,7 @@ app.views.Send = (function() {
 				// Update the form with the address, amount, feeRate of the double-spend tx.
 				this.model.set('address', doubleSpend.address);
 				this.model.set('amount', doubleSpend.amount);
+				this.model.set('label', doubleSpend.label);
 				this.model.set('feeRate', doubleSpend.feeRate);
 			} catch (error) {
 				app.log(error);
@@ -696,6 +705,7 @@ app.views.Send = (function() {
 				fee: fee,
 				feeRate: feeRate,
 				inputs: tx.ins,
+				label: formData.label,
 				rawTx: tx.toHex(),
 				sequence: sequence,
 				txid: tx.getId(),
@@ -703,6 +713,7 @@ app.views.Send = (function() {
 			};
 		},
 		createDoubleSpend: function(payment) {
+			var formData = this.getFormData();
 			payment = payment || this.model.get('payment');
 			// Convert to satoshis/kilobyte.
 			var feeRate = this.getNumberInputValue('feeRate') * 1000;
@@ -757,6 +768,7 @@ app.views.Send = (function() {
 				fee: fee,
 				feeRate: feeRate,
 				inputs: tx.ins,
+				label: formData.label,
 				payment: _.pick(payment, 'txid'),
 				rawTx: tx.toHex(),
 				sequence: sequence,
@@ -915,7 +927,7 @@ app.views.Send = (function() {
 			this.saveTransaction(doubleSpend, 'double-spend');
 		},
 		saveTransaction: function(data, type) {
-			var transaction = _.pick(data, 'fee', 'rawTx', 'txid');
+			var transaction = _.pick(data, 'fee', 'rawTx', 'label', 'txid');
 			transaction.status = 'pending';
 			transaction.type = type;
 			transaction.network = app.wallet.getNetwork();

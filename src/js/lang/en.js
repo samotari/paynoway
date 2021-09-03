@@ -61,6 +61,7 @@ app.lang['en'] = (function() {
 		'form.field-required': 'This field is required',
 
 		'history.list-header.status': 'status',
+		'history.list-header.label': 'label',
 		'history.list-header.type': 'type',
 		'history.empty': 'No transactions yet for this network.',
 		'history.refresh-transactions': 'Refresh History',
@@ -84,6 +85,7 @@ app.lang['en'] = (function() {
 		'send.invalid-amount.number': 'Amount must be a number',
 		'send.invalid-amount.greater-than-zero': 'Amount must be greater than zero',
 		'send.create-payment.errors': 'Cannot create payment transaction because of missing or invalid parameters.',
+		'send.label': 'Label',
 		'send.fee-rate': 'Miner fee (sats / vbyte)',
 		'send.fee-rate.invalid-number': 'Must be a number',
 		'send.fee-rate.greater-than-or-equal-zero': 'Fee rate must be greater than or equal to zero',
