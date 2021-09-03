@@ -199,13 +199,6 @@ app.config = (function() {
 					'bitcoinTestnet': 'https://api.blockcypher.com/v1/bcy/test',
 				},
 			},
-			'smartbit': {
-				constructor: app.services.SmartBit,
-				defaultUrls: {
-					'bitcoin': 'https://api.smartbit.com.au',
-					'bitcoinTestnet': 'https://testnet-api.smartbit.com.au',
-				},
-			},
 			'tokenview': {
 				constructor: app.services.TokenView,
 				defaultUrls: {

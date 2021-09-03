@@ -11,7 +11,6 @@ describe('services.coin', function() {
 		{ type: 'blockcypher' },
 		{ type: 'esplora', full: true },
 		{ type: 'mempool', full: true },
-		{ type: 'smartbit', timeout: 10000 },
 		{ type: 'tokenview' },
 	];
 
