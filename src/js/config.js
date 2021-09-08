@@ -199,11 +199,11 @@ app.config = (function() {
 					'bitcoinTestnet': 'https://api.blockcypher.com/v1/bcy/test',
 				},
 			},
-			'tokenview': {
-				constructor: app.services.TokenView,
+			'chain-so': {
+				constructor: app.services.ChainSo,
 				defaultUrls: {
-					'bitcoin': 'https://wallet.tokenview.com',
-					'bitcoinTestnet': 'https://wallet.tokenview.com',
+					'bitcoin': 'https://chain.so',
+					'bitcoinTestnet': 'https://chain.so',
 				},
 			},
 		},

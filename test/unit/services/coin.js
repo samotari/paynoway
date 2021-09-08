@@ -9,9 +9,9 @@ describe('services.coin', function() {
 		{ type: 'bitapps' },
 		{ type: 'blockchair' },
 		{ type: 'blockcypher' },
+		{ type: 'chain-so' },
 		{ type: 'esplora', full: true },
 		{ type: 'mempool', full: true },
-		{ type: 'tokenview' },
 	];
 
 	const partialServiceNames = _.chain(services).filter(function(service) {
@@ -27,7 +27,7 @@ describe('services.coin', function() {
 			],
 			expected: {
 				error: function(error) {
-					if (!/missing inputs|inputs-missingorspent|missing reference/i.test(error.message)) {
+					if (!/missing inputs|inputs-missingorspent|missing reference|available to spend/i.test(error.message)) {
 						throw new Error('Expected error ("Missing inputs"), but received: ' + error.message);
 					}
 				},
@@ -44,7 +44,7 @@ describe('services.coin', function() {
 			},
 			expected: {
 				error: function(error) {
-					if (!/already in block chain|missing inputs/i.test(error.message)) {
+					if (!/already in block chain|missing inputs|available to spend/i.test(error.message)) {
 						throw new Error('Expected error ("Already in blockchain" or "Missing inputs"), but received: ' + error.message);
 					}
 				},
